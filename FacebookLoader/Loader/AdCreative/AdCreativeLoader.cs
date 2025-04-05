@@ -78,11 +78,11 @@ public class FacebookAdCreativesLoader : FacebookLoaderBase
 
     public FacebookAdCreativesResponse StartLoad(bool testMode = false)
     {
-        string url = $"{facebookParameters.CreateUrlFor("ads")}?fields={FIELDS_LIST}&limit={LIMIT}&access_token={facebookParameters.Token}";
+        string url = $"{FacebookParameters.CreateUrlFor("ads")}?fields={FIELDS_LIST}&limit={LIMIT}&access_token={FacebookParameters.Token}";
         return Load(url, testMode);
     }
 
-    public FacebookAdCreativesResponse Load(string startUrl, bool testMode = false)
+    public async FacebookAdCreativesResponse Load(string startUrl, bool testMode = false)
     {
         int loopCount = 0;
         string currentUrl = startUrl;
@@ -92,7 +92,7 @@ public class FacebookAdCreativesLoader : FacebookLoaderBase
         {
             try
             {
-                var data = global::FacebookLoader.Content.FacebookLoaderBase.CallGraphApi(currentUrl);
+                var data = await CallGraphApiAsync(currentUrl);
                 var root = FacebookLoader.Root.FromJson(data);
 
                 foreach (var item in root.Data)

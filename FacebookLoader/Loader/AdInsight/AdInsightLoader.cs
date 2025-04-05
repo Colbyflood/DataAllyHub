@@ -1,4 +1,5 @@
-﻿using FacebookLoader.Common;
+﻿using System.Net.Http.Headers;
+using FacebookLoader.Common;
 using FacebookLoader.Content;
 
 namespace FacebookLoader.Loader.AdInsight;
@@ -22,46 +23,66 @@ public class FacebookAdInsightsLoader : FacebookLoaderBase
 
     public FacebookAdInsightsLoader(FacebookParameters facebookParameters) : base(facebookParameters) {}
 
-    public async Task<List<Datum>> LoadAsync(string startDate, string endDate, bool testMode = false)
+    private async Task<List<Datum>> LoadAsync(string startDate, string endDate, bool testMode = false)
     {
-        string insights = PrepareInsights(startDate, endDate);
-        string url = $"{_baseUrl}/ads?fields={FieldsList}{insights}&limit={Limit}&access_token={_accessToken}";
+	    int loopCount = 0;
+	    string currentUrl = startUrl;
+	    var records = new List<FacebookAdInsight>();
 
-        var allRecords = new List<Datum>();
-        int loopCount = 0;
-        string? currentUrl = url;
+	    while (true)
+	    {
+		    try
+		    {
+			    var data = FacebookAdInsightsLoader.CallGraphApi(currentUrl);
+			    var root = Root.FromDictionary(data);
 
-        while (!string.IsNullOrEmpty(currentUrl))
-        {
-            try
-            {
-                var root = await GetFromGraphApi<Root>(currentUrl);
-                if (root == null) break;
+			    foreach (var item in root.Data)
+			    {
+				    var previews = FacebookAdInsightsLoader.DigestPreviews(item.Previews);
+				    var insights = FacebookAdInsightsLoader.DigestInsights(item.Insights);
 
-                allRecords.AddRange(root.Data);
-                currentUrl = root.Paging?.Next;
+				    records.Add(new FacebookAdInsight
+				    {
+					    Id = item.Id,
+					    Name = item.Name,
+					    CreatedTime = item.CreatedTime,
+					    UpdatedTime = item.UpdatedTime,
+					    PreviewShareableLink = item.PreviewShareableLink,
+					    Previews = previews,
+					    Insights = insights
+				    });
+			    }
 
-                if (testMode && loopCount >= MaxTestLoops)
-                    break;
+			    if (string.IsNullOrEmpty(root.Paging?.Next) || (testMode && loopCount >= this.MAX_TEST_LOOPS))
+			    {
+				    break;
+			    }
 
-                loopCount++;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error during API call: {ex.Message}");
-                break;
-            }
-        }
+			    currentUrl = root.Paging.Next;
+			    loopCount++;
+		    }
+		    catch (FacebookHttpException fe)
+		    {
+			    Logging.Info($"Caught FacebookHttpException at FacebookInsightsLoader.Load(): {fe}");
+			    return new FacebookAdInsightsResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
+		    }
+		    catch (Exception ex)
+		    {
+			    Logging.Info($"Caught exception at FacebookAdInsightsLoader.Load(): {ex}");
+			    return new FacebookAdInsightsResponse(records, false, currentUrl, true);
+		    }
+	    }
 
-        return allRecords;
+	    return new FacebookAdInsightsResponse(records);
     }
+    
 
     private string PrepareInsights(string startDate, string endDate)
     {
         return $"insights.time_range(\"{{\\\"since\\\":\\\"{startDate}\\\",\\\"until\\\":\\\"{endDate}\\\"}}\").time_increment(1).limit(1000){InsightFields}";
     }
     
-    public static List<string> DigestPreviews(Previews previews)
+    private static List<string> DigestPreviews(Previews previews)
     {
 	    var digest = new List<string>();
 

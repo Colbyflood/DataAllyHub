@@ -2,25 +2,25 @@
 
 public class FacebookParameters
 {
-	public readonly string accountId;
-	public readonly string token;
-	public readonly string facebookVersion;
+	public string AccountId { get; }
+	public string Token { get; }
+	public string FacebookVersion { get; }
 
 	public FacebookParameters(string accountId, string token, string facebookVersion = "22.0")
 	{
-		this.accountId = accountId;
-		this.token = token;
-		this.facebookVersion = facebookVersion;
+		AccountId = accountId;
+		Token = token;
+		FacebookVersion = facebookVersion;
 	}
 
 	public string CreateUrlFor(string endpoint)
 	{
-		var accountValue = accountId;
+		var accountValue = AccountId;
 		if (!accountValue.StartsWith("act_"))
 		{
-			accountValue = $"act_{accountId}";
+			accountValue = $"act_{AccountId}";
 		}
 
-		return $"https://graph.facebook.com/v{facebookVersion}/{accountValue}/{endpoint}";
+		return $"https://graph.facebook.com/v{FacebookVersion}/{accountValue}/{endpoint}";
 	}
 }
