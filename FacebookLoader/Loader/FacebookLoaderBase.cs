@@ -62,14 +62,25 @@ public abstract class FacebookLoaderBase
         return value.ToObject<bool>();
     }
 
-    public static JObject? ExtractObject(JToken? obj, string tag)
+    public static JToken? ExtractObject(JToken? obj, string tag)
     {
-        JToken? value = obj?[tag];
-        if (value == null || value.Type != JTokenType.Object)
+        if (obj == null)
         {
             return null;
         }
-        return value as JObject;
+
+        if (obj.Type == JTokenType.Array)
+        {
+            return obj;
+        }
+
+        if (obj.Type == JTokenType.Object)
+        {
+            var jObject = (JObject)obj;
+            return jObject.TryGetValue(tag, out JToken value) ? value : null;
+        }
+
+        return null;
     }
 
     public static List<JObject> ExtractObjectArray(JToken? obj, string tag)

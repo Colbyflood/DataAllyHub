@@ -177,14 +177,21 @@ class VideoData
 class ObjectStorySpec
 {
     public string PageId { get; set; }
-    public VideoData VideoData { get; set; }
+    public VideoData? VideoData { get; set; }
 
-    public static ObjectStorySpec FromJson(JObject obj)
+    public static ObjectStorySpec FromJson(JToken? obj)
     {
+        var pageId = FacebookLoaderBase.ExtractString(obj, "page_id");
+        var videoDataNode = obj["video_data"];
+        VideoData? videoData = null;
+        if (videoDataNode != null)
+        {
+            videoData =  VideoData.FromJson(videoDataNode);
+        }
         return new ObjectStorySpec
         {
-            PageId = FacebookLoaderBase.ExtractString(obj, "page_id"),
-            VideoData = VideoData.FromJson(obj["video_data"])
+            PageId = pageId,
+            VideoData = videoData
         };
     }
 }
@@ -238,6 +245,8 @@ class Content
 
     public static Content FromJson(JToken obj)
     {
+        var x = obj["creative"];
+        var _Creative = Creative.FromJson(obj["creative"]);
         return new Content
         {
             AccountId = FacebookLoaderBase.ExtractString(obj, "account_id"),
