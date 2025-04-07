@@ -1,6 +1,6 @@
 using System.Net.Http.Headers;
-using System.Text.Json;
 using FacebookLoader.Common;
+using Newtonsoft.Json.Linq;
 
 namespace FacebookLoader.Loader;
 
@@ -8,10 +8,15 @@ namespace FacebookLoader.Loader;
 public abstract class FacebookLoaderBase
 {
     public FacebookParameters FacebookParameters { get; }
+    public ILogging Logger { get; }
 
-    public FacebookLoaderBase(FacebookParameters facebookParameters) => this.FacebookParameters = facebookParameters;
+    public FacebookLoaderBase(FacebookParameters facebookParameters, ILogging logger)
+    {
+        this.FacebookParameters = facebookParameters;
+        this.Logger = logger;
+    }
 
-    protected async Task<JsonDocument> CallGraphApiAsync(string url)
+    protected async Task<JObject> CallGraphApiAsync(string url)
     {
         using var httpClient = new HttpClient();
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -21,8 +26,8 @@ public abstract class FacebookLoaderBase
             var response = await httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
-            var stream = await response.Content.ReadAsStreamAsync();
-            return await JsonDocument.ParseAsync(stream);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            return JObject.Parse(responseContent);
         }
         catch (HttpRequestException httpEx) when (httpEx.StatusCode.HasValue)
         {
@@ -37,33 +42,37 @@ public abstract class FacebookLoaderBase
         }
     }
 
-    public static string ExtractString(JsonElement obj, string tag)
+    public static string ExtractString(JObject obj, string tag)
     {
-        if (!obj.TryGetProperty(tag, out var value)) return string.Empty;
-        return value.GetString() ?? string.Empty;
+        JToken value;
+        if (!obj.TryGetValue(tag, out value)) return string.Empty;
+        return value.ToString() ?? string.Empty;
     }
 
-    public static bool ExtractBoolean(JsonElement obj, string tag)
+    public static bool ExtractBoolean(JObject obj, string tag)
     {
-        if (!obj.TryGetProperty(tag, out var value)) return false;
-        return value.GetBoolean();
+        JToken value;
+        if (!obj.TryGetValue(tag, out value)) return false;
+        return value.ToObject<bool>();
     }
 
-    public static JsonElement? ExtractObject(JsonElement obj, string tag)
+    public static JObject ExtractObject(JObject obj, string tag)
     {
-        if (!obj.TryGetProperty(tag, out var value)) return null;
-        return value;
+        JToken value;
+        if (!obj.TryGetValue(tag, out value)) return null;
+        return value as JObject;
     }
 
-    public static List<JsonElement> ExtractObjectArray(JsonElement obj, string tag)
+    public static List<JObject> ExtractObjectArray(JObject obj, string tag)
     {
-        if (!obj.TryGetProperty(tag, out var arrayElement) || arrayElement.ValueKind != JsonValueKind.Array)
-            return new List<JsonElement>();
+        JToken arrayToken;
+        if (!obj.TryGetValue(tag, out arrayToken) || !(arrayToken is JArray arrayElement))
+            return new List<JObject>();
 
-        var list = new List<JsonElement>();
-        foreach (var element in arrayElement.EnumerateArray())
+        var list = new List<JObject>();
+        foreach (var element in arrayElement)
         {
-            list.Add(element);
+            list.Add(element as JObject);
         }
         return list;
     }

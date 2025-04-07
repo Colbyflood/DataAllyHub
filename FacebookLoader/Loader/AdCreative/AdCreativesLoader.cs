@@ -19,7 +19,7 @@ public class FacebookAdCreativesLoader : FacebookLoaderBase
     private const int Limit = 30;
     private const int MaxTestLoops = 4;
 
-    public FacebookAdCreativesLoader(FacebookParameters facebookParameters) : base(facebookParameters) { }
+    public FacebookAdCreativesLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) { }
 
     private static FacebookCallToAction DigestCallToAction(CallToAction call)
     {
@@ -84,7 +84,7 @@ public class FacebookAdCreativesLoader : FacebookLoaderBase
             try
             {
                 var data = await CallGraphApiAsync(currentUrl);
-                var root = FacebookLoader.Root.FromJson(data);
+                var root = Root.FromJson(data);
 
                 foreach (var item in root.Data)
                 {
@@ -132,12 +132,14 @@ class Value
 
 class CallToAction
 {
+    public string Type { get; set; }
     public Value Value { get; set; }
 
     public static CallToAction FromJson(JsonElement obj)
     {
         var callToAction = new CallToAction
         {
+            Type = obj.GetProperty("type").GetString()!,
             Value = new Value
             {
                 Link = FacebookLoaderBase.ExtractString(obj.GetProperty("value"), "link")
@@ -189,13 +191,35 @@ class ObjectStorySpec
 
 class Creative
 {
+    public string Id { get; set; }
+    public string Status { get; set; }
+    public string ActorId { get; set; }
+    public string InstagramActorId { get; set; }
+    public string InstagramPermalinkUrl { get; set; }
+    public string ObjectType { get; set; }
+    public string ThumbnailUrl { get; set; }
+    public string ThumbnailId { get; set; }
+    public string UrlTags { get; set; }
+    public string Title { get; set; }
+    public string Body { get; set; }
     public ObjectStorySpec ObjectStorySpec { get; set; }
 
-    public static Creative FromJson(JsonElement obj)
+    public static Creative FromJson(JObject obj)
     {
         return new Creative
         {
-            ObjectStorySpec = ObjectStorySpec.FromJson(obj.GetProperty("object_story_spec"))
+            Id = FacebookLoaderBase.ExtractString(obj, "id"),
+            Status = FacebookLoaderBase.ExtractString(obj, "status"),
+            ActorId = FacebookLoaderBase.ExtractString(obj, "actor_id"),
+            InstagramActorId = FacebookLoaderBase.ExtractString(obj, "instagram_actor_id"),
+            InstagramPermalinkUrl = FacebookLoaderBase.ExtractString(obj, "instagram_permalink_url"),
+            ObjectType = FacebookLoaderBase.ExtractString(obj, "object_type"),
+            ThumbnailUrl = FacebookLoaderBase.ExtractString(obj, "thumbnail_url"),
+            ThumbnailId = FacebookLoaderBase.ExtractString(obj, "thumbnail_id"),
+            UrlTags = FacebookLoaderBase.ExtractString(obj, "url_tags"),
+            Title = FacebookLoaderBase.ExtractString(obj, "title"),
+            Body = FacebookLoaderBase.ExtractString(obj, "body"),
+            ObjectStorySpec = ObjectStorySpec.FromJson(FacebookLoaderBase.ExtractObject(obj, "object_story_spec"))
         };
     }
 }

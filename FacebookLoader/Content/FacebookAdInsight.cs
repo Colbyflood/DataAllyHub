@@ -131,7 +131,7 @@ public class FacebookInsight
         string QualityRanking, int? Video30SecWatched, float? VideoAvgTimeWatched, int? VideoP100Watched,
         int? VideoP25Watched, int? VideoP50Watched, int? VideoP75Watched, int? VideoP95Watched,
         int? VideoThruplayWatched, int? VideoPlay, float? CostPerThruplay, float? CostPerUniqueClick,
-        int? OutboundClicks, float? OutboundClicksCtr, int? CostPerOutboundClick, float? InlineLinkClickCtr,
+        int? OutboundClicks, float? OutboundClicksCtr, float? CostPerOutboundClick, float? InlineLinkClickCtr,
         ActionData AddPayment, ActionData AddToCart, ActionData AddToWishlist, ActionData MobileAddPayment,
         ActionData MobileAddToCart, ActionData MobileAddToWishlist, ActionData MobileAppInstall,
         ActionData MobileCompleteRegistration, ActionData MobileInitiatedCheckout, ActionData MobilePurchase,
