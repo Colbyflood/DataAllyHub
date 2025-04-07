@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace FacebookLoader.Loader.AdImage;
 
-public class FacebookAdImagesLoader : FacebookLoaderBase
+public class AdImagesLoader : FacebookLoaderBase
 {
     private const string FieldsList = "account_id,created_time,creatives,hash,id,is_associated_creatives_in_adgroups," +
                                        "name,permalink_url,status,updated_time,url,url_128";
@@ -14,12 +14,12 @@ public class FacebookAdImagesLoader : FacebookLoaderBase
     private const int Limit = 500;
     private const int MaxTestLoops = 4;
     
-    public FacebookAdImagesLoader(FacebookParameters facebookParameters) : base(facebookParameters) {}
+    public AdImagesLoader(FacebookParameters facebookParameters) : base(facebookParameters) {}
 
-    public FacebookAdImagesResponse StartLoad(bool testMode = false)
+    public async Task<FacebookAdImagesResponse> StartLoad(bool testMode = false)
     {
-        string url = $"{FacebookParameters.CreateUrlFor("adimages")}?fields={FieldsList}&limit={Limit}&access_token={FacebookParameters.Token}";
-        return Load(url, testMode);
+        var url = $"{FacebookParameters.CreateUrlFor("adimages")}?fields={FieldsList}&limit={Limit}&access_token={FacebookParameters.Token}";
+        return await Load(url, testMode);
     }
 
     public async Task<FacebookAdImagesResponse> Load(string startUrl, bool testMode = false)

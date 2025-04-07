@@ -58,7 +58,7 @@ public class FacebookInsight
     public float? CostPerUniqueClick { get; }
     public int? OutboundClicks { get; }
     public float? OutboundClicksCtr { get; }
-    public int? CostPerOutboundClick { get; }
+    public float? CostPerOutboundClick { get; }
     public float? InlineLinkClickCtr { get; }
 
     // ActionData fields

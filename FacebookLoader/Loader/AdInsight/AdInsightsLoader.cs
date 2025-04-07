@@ -1,11 +1,10 @@
-﻿using System.Net.Http.Headers;
-using FacebookLoader.Common;
+﻿using FacebookLoader.Common;
 using FacebookLoader.Content;
 
 namespace FacebookLoader.Loader.AdInsight;
 
 
-public class FacebookAdInsightsLoader : FacebookLoaderBase
+public class AdInsightsLoader : FacebookLoaderBase
 {
     private const string FieldsList = "id,name,created_time,updated_time,preview_shareable_link,previews.ad_format(DESKTOP_FEED_STANDARD),";
 
@@ -18,42 +17,46 @@ public class FacebookAdInsightsLoader : FacebookLoaderBase
 
     private const int Limit = 50;
     private const int MaxTestLoops = 4;
-    private readonly string _accessToken;
-    private readonly string _baseUrl;
 
-    public FacebookAdInsightsLoader(FacebookParameters facebookParameters) : base(facebookParameters) {}
+    public AdInsightsLoader(FacebookParameters facebookParameters) : base(facebookParameters) {}
 
-    private async Task<List<Datum>> LoadAsync(string startDate, string endDate, bool testMode = false)
+    private async Task<List<Datum>> StartLoadAsync(string startDate, string endDate, bool testMode = false)
     {
-	    int loopCount = 0;
-	    string currentUrl = startUrl;
+	    var url =
+		    $"{FacebookParameters.CreateUrlFor("ads")}?fields={FieldsList}{PrepareInsights(startDate, endDate)}&limit={Limit}&access_token={FacebookParameters.Token}";
+	    
+	    return await LoadAsync(url, testMode);
+    }
+
+    private async Task<List<Datum>> LoadAsync(string startUrl, bool testMode = false)
+    {
+	    var loopCount = 0;
+	    var currentUrl = startUrl;
 	    var records = new List<FacebookAdInsight>();
 
 	    while (true)
 	    {
 		    try
 		    {
-			    var data = FacebookAdInsightsLoader.CallGraphApi(currentUrl);
+			    var data = await CallGraphApiAsync(currentUrl);
 			    var root = Root.FromDictionary(data);
 
 			    foreach (var item in root.Data)
 			    {
-				    var previews = FacebookAdInsightsLoader.DigestPreviews(item.Previews);
-				    var insights = FacebookAdInsightsLoader.DigestInsights(item.Insights);
+				    var previews = DigestPreviews(item.Previews);
+				    var insights = DigestInsights(item.Insights);
 
-				    records.Add(new FacebookAdInsight
-				    {
-					    Id = item.Id,
-					    Name = item.Name,
-					    CreatedTime = item.CreatedTime,
-					    UpdatedTime = item.UpdatedTime,
-					    PreviewShareableLink = item.PreviewShareableLink,
-					    Previews = previews,
-					    Insights = insights
-				    });
+				    records.Add(new FacebookAdInsight(
+					    item.Id,
+					    item.Name,
+					    item.CreatedTime,
+					    item.UpdatedTime,
+					    item.PreviewShareableLink,
+					    previews,
+					    insights));
 			    }
 
-			    if (string.IsNullOrEmpty(root.Paging?.Next) || (testMode && loopCount >= this.MAX_TEST_LOOPS))
+			    if (string.IsNullOrEmpty(root.Paging?.Next) || (testMode && loopCount >= MaxTestLoops))
 			    {
 				    break;
 			    }
@@ -153,7 +156,7 @@ public class FacebookAdInsightsLoader : FacebookLoaderBase
 	    };
     }
     
-	public static List<FacebookInsight> DigestInsights(Insights insights)
+	private static List<FacebookInsight> DigestInsights(Insights insights)
     {
         var digest = new List<FacebookInsight>();
 
@@ -164,31 +167,32 @@ public class FacebookAdInsightsLoader : FacebookLoaderBase
 
         foreach (var insight in insights.Data)
         {
-            var video_30_sec_watched = FacebookInsightUtils.ExtractValueFrom(insight.Video30SecWatchedActions, "video_view");
-            var video_avg_time_watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoAvgTimeWatchedActions, "video_view");
-            var video_p100_watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP100WatchedActions, "video_view");
-            var video_p25_watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP25WatchedActions, "video_view");
-            var video_p50_watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP50WatchedActions, "video_view");
-            var video_p75_watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP75WatchedActions, "video_view");
-            var video_p95_watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP95WatchedActions, "video_view");
-            var video_thruplay_watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoThruplayWatchedActions, "video_view");
-            var video_play = FacebookInsightUtils.ExtractValueFrom(insight.VideoPlayActions, "video_view");
-            var cost_per_thruplay = FacebookInsightUtils.ExtractValueFrom(insight.CostPerThruplay, "video_view");
+            var video30SecWatched = FacebookInsightUtils.ExtractValueFrom(insight.Video30SecWatchedActions, "video_view");
+            var videoAvgTimeWatched = FacebookInsightUtils.ExtractValueFrom(insight.VideoAvgTimeWatchedActions, "video_view");
+            var videoP100Watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP100WatchedActions, "video_view");
+            var videoP25Watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP25WatchedActions, "video_view");
+            var videoP50Watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP50WatchedActions, "video_view");
+            var videoP75Watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP75WatchedActions, "video_view");
+            var videoP95Watched = FacebookInsightUtils.ExtractValueFrom(insight.VideoP95WatchedActions, "video_view");
+            var videoThruplayWatched = FacebookInsightUtils.ExtractValueFrom(insight.VideoThruplayWatchedActions, "video_view");
+            var videoPlay = FacebookInsightUtils.ExtractValueFrom(insight.VideoPlayActions, "video_view");
+            var costPerThruplay = FacebookInsightUtils.ExtractValueFrom(insight.CostPerThruplay, "video_view");
 
-            var outbound_clicks = FacebookInsightUtils.ExtractValueFrom(insight.OutboundClicks, "outbound_click");
-            var outbound_clicks_ctr = FacebookInsightUtils.ExtractValueFrom(insight.OutboundClicksCtr, "outbound_click");
-            var cost_per_outbound_click = FacebookInsightUtils.ExtractValueFrom(insight.CostPerOutboundClick, "outbound_click");
+            var outboundClicks = FacebookInsightUtils.ExtractValueFrom(insight.OutboundClicks, "outbound_click");
+            var outboundClicksCtr = FacebookInsightUtils.ExtractValueFrom(insight.OutboundClicksCtr, "outbound_click");
+            var costPerOutboundClick = FacebookInsightUtils.ExtractValueFrom(insight.CostPerOutboundClick, "outbound_click");
 
-            var add_payment = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_payment_info");
-            var add_to_cart = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_cart");
-            var add_to_wishlist = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_wishlist");
-            var mobile_add_payment = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_payment_info");
-            var mobile_add_to_cart = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_to_cart");
-            var mobile_add_to_wishlist = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_to_wishlist");
-            var mobile_app_install = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_install");
-            var mobile_complete_registration = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_complete_registration");
-            var mobile_initiated_checkout = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_initiated_checkout");
-			var appInstall = FacebookAdInsightsLoader.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_install");
+            var addPayment = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_payment_info");
+            var addToCart = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_cart");
+            var addToWishlist = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_wishlist");
+            var mobileAddPayment = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_payment_info");
+            var mobileAddToCart = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_to_cart");
+            var mobileAddToWishlist = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_to_wishlist");
+            var mobileAppInstall = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_install");
+            var mobileCompleteRegistration = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_complete_registration");
+            var mobileInitiatedCheckout = FacebookInsightUtils.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_initiated_checkout");			var appInstall = FacebookAdInsightsLoader.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_install");
+            var mobilePurchase = FacebookAdInsightsLoader.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_purchase");
+            var appInstall = FacebookAdInsightsLoader.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_install");
 			var appUse = FacebookAdInsightsLoader.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_use");
 			var comment = FacebookAdInsightsLoader.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "comment");
 			var completeRegistration = FacebookAdInsightsLoader.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_complete_registration");
@@ -240,110 +244,109 @@ public class FacebookAdInsightsLoader : FacebookLoaderBase
 			var onsitePurchases = FacebookAdInsightsLoader.ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_conversion.purchase");
 
 
-            var insightModel = new FacebookInsight
-            {
-                DateStart = insight.DateStart,
-                DateStop = insight.DateStop,
-                AccountId = insight.AccountId,
-                AccountName = insight.AccountName,
-                AccountCurrency = insight.AccountCurrency,
-                AttributionSetting = insight.AttributionSetting,
-                OptimizationGoal = insight.OptimizationGoal,
-                CampaignId = insight.CampaignId,
-                CampaignName = insight.CampaignName,
-                Objective = insight.Objective,
-                BuyingType = insight.BuyingType,
-                AdsetId = insight.AdsetId,
-                AdsetName = insight.AdsetName,
-                AdId = insight.AdId,
-                AdName = insight.AdName,
-                Impressions = FacebookInsightUtils.ConvertToInteger(insight.Impressions),
-                Reach = insight.Reach,
-                Frequency = insight.Frequency,
-                Spend = FacebookInsightUtils.ConvertToDecimal(insight.Spend),
-                Clicks = FacebookInsightUtils.ConvertToInteger(insight.Clicks),
-                Cpc = FacebookInsightUtils.ConvertToDecimal(insight.Cpc),
-                Ctr = FacebookInsightUtils.ConvertToDecimal(insight.Ctr),
-                Cpm = FacebookInsightUtils.ConvertToDecimal(insight.Cpm),
-                ConversionRateRanking = insight.ConversionRateRanking,
-                EngagementRateRanking = insight.EngagementRateRanking,
-                QualityRanking = insight.QualityRanking,
-                Video30SecWatched = FacebookInsightUtils.ConvertToInteger(video_30_sec_watched),
-                VideoAvgTimeWatched = FacebookInsightUtils.ConvertToDecimal(video_avg_time_watched),
-                VideoP100Watched = FacebookInsightUtils.ConvertToInteger(video_p100_watched),
-                VideoP25Watched = FacebookInsightUtils.ConvertToInteger(video_p25_watched),
-                VideoP50Watched = FacebookInsightUtils.ConvertToInteger(video_p50_watched),
-                VideoP75Watched = FacebookInsightUtils.ConvertToInteger(video_p75_watched),
-                VideoP95Watched = FacebookInsightUtils.ConvertToInteger(video_p95_watched),
-                VideoThruplayWatched = FacebookInsightUtils.ConvertToInteger(video_thruplay_watched),
-                VideoPlay = FacebookInsightUtils.ConvertToInteger(video_play),
-                CostPerThruplay = FacebookInsightUtils.ConvertToDecimal(cost_per_thruplay),
-                CostPerUniqueClick = FacebookInsightUtils.ConvertToInteger(insight.CostPerUniqueClick),
-                OutboundClicks = FacebookInsightUtils.ConvertToInteger(outbound_clicks),
-                OutboundClicksCtr = FacebookInsightUtils.ConvertToDecimal(outbound_clicks_ctr),
-                CostPerOutboundClick = FacebookInsightUtils.ConvertToDecimal(cost_per_outbound_click),
-                InlineLinkClickCtr = FacebookInsightUtils.ConvertToDecimal(insight.InlineLinkClickCtr),
-                AddPayment = add_payment,
-                AddToCart = add_to_cart,
-                AddToWishlist = add_to_wishlist,
-                MobileAddPayment = mobile_add_payment,
-                MobileAddToCart = mobile_add_to_cart,
-                MobileAddToWishlist = mobile_add_to_wishlist,
-                MobileAppInstall = mobile_app_install,
-                MobileCompleteRegistration = mobile_complete_registration,
-                MobileInitiatedCheckout = mobile_initiated_checkout,
-                MobilePurchase = mobile_purchase
-                AppInstall = appInstall,
-			    AppUse = appUse,
-			    Comment = comment,
-			    CompleteRegistration = completeRegistration,
-			    ContactMobileApp = contactMobileApp,
-			    ContactOffline = contactOffline,
-			    ContactTotal = contactTotal,
-			    ContactWebsite = contactWebsite,
-			    FindLocationMobile = findLocationMobile,
-			    FindLocationOffline = findLocationOffline,
-			    FindLocationTotal = findLocationTotal,
-			    FindLocationWebsite = findLocationWebsite,
-			    InitiateCheckout = initiateCheckout,
-			    LandingPageView = landingPageView,
-			    Lead = lead,
-			    Like = like,
-			    LinkClick = linkClick,
-			    OffsiteConversionAddPayment = offsiteConversionAddPayment,
-			    OffsiteConversionAddToCart = offsiteConversionAddToCart,
-			    OffsiteConversionAddToWishlist = offsiteConversionAddToWishlist,
-			    OffsiteConversionCompleteRegistration = offsiteConversionCompleteRegistration,
-			    OffsiteConversionInitiateCheckout = offsiteConversionInitiateCheckout,
-			    OffsiteConversionLead = offsiteConversionLead,
-			    OffsiteConversionPurchase = offsiteConversionPurchase,
-			    OffsiteConversionViewContent = offsiteConversionViewContent,
-			    OmniPurchase = omniPurchase,
-			    OnsiteConversionPostSave = onsiteConversionPostSave,
-			    OnsiteConversionPurchase = onsiteConversionPurchase,
-			    PageEngagement = pageEngagement,
-			    PhotoView = photoView,
-			    Post = post,
-			    PostEngagement = postEngagement,
-			    PostReaction = postReaction,
-			    ScheduleMobileApp = scheduleMobileApp,
-			    ScheduleOffline = scheduleOffline,
-			    ScheduleTotal = scheduleTotal,
-			    ScheduleWebsite = scheduleWebsite,
-			    StartTrialMobileApp = startTrialMobileApp,
-			    StartTrialOffline = startTrialOffline,
-			    StartTrialTotal = startTrialTotal,
-			    StartTrialWebsite = startTrialWebsite,
-			    SubmitApplicationMobileApp = submitApplicationMobileApp,
-			    SubmitApplicationOffline = submitApplicationOffline,
-			    SubmitApplicationTotal = submitApplicationTotal,
-			    SubmitApplicationWebsite = submitApplicationWebsite,
-			    SubscribeMobileApp = subscribeMobileApp,
-			    SubscribeTotal = subscribeTotal,
-			    SubscribeWebsite = subscribeWebsite,
-			    VideoView = videoView,
-			    OnsitePurchases = onsitePurchases
-            };
+			var insightModel = new FacebookInsight(
+				insight.DateStart, 
+				insight.DateStop, 
+				insight.AccountId,
+				insight.AccountName, 
+				insight.AccountCurrency,
+				insight.AttributionSetting, 
+				insight.OptimizationGoal,
+				insight.CampaignId, 
+				insight.CampaignName, 
+				insight.Objective,
+				insight.BuyingType, 
+				insight.AdsetId, 
+				insight.AdsetName, 
+				insight.AdId,
+				insight.AdName,
+				insight.Reach,
+				insight.Frequency,
+				ConvertToDecimal(insight.Spend),
+				ConvertToInteger(insight.Clicks),
+				ConvertToDecimal(insight.Cpc),
+				ConvertToDecimal(insight.Ctr),
+				ConvertToDecimal(insight.Cpm),
+				ConvertToInteger(insight.Impressions),
+				insight.ConversionRateRanking, 
+				insight.EngagementRateRanking,
+				insight.QualityRanking,
+				video30SecWatched,
+				videoAvgTimeWatched,
+				videoP100Watched,
+				videoP25Watched,
+				videoP50Watched,
+				videoP75Watched,
+				videoP95Watched,
+				videoThruplayWatched,
+				videoPlay,
+				costPerThruplay,
+				ConvertToInteger(insight.CostPerUniqueClick),
+				outboundClicks,
+				outboundClicksCtr,
+				costPerOutboundClick,
+				ConvertToDecimal(insight.InlineLinkClickCtr),
+				addPayment,
+				addToCart,
+				addToWishlist,
+				mobileAddPayment,
+				mobileAddToCart,
+				mobileAddToWishlist,
+				mobileAppInstall,
+				mobileCompleteRegistration,
+				mobileInitiatedCheckout,
+				mobilePurchase,
+				appInstall,
+				appUse,
+				comment,
+				completeRegistration,
+				contactMobileApp,
+				contactOffline,
+				contactTotal,
+				contactWebsite,
+				findLocationMobile,
+				findLocationOffline,
+				findLocationTotal,
+				findLocationWebsite,
+				initiateCheckout,
+				landingPageView,
+				lead,
+				like,
+				linkClick,
+				offsiteConversionAddPayment,
+				offsiteConversionAddToCart,
+				offsiteConversionAddToWishlist,
+				offsiteConversionCompleteRegistration,
+				offsiteConversionInitiateCheckout,
+				offsiteConversionLead,
+				offsiteConversionPurchase,
+				offsiteConversionViewContent,
+				omniPurchase,
+				onsiteConversionPostSave,
+				onsiteConversionPurchase,
+				pageEngagement,
+				photoView,
+				post,
+				postEngagement,
+				postReaction,
+				scheduleMobileApp,
+				scheduleOffline,
+				scheduleTotal,
+				scheduleWebsite,
+				startTrialMobileApp,
+				startTrialOffline,
+				startTrialTotal,
+				startTrialWebsite,
+				submitApplicationMobileApp,
+				submitApplicationOffline,
+				submitApplicationTotal,
+				submitApplicationWebsite,
+				subscribeMobileApp,
+				subscribeTotal,
+				subscribeWebsite,
+				videoView,
+				onsitePurchases);
+
 
             digest.Add(insightModel);
         }
@@ -357,19 +360,53 @@ class Action
 	public string ActionType { get; set; }
 	public string ActionDevice { get; set; }
 	public string Value { get; set; }
+
+	public static Action FromDictionary(JObject obj)
+	{
+		return new Action
+		{
+			ActionType = FacebookLoaderBase.ExtractString(obj, "action_type"),
+			ActionDevice = FacebookLoaderBase.ExtractString(obj, "action_device"),
+			Value = FacebookLoaderBase.ExtractString(obj, "value")
+		};
+	}
 }
 
 
 class PreviewDatum
 {
 	public string Body { get; set; }
+
+	public static PreviewDatum FromDictionary(JObject obj)
+	{
+		return new PreviewDatum
+		{
+			Body = FacebookLoaderBase.ExtractString(obj, "body")
+		};
+	}
 }
 
 class Previews
 {
 	public List<PreviewDatum> Data { get; set; }
-}
 
+	public static Previews FromDictionary(JObject obj)
+	{
+		var list = new List<PreviewDatum>();
+		var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
+
+		foreach (var item in data)
+		{
+			if (item is JObject o)
+				list.Add(PreviewDatum.FromDictionary(o));
+		}
+
+		return new Previews
+		{
+			Data = list
+		};
+	}
+}
 
 class InsightDatum
 {
@@ -399,11 +436,9 @@ class InsightDatum
     public string ConversionRateRanking { get; set; }
     public string EngagementRateRanking { get; set; }
     public string QualityRanking { get; set; }
-
     public List<Action> Actions { get; set; }
     public List<Action> ActionValues { get; set; }
     public List<Action> CostPerActionType { get; set; }
-
     public List<Action> Video30SecWatchedActions { get; set; }
     public List<Action> VideoAvgTimeWatchedActions { get; set; }
     public List<Action> VideoP100WatchedActions { get; set; }
@@ -413,22 +448,71 @@ class InsightDatum
     public List<Action> VideoP95WatchedActions { get; set; }
     public List<Action> VideoThruplayWatchedActions { get; set; }
     public List<Action> VideoPlayActions { get; set; }
-
     public List<Action> CostPerThruplay { get; set; }
     public List<Action> Conversions { get; set; }
     public List<Action> ConversionValues { get; set; }
     public List<Action> CostPerConversion { get; set; }
-
     public string CostPerUniqueClick { get; set; }
     public List<Action> CostPerUniqueConversion { get; set; }
-
     public List<Action> OutboundClicks { get; set; }
     public List<Action> OutboundClicksCtr { get; set; }
     public List<Action> CostPerOutboundClick { get; set; }
-
     public string InlineLinkClickCtr { get; set; }
-    
-    // get the rest
+
+    public static InsightDatum FromDictionary(JObject obj)
+    {
+        return new InsightDatum
+        {
+            DateStart = FacebookLoaderBase.ExtractString(obj, "date_start"),
+            DateStop = FacebookLoaderBase.ExtractString(obj, "date_stop"),
+            AccountId = FacebookLoaderBase.ExtractString(obj, "account_id"),
+            AccountName = FacebookLoaderBase.ExtractString(obj, "account_name"),
+            AccountCurrency = FacebookLoaderBase.ExtractString(obj, "account_currency"),
+            AttributionSetting = FacebookLoaderBase.ExtractString(obj, "attribution_setting"),
+            OptimizationGoal = FacebookLoaderBase.ExtractString(obj, "optimization_goal"),
+            CampaignId = FacebookLoaderBase.ExtractString(obj, "campaign_id"),
+            CampaignName = FacebookLoaderBase.ExtractString(obj, "campaign_name"),
+            Objective = FacebookLoaderBase.ExtractString(obj, "objective"),
+            BuyingType = FacebookLoaderBase.ExtractString(obj, "buying_type"),
+            AdsetId = FacebookLoaderBase.ExtractString(obj, "adset_id"),
+            AdsetName = FacebookLoaderBase.ExtractString(obj, "adset_name"),
+            AdId = FacebookLoaderBase.ExtractString(obj, "ad_id"),
+            AdName = FacebookLoaderBase.ExtractString(obj, "ad_name"),
+            Impressions = FacebookLoaderBase.ExtractString(obj, "impressions"),
+            Reach = FacebookLoaderBase.ExtractString(obj, "reach"),
+            Frequency = FacebookLoaderBase.ExtractString(obj, "frequency"),
+            Spend = FacebookLoaderBase.ExtractString(obj, "spend"),
+            Clicks = FacebookLoaderBase.ExtractString(obj, "clicks"),
+            Cpc = FacebookLoaderBase.ExtractString(obj, "cpc"),
+            Ctr = FacebookLoaderBase.ExtractString(obj, "ctr"),
+            Cpm = FacebookLoaderBase.ExtractString(obj, "cpm"),
+            ConversionRateRanking = FacebookLoaderBase.ExtractString(obj, "conversion_rate_ranking"),
+            EngagementRateRanking = FacebookLoaderBase.ExtractString(obj, "engagement_rate_ranking"),
+            QualityRanking = FacebookLoaderBase.ExtractString(obj, "quality_ranking"),
+            Actions = FacebookLoaderBase.ExtractActionList(obj, "actions"),
+            ActionValues = FacebookLoaderBase.ExtractActionList(obj, "action_values"),
+            CostPerActionType = FacebookLoaderBase.ExtractActionList(obj, "cost_per_action_type"),
+            Video30SecWatchedActions = FacebookLoaderBase.ExtractActionList(obj, "video_30_sec_watched_actions"),
+            VideoAvgTimeWatchedActions = FacebookLoaderBase.ExtractActionList(obj, "video_avg_time_watched_actions"),
+            VideoP100WatchedActions = FacebookLoaderBase.ExtractActionList(obj, "video_p100_watched_actions"),
+            VideoP25WatchedActions = FacebookLoaderBase.ExtractActionList(obj, "video_p25_watched_actions"),
+            VideoP50WatchedActions = FacebookLoaderBase.ExtractActionList(obj, "video_p50_watched_actions"),
+            VideoP75WatchedActions = FacebookLoaderBase.ExtractActionList(obj, "video_p75_watched_actions"),
+            VideoP95WatchedActions = FacebookLoaderBase.ExtractActionList(obj, "video_p95_watched_actions"),
+            VideoThruplayWatchedActions = FacebookLoaderBase.ExtractActionList(obj, "video_thruplay_watched_actions"),
+            VideoPlayActions = FacebookLoaderBase.ExtractActionList(obj, "video_play_actions"),
+            CostPerThruplay = FacebookLoaderBase.ExtractActionList(obj, "cost_per_thruplay"),
+            Conversions = FacebookLoaderBase.ExtractActionList(obj, "conversions"),
+            ConversionValues = FacebookLoaderBase.ExtractActionList(obj, "conversion_values"),
+            CostPerConversion = FacebookLoaderBase.ExtractActionList(obj, "cost_per_conversion"),
+            CostPerUniqueClick = FacebookLoaderBase.ExtractString(obj, "cost_per_unique_click"),
+            CostPerUniqueConversion = FacebookLoaderBase.ExtractActionList(obj, "cost_per_unique_conversion"),
+            OutboundClicks = FacebookLoaderBase.ExtractActionList(obj, "outbound_clicks"),
+            OutboundClicksCtr = FacebookLoaderBase.ExtractActionList(obj, "outbound_clicks_ctr"),
+            CostPerOutboundClick = FacebookLoaderBase.ExtractActionList(obj, "cost_per_outbound_click"),
+            InlineLinkClickCtr = FacebookLoaderBase.ExtractString(obj, "inline_link_click_ctr")
+        };
+    }
 }
 
 
@@ -441,6 +525,32 @@ class Datum
 	public string PreviewShareableLink { get; set; }
 	public Previews Previews { get; set; }
 	public Insights Insights { get; set; }
+
+	public static Datum FromDictionary(JObject obj)
+	{
+		var id = FacebookLoaderBase.ExtractString(obj, "id");
+		var name = FacebookLoaderBase.ExtractString(obj, "name");
+		var createdTime = FacebookLoaderBase.ExtractString(obj, "created_time");
+		var updatedTime = FacebookLoaderBase.ExtractString(obj, "updated_time");
+		var previewShareableLink = FacebookLoaderBase.ExtractString(obj, "preview_shareable_link");
+
+		var previewsArray = FacebookLoaderBase.ExtractObjectArray(obj, "previews");
+		var previews = Previews.FromDictionary(previewsArray);
+
+		var insightsArray = FacebookLoaderBase.ExtractObjectArray(obj, "insights");
+		var insights = Insights.FromDictionary(insightsArray);
+
+		return new Datum
+		{
+			Id = id,
+			Name = name,
+			CreatedTime = createdTime,
+			UpdatedTime = updatedTime,
+			PreviewShareableLink = previewShareableLink,
+			Previews = previews,
+			Insights = insights
+		};
+	}
 }
 
 
@@ -448,27 +558,76 @@ class Insights
 {
 	public List<InsightDatum> Data { get; set; }
 	public Paging Paging { get; set; }
+
+	public static Insights FromDictionary(JObject obj)
+	{
+		var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
+		var list = new List<InsightDatum>();
+		foreach (var item in data)
+		{
+			if (item is JObject o)
+				list.Add(InsightDatum.FromDictionary(o));
+		}
+
+		var paging = Paging.FromDictionary(FacebookLoaderBase.ExtractObject(obj, "paging"));
+		return new Insights
+		{
+			Data = list,
+			Paging = paging
+		};
+	}
 }
 
 class Cursors
 {
 	public string Before { get; set; }
 	public string After { get; set; }
+
+	public static Cursors FromDictionary(JObject obj)
+	{
+		return new Cursors
+		{
+			Before = FacebookLoaderBase.ExtractString(obj, "before"),
+			After = FacebookLoaderBase.ExtractString(obj, "after")
+		};
+	}
 }
 
 class Paging
 {
 	public Cursors Cursors { get; set; }
 	public string Next { get; set; }
+
+	public static Paging FromDictionary(JObject obj)
+	{
+		return new Paging
+		{
+			Cursors = Cursors.FromDictionary(FacebookLoaderBase.ExtractObject(obj, "cursors")),
+			Next = FacebookLoaderBase.ExtractString(obj, "next")
+		};
+	}
 }
 
 class Root
 {
 	public List<Datum> Data { get; set; }
 	public Paging Paging { get; set; }
+
+	public static Root FromDictionary(JObject obj)
+	{
+		var list = new List<Datum>();
+		var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
+
+		foreach (var item in data)
+		{
+			if (item is JObject o)
+				list.Add(Datum.FromDictionary(o));
+		}
+
+		return new Root
+		{
+			Data = list,
+			Paging = Paging.FromDictionary(FacebookLoaderBase.ExtractObject(obj, "paging"))
+		};
+	}
 }
-
-
-
-
-
