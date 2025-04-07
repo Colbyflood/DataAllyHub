@@ -87,4 +87,25 @@ public class Logging : ILogging
 	{
 		Console.WriteLine($"LOGGING DEBUG: {message}");
 	}
+
+	public void LogException(Exception ex, string message)
+	{
+		Console.WriteLine($"LOGGING EXCEPTION: {message}");
+		PrintExceptionDetails(ex);
+	}
+	
+	private static void PrintExceptionDetails(Exception ex)
+	{
+		Console.WriteLine("Exception Details:");
+		Console.WriteLine($"Type: {ex.GetType().FullName}");
+		Console.WriteLine($"Message: {ex.Message}");
+		Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+
+		// Print inner exceptions recursively
+		if (ex.InnerException != null)
+		{
+			Console.WriteLine("Inner Exception:");
+			PrintExceptionDetails(ex.InnerException);
+		}
+	}
 }

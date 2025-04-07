@@ -99,12 +99,12 @@ public class AdCreativesLoader : FacebookLoaderBase
             }
             catch (FacebookHttpException fe)
             {
-                Logger.LogError($"Caught FacebookHttpException: {fe.Message}");
+                Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message}");
                 return new FacebookAdCreativesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Caught exception: {ex.Message}");
+                Logger.LogException(ex, $"Caught exception: {ex.Message}");
                 return new FacebookAdCreativesResponse(records, false, currentUrl, true);
             }
         }
@@ -127,13 +127,13 @@ class Paging
 
 class Value
 {
-    public string Link { get; set; }
+    public string Link { get; set; } = "";
 }
 
 class CallToAction
 {
-    public string Type { get; set; }
-    public Value Value { get; set; }
+    public string Type { get; set; } = "";
+    public Value Value { get; set; } = new Value();
 
     public static CallToAction FromJson(JToken obj)
     {
@@ -151,23 +151,29 @@ class CallToAction
 
 class VideoData
 {
-    public string VideoId { get; set; }
-    public string Title { get; set; }
-    public string Message { get; set; }
-    public string LinkDescription { get; set; }
-    public CallToAction CallToAction { get; set; }
-    public string ImageUrl { get; set; }
-    public string ImageHash { get; set; }
+    public string VideoId { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Message { get; set; } = "";
+    public string LinkDescription { get; set; } = "";
+    public CallToAction CallToAction { get; set; } = new CallToAction();
+    public string ImageUrl { get; set; } = "";
+    public string ImageHash { get; set; } = "";
 
     public static VideoData FromJson(JToken obj)
     {
+        var callToActionNode = obj["call_to_action"];
+        CallToAction callToAction = new CallToAction();
+        if (callToActionNode != null)
+        {
+            callToAction = CallToAction.FromJson(callToActionNode);
+        }
         return new VideoData
         {
             VideoId = FacebookLoaderBase.ExtractString(obj, "video_id"),
             Title = FacebookLoaderBase.ExtractString(obj, "title"),
             Message = FacebookLoaderBase.ExtractString(obj, "message"),
             LinkDescription = FacebookLoaderBase.ExtractString(obj, "link_description"),
-            CallToAction = CallToAction.FromJson(obj["call_to_action"]),
+            CallToAction = callToAction,
             ImageUrl = FacebookLoaderBase.ExtractString(obj, "image_url"),
             ImageHash = FacebookLoaderBase.ExtractString(obj, "image_hash")
         };
@@ -176,14 +182,14 @@ class VideoData
 
 class ObjectStorySpec
 {
-    public string PageId { get; set; }
-    public VideoData? VideoData { get; set; }
+    public string PageId { get; set; } = "";
+    public VideoData VideoData { get; set; } = new VideoData();
 
     public static ObjectStorySpec FromJson(JToken? obj)
     {
         var pageId = FacebookLoaderBase.ExtractString(obj, "page_id");
         var videoDataNode = obj["video_data"];
-        VideoData? videoData = null;
+        VideoData videoData = new VideoData();
         if (videoDataNode != null)
         {
             videoData =  VideoData.FromJson(videoDataNode);
@@ -198,21 +204,28 @@ class ObjectStorySpec
 
 class Creative
 {
-    public string Id { get; set; }
-    public string Status { get; set; }
-    public string ActorId { get; set; }
-    public string InstagramActorId { get; set; }
-    public string InstagramPermalinkUrl { get; set; }
-    public string ObjectType { get; set; }
-    public string ThumbnailUrl { get; set; }
-    public string ThumbnailId { get; set; }
-    public string UrlTags { get; set; }
-    public string Title { get; set; }
-    public string Body { get; set; }
-    public ObjectStorySpec ObjectStorySpec { get; set; }
+    public string Id { get; set; } = "";
+    public string Status { get; set; } = "";
+    public string ActorId { get; set; } = "";
+    public string InstagramActorId { get; set; } = "";
+    public string InstagramPermalinkUrl { get; set; } = "";
+    public string ObjectType { get; set; } = "";
+    public string ThumbnailUrl { get; set; } = "";
+    public string ThumbnailId { get; set; } = "";
+    public string UrlTags { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Body { get; set; } = "";
+    public ObjectStorySpec ObjectStorySpec { get; set; } = new ObjectStorySpec();
 
     public static Creative FromJson(JToken obj)
     {
+        var objectStorySpecNode = FacebookLoaderBase.ExtractObject(obj, "object_story_spec");
+        ObjectStorySpec objectStorySpec = new ObjectStorySpec();
+        if (objectStorySpecNode != null)
+        {
+            objectStorySpec = ObjectStorySpec.FromJson(objectStorySpecNode);
+        }
+
         return new Creative
         {
             Id = FacebookLoaderBase.ExtractString(obj, "id"),
@@ -226,22 +239,22 @@ class Creative
             UrlTags = FacebookLoaderBase.ExtractString(obj, "url_tags"),
             Title = FacebookLoaderBase.ExtractString(obj, "title"),
             Body = FacebookLoaderBase.ExtractString(obj, "body"),
-            ObjectStorySpec = ObjectStorySpec.FromJson(FacebookLoaderBase.ExtractObject(obj, "object_story_spec"))
+            ObjectStorySpec = objectStorySpec
         };
     }
 }
 
 class Content
 {
-    public string AccountId { get; set; }
-    public string Id { get; set; }
-    public string Name { get; set; }
-    public string Status { get; set; }
-    public string AdsetId { get; set; }
-    public string CampaignId { get; set; }
-    public string CreatedTime { get; set; }
-    public string UpdatedTime { get; set; }
-    public Creative Creative { get; set; }
+    public string AccountId { get; set; } = "";
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Status { get; set; } = "";
+    public string AdsetId { get; set; } = "";
+    public string CampaignId { get; set; } = "";
+    public string CreatedTime { get; set; } = "";
+    public string UpdatedTime { get; set; } = "";
+    public Creative Creative { get; set; } = new Creative();
 
     public static Content FromJson(JToken obj)
     {
