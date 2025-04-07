@@ -14,15 +14,15 @@ public class AdImagesLoader : FacebookLoaderBase
     private const int Limit = 500;
     private const int MaxTestLoops = 4;
     
-    public AdImagesLoader(FacebookParameters facebookParameters) : base(facebookParameters) {}
+    public AdImagesLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) {}
 
-    public async Task<FacebookAdImagesResponse> StartLoad(bool testMode = false)
+    public async Task<FacebookAdImagesResponse?> StartLoad(bool testMode = false)
     {
         var url = $"{FacebookParameters.CreateUrlFor("adimages")}?fields={FieldsList}&limit={Limit}&access_token={FacebookParameters.Token}";
         return await Load(url, testMode);
     }
 
-    public async Task<FacebookAdImagesResponse> Load(string startUrl, bool testMode = false)
+    public async Task<FacebookAdImagesResponse?> Load(string startUrl, bool testMode = false)
     {
         int loopCount = 0;
         string currentUrl = startUrl;
@@ -82,7 +82,7 @@ class Cursors
     public string Before { get; set; }
     public string After { get; set; }
 
-    public static Cursors FromJson(JObject obj)
+    public static Cursors FromJson(JToken obj)
     {
         return new Cursors
         {
@@ -107,13 +107,18 @@ class Content
     public string Url { get; set; }
     public string Url128 { get; set; }
 
-    public static Content FromJson(JObject obj)
+    public static Content FromJson(JToken obj)
     {
+        var creatives = new List<string>();
+        foreach (var item in FacebookLoaderBase.ExtractObjectArray(obj, "creatives"))
+        {
+            creatives.Add(item.ToString());
+        }
         return new Content
         {
             AccountId = FacebookLoaderBase.ExtractString(obj, "account_id"),
             CreatedTime = FacebookLoaderBase.ExtractString(obj, "created_time"),
-            Creatives = FacebookLoaderBase.ExtractObjectArray(obj, "creatives"),
+            Creatives = creatives,
             Hash = FacebookLoaderBase.ExtractString(obj, "hash"),
             Id = FacebookLoaderBase.ExtractString(obj, "id"),
             IsAssociatedCreativesInAdgroups = FacebookLoaderBase.ExtractBoolean(obj, "is_associated_creatives_in_adgroups"),
@@ -132,11 +137,11 @@ class Paging
     public Cursors Cursors { get; set; }
     public string Next { get; set; }
 
-    public static Paging FromJson(JObject obj)
+    public static Paging FromJson(JToken? obj)
     {
         return new Paging
         {
-            Cursors = Cursors.FromJson((JObject)FacebookLoaderBase.ExtractObject(obj, "cursors")),
+            Cursors = Cursors.FromJson(FacebookLoaderBase.ExtractObject(obj, "cursors")),
             Next = FacebookLoaderBase.ExtractString(obj, "next")
         };
     }
@@ -147,12 +152,18 @@ class Root
     public List<Content> Data { get; set; }
     public Paging Paging { get; set; }
 
-    public static Root FromJson(JObject obj)
+    public static Root FromJson(JToken obj)
     {
+        var data = new List<Content>();
+        foreach (var item in FacebookLoaderBase.ExtractObjectArray(obj, "data")) 
+        {
+            data.Add(Content.FromJson(item));
+        }
+        
         return new Root
         {
-            Data = FacebookLoaderBase.ExtractObjectArray(obj, "data", Content.FromJson),
-            Paging = Paging.FromJson((JObject) FacebookLoaderBase.ExtractObject(obj, "paging"))
+            Data = data,
+            Paging = Paging.FromJson(FacebookLoaderBase.ExtractObject(obj, "paging"))
         };
     }
 }

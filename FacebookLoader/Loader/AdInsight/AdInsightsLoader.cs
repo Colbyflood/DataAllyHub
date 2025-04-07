@@ -41,7 +41,7 @@ public class AdInsightsLoader : FacebookLoaderBase
 		    try
 		    {
 			    var data = await CallGraphApiAsync(currentUrl);
-			    var root = Root.FromDictionary(data);
+			    var root = Root.FromJson(data);
 
 			    foreach (var item in root.Data)
 			    {
@@ -358,7 +358,7 @@ class Action
 	public string ActionDevice { get; set; }
 	public string Value { get; set; }
 
-	public static Action FromDictionary(JObject obj)
+	public static Action FromJson(JToken? obj)
 	{
 		return new Action
 		{
@@ -374,7 +374,7 @@ class PreviewDatum
 {
 	public string Body { get; set; }
 
-	public static PreviewDatum FromDictionary(JObject obj)
+	public static PreviewDatum FromJson(JToken? obj)
 	{
 		return new PreviewDatum
 		{
@@ -387,15 +387,15 @@ class Previews
 {
 	public List<PreviewDatum> Data { get; set; }
 
-	public static Previews FromDictionary(JObject obj)
+	public static Previews FromJson(JToken? obj)
 	{
 		var list = new List<PreviewDatum>();
 		var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
 
 		foreach (var item in data)
 		{
-			if (item is JObject o)
-				list.Add(PreviewDatum.FromDictionary(o));
+			if (item is JObject dataObject)
+				list.Add(PreviewDatum.FromJson(dataObject));
 		}
 
 		return new Previews
@@ -457,12 +457,13 @@ class InsightDatum
     public string InlineLinkClickCtr { get; set; }
 
     
-    private static List<Action> ExtractActionListFrom(JsonElement obj, string actionTag)
+    private static List<Action> ExtractActionListFrom(JToken obj, string actionTag)
     {
-	    return FacebookLoaderBase.ExtractObjectArray(obj, actionTag).Select(item => Action.FromDictionary(item)).ToList();
+	    return FacebookLoaderBase.ExtractObjectArray(obj, actionTag)
+					.Select(item => Action.FromJson(item)).ToList();
     }
     
-    public static InsightDatum FromDictionary(JObject obj)
+    public static InsightDatum FromJson(JToken? obj)
     {
         return new InsightDatum
         {
@@ -529,7 +530,7 @@ class Datum
 	public Previews Previews { get; set; }
 	public Insights Insights { get; set; }
 
-	public static Datum FromDictionary(JObject obj)
+	public static Datum FromJson(JToken? obj)
 	{
 		var id = FacebookLoaderBase.ExtractString(obj, "id");
 		var name = FacebookLoaderBase.ExtractString(obj, "name");
@@ -537,11 +538,13 @@ class Datum
 		var updatedTime = FacebookLoaderBase.ExtractString(obj, "updated_time");
 		var previewShareableLink = FacebookLoaderBase.ExtractString(obj, "preview_shareable_link");
 
-		var previewsArray = FacebookLoaderBase.ExtractObjectArray(obj, "previews");
-		var previews = Previews.FromDictionary(previewsArray);
+		// var previewsArray = FacebookLoaderBase.ExtractObjectArray(obj, "previews");
+		var previewsArray = FacebookLoaderBase.ExtractObject(obj, "previews");
+		var previews = Previews.FromJson(previewsArray);
 
-		var insightsArray = FacebookLoaderBase.ExtractObjectArray(obj, "insights");
-		var insights = Insights.FromDictionary(insightsArray);
+		// var insightsArray = FacebookLoaderBase.ExtractObjectArray(obj, "insights");
+		var insightsArray = FacebookLoaderBase.ExtractObject(obj, "insights");
+		var insights = Insights.FromJson(insightsArray);
 
 		return new Datum
 		{
@@ -562,17 +565,17 @@ class Insights
 	public List<InsightDatum> Data { get; set; }
 	public Paging Paging { get; set; }
 
-	public static Insights FromDictionary(JObject obj)
+	public static Insights FromJson(JToken? obj)
 	{
 		var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
 		var list = new List<InsightDatum>();
 		foreach (var item in data)
 		{
-			if (item is JObject o)
-				list.Add(InsightDatum.FromDictionary(o));
+			if (item is JObject dataObject)
+				list.Add(InsightDatum.FromJson(dataObject));
 		}
 
-		var paging = Paging.FromDictionary(FacebookLoaderBase.ExtractObject(obj, "paging"));
+		var paging = Paging.FromJson(FacebookLoaderBase.ExtractObject(obj, "paging"));
 		return new Insights
 		{
 			Data = list,
@@ -586,7 +589,7 @@ class Cursors
 	public string Before { get; set; }
 	public string After { get; set; }
 
-	public static Cursors FromDictionary(JObject obj)
+	public static Cursors FromJson(JToken? obj)
 	{
 		return new Cursors
 		{
@@ -601,11 +604,11 @@ class Paging
 	public Cursors Cursors { get; set; }
 	public string Next { get; set; }
 
-	public static Paging FromDictionary(JObject obj)
+	public static Paging FromJson(JToken? obj)
 	{
 		return new Paging
 		{
-			Cursors = Cursors.FromDictionary(FacebookLoaderBase.ExtractObject(obj, "cursors")),
+			Cursors = Cursors.FromJson(FacebookLoaderBase.ExtractObject(obj, "cursors")),
 			Next = FacebookLoaderBase.ExtractString(obj, "next")
 		};
 	}
@@ -616,7 +619,7 @@ class Root
 	public List<Datum> Data { get; set; }
 	public Paging Paging { get; set; }
 
-	public static Root FromDictionary(JObject obj)
+	public static Root FromJson(JToken? obj)
 	{
 		var list = new List<Datum>();
 		var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
@@ -624,13 +627,13 @@ class Root
 		foreach (var item in data)
 		{
 			if (item is JObject o)
-				list.Add(Datum.FromDictionary(o));
+				list.Add(Datum.FromJson(o));
 		}
 
 		return new Root
 		{
 			Data = list,
-			Paging = Paging.FromDictionary(FacebookLoaderBase.ExtractObject(obj, "paging"))
+			Paging = Paging.FromJson(FacebookLoaderBase.ExtractObject(obj, "paging"))
 		};
 	}
 }

@@ -42,37 +42,50 @@ public abstract class FacebookLoaderBase
         }
     }
 
-    public static string ExtractString(JObject obj, string tag)
+    public static string ExtractString(JToken? obj, string tag)
     {
-        JToken value;
-        if (!obj.TryGetValue(tag, out value)) return string.Empty;
-        return value.ToString() ?? string.Empty;
+        JToken? value = obj?[tag];
+        if (value == null)
+        {
+            return string.Empty;
+        }
+        return value.ToString();
     }
 
-    public static bool ExtractBoolean(JObject obj, string tag)
+    public static bool ExtractBoolean(JToken? obj, string tag)
     {
-        JToken value;
-        if (!obj.TryGetValue(tag, out value)) return false;
+        JToken? value = obj?[tag];
+        if (value == null)
+        {
+            return false;
+        }
         return value.ToObject<bool>();
     }
 
-    public static JObject ExtractObject(JObject obj, string tag)
+    public static JObject? ExtractObject(JToken? obj, string tag)
     {
-        JToken value;
-        if (!obj.TryGetValue(tag, out value)) return null;
+        JToken? value = obj?[tag];
+        if (value == null || value.Type != JTokenType.Object)
+        {
+            return null;
+        }
         return value as JObject;
     }
 
-    public static List<JObject> ExtractObjectArray(JObject obj, string tag)
+    public static List<JObject> ExtractObjectArray(JToken? obj, string tag)
     {
-        JToken arrayToken;
-        if (!obj.TryGetValue(tag, out arrayToken) || !(arrayToken is JArray arrayElement))
+        JToken? value = obj?[tag];
+        if (value is not JArray arrayElement)
+        {
             return new List<JObject>();
-
+        }
         var list = new List<JObject>();
         foreach (var element in arrayElement)
         {
-            list.Add(element as JObject);
+            if (element is JObject jObject)
+            {
+                list.Add(jObject);
+            }
         }
         return list;
     }

@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace FacebookLoader.Loader.AdCreative;
 
 
-public class FacebookAdCreativesLoader : FacebookLoaderBase
+public class AdCreativesLoader : FacebookLoaderBase
 {
     private const string FieldsList = "account_id,id,name,status,adset_id,campaign_id,created_time,updated_time,creative{id,status," +
         "actor_id,instagram_actor_id,instagram_permalink_url,object_type,image_url,image_hash,thumbnail_url," +
@@ -19,7 +19,7 @@ public class FacebookAdCreativesLoader : FacebookLoaderBase
     private const int Limit = 30;
     private const int MaxTestLoops = 4;
 
-    public FacebookAdCreativesLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) { }
+    public AdCreativesLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) { }
 
     private static FacebookCallToAction DigestCallToAction(CallToAction call)
     {
@@ -67,13 +67,13 @@ public class FacebookAdCreativesLoader : FacebookLoaderBase
         );
     }
 
-    public async Task<FacebookAdCreativesResponse> StartLoad(bool testMode = false)
+    public async Task<FacebookAdCreativesResponse?> StartLoad(bool testMode = false)
     {
         string url = $"{FacebookParameters.CreateUrlFor("ads")}?fields={FieldsList}&limit={Limit}&access_token={FacebookParameters.Token}";
         return await Load(url, testMode);
     }
 
-    public async Task<FacebookAdCreativesResponse> Load(string startUrl, bool testMode = false)
+    public async Task<FacebookAdCreativesResponse?> Load(string startUrl, bool testMode = false)
     {
         int loopCount = 0;
         string currentUrl = startUrl;
@@ -135,14 +135,14 @@ class CallToAction
     public string Type { get; set; }
     public Value Value { get; set; }
 
-    public static CallToAction FromJson(JsonElement obj)
+    public static CallToAction FromJson(JToken obj)
     {
         var callToAction = new CallToAction
         {
-            Type = obj.GetProperty("type").GetString()!,
+            Type = obj["type"]!.ToString(),
             Value = new Value
             {
-                Link = FacebookLoaderBase.ExtractString(obj.GetProperty("value"), "link")
+                Link = FacebookLoaderBase.ExtractString(obj["value"], "link")
             }
         };
         return callToAction;
@@ -159,7 +159,7 @@ class VideoData
     public string ImageUrl { get; set; }
     public string ImageHash { get; set; }
 
-    public static VideoData FromJson(JsonElement obj)
+    public static VideoData FromJson(JToken obj)
     {
         return new VideoData
         {
@@ -167,7 +167,7 @@ class VideoData
             Title = FacebookLoaderBase.ExtractString(obj, "title"),
             Message = FacebookLoaderBase.ExtractString(obj, "message"),
             LinkDescription = FacebookLoaderBase.ExtractString(obj, "link_description"),
-            CallToAction = CallToAction.FromJson(obj.GetProperty("call_to_action")),
+            CallToAction = CallToAction.FromJson(obj["call_to_action"]),
             ImageUrl = FacebookLoaderBase.ExtractString(obj, "image_url"),
             ImageHash = FacebookLoaderBase.ExtractString(obj, "image_hash")
         };
@@ -179,12 +179,12 @@ class ObjectStorySpec
     public string PageId { get; set; }
     public VideoData VideoData { get; set; }
 
-    public static ObjectStorySpec FromJson(JsonElement obj)
+    public static ObjectStorySpec FromJson(JObject obj)
     {
         return new ObjectStorySpec
         {
             PageId = FacebookLoaderBase.ExtractString(obj, "page_id"),
-            VideoData = VideoData.FromJson(obj.GetProperty("video_data"))
+            VideoData = VideoData.FromJson(obj["video_data"])
         };
     }
 }
@@ -204,7 +204,7 @@ class Creative
     public string Body { get; set; }
     public ObjectStorySpec ObjectStorySpec { get; set; }
 
-    public static Creative FromJson(JObject obj)
+    public static Creative FromJson(JToken obj)
     {
         return new Creative
         {
@@ -236,7 +236,7 @@ class Content
     public string UpdatedTime { get; set; }
     public Creative Creative { get; set; }
 
-    public static Content FromJson(JsonElement obj)
+    public static Content FromJson(JToken obj)
     {
         return new Content
         {
@@ -248,7 +248,7 @@ class Content
             CampaignId = FacebookLoaderBase.ExtractString(obj, "campaign_id"),
             CreatedTime = FacebookLoaderBase.ExtractString(obj, "created_time"),
             UpdatedTime = FacebookLoaderBase.ExtractString(obj, "updated_time"),
-            Creative = Creative.FromJson(obj.GetProperty("creative"))
+            Creative = Creative.FromJson(obj["creative"])
         };
     }
 }
@@ -258,7 +258,7 @@ class Root
     public List<Content> Data { get; set; }
     public Paging Paging { get; set; }
 
-    public static Root FromJson(JsonElement obj)
+    public static Root FromJson(JToken obj)
     {
         var dataList = new List<Content>();
         foreach (var item in FacebookLoaderBase.ExtractObjectArray(obj, "data"))
@@ -273,10 +273,10 @@ class Root
             {
                 Cursors = new Cursors
                 {
-                    Before = FacebookLoaderBase.ExtractString(obj.GetProperty("paging").GetProperty("cursors"), "before"),
-                    After = FacebookLoaderBase.ExtractString(obj.GetProperty("paging").GetProperty("cursors"), "after")
+                    Before = FacebookLoaderBase.ExtractString(obj["paging"]["cursors"], "before"),
+                    After = FacebookLoaderBase.ExtractString(obj["paging"]["cursors"], "after")
                 },
-                Next = FacebookLoaderBase.ExtractString(obj.GetProperty("paging"), "next")
+                Next = FacebookLoaderBase.ExtractString(obj["paging"], "next")
             }
         };
     }

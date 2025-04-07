@@ -3702,7 +3702,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\lafor\\.nuget\\packages\\": {},
+    "C:\\Users\\Chris\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -3711,14 +3711,14 @@
       "projectUniqueName": "C:\\Code\\DataAllyHub\\DataAllyEngine\\DataAllyEngine.csproj",
       "projectName": "DataAllyEngine",
       "projectPath": "C:\\Code\\DataAllyHub\\DataAllyEngine\\DataAllyEngine.csproj",
-      "packagesPath": "C:\\Users\\lafor\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\Chris\\.nuget\\packages\\",
       "outputPath": "C:\\Code\\DataAllyHub\\DataAllyEngine\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\lafor\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Chris\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
