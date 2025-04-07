@@ -8,21 +8,21 @@ namespace FacebookLoader.Loader.AdImage;
 
 public class FacebookAdImagesLoader : FacebookLoaderBase
 {
-    private const string FIELDS_LIST = "account_id,created_time,creatives,hash,id,is_associated_creatives_in_adgroups," +
+    private const string FieldsList = "account_id,created_time,creatives,hash,id,is_associated_creatives_in_adgroups," +
                                        "name,permalink_url,status,updated_time,url,url_128";
 
-    private const int LIMIT = 500;
-    private const int MAX_TEST_LOOPS = 4;
+    private const int Limit = 500;
+    private const int MaxTestLoops = 4;
     
     public FacebookAdImagesLoader(FacebookParameters facebookParameters) : base(facebookParameters) {}
 
     public FacebookAdImagesResponse StartLoad(bool testMode = false)
     {
-        string url = $"{FacebookParameters.CreateUrlFor("adimages")}?fields={FIELDS_LIST}&limit={LIMIT}&access_token={FacebookParameters.Token}";
+        string url = $"{FacebookParameters.CreateUrlFor("adimages")}?fields={FieldsList}&limit={Limit}&access_token={FacebookParameters.Token}";
         return Load(url, testMode);
     }
 
-    public async FacebookAdImagesResponse Load(string startUrl, bool testMode = false)
+    public async Task<FacebookAdImagesResponse> Load(string startUrl, bool testMode = false)
     {
         int loopCount = 0;
         string currentUrl = startUrl;
@@ -55,7 +55,7 @@ public class FacebookAdImagesLoader : FacebookLoaderBase
                     records.Add(image);
                 }
 
-                if (string.IsNullOrEmpty(root.Paging.Next) || (testMode && loopCount >= MAX_TEST_LOOPS))
+                if (string.IsNullOrEmpty(root.Paging.Next) || (testMode && loopCount >= MaxTestLoops))
                     break;
 
                 currentUrl = root.Paging.Next;
@@ -86,8 +86,8 @@ class Cursors
     {
         return new Cursors
         {
-            Before = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "before"),
-            After = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "after")
+            Before = FacebookLoaderBase.ExtractString(obj, "before"),
+            After = FacebookLoaderBase.ExtractString(obj, "after")
         };
     }
 }
@@ -111,18 +111,18 @@ class Content
     {
         return new Content
         {
-            AccountId = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "account_id"),
-            CreatedTime = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "created_time"),
-            Creatives = FacebookLoader.Content.FacebookLoaderBase.ExtractObjectArray(obj, "creatives"),
-            Hash = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "hash"),
-            Id = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "id"),
-            IsAssociatedCreativesInAdgroups = FacebookLoader.Content.FacebookLoaderBase.ExtractBoolean(obj, "is_associated_creatives_in_adgroups"),
-            Name = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "name"),
-            PermalinkUrl = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "permalink_url"),
-            Status = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "status"),
-            UpdatedTime = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "updated_time"),
-            Url = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "url"),
-            Url128 = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "url_128")
+            AccountId = FacebookLoaderBase.ExtractString(obj, "account_id"),
+            CreatedTime = FacebookLoaderBase.ExtractString(obj, "created_time"),
+            Creatives = FacebookLoaderBase.ExtractObjectArray(obj, "creatives"),
+            Hash = FacebookLoaderBase.ExtractString(obj, "hash"),
+            Id = FacebookLoaderBase.ExtractString(obj, "id"),
+            IsAssociatedCreativesInAdgroups = FacebookLoaderBase.ExtractBoolean(obj, "is_associated_creatives_in_adgroups"),
+            Name = FacebookLoaderBase.ExtractString(obj, "name"),
+            PermalinkUrl = FacebookLoaderBase.ExtractString(obj, "permalink_url"),
+            Status = FacebookLoaderBase.ExtractString(obj, "status"),
+            UpdatedTime = FacebookLoaderBase.ExtractString(obj, "updated_time"),
+            Url = FacebookLoaderBase.ExtractString(obj, "url"),
+            Url128 = FacebookLoaderBase.ExtractString(obj, "url_128")
         };
     }
 }
@@ -136,8 +136,8 @@ class Paging
     {
         return new Paging
         {
-            Cursors = Cursors.FromJson((JObject)FacebookLoader.Content.FacebookLoaderBase.ExtractObject(obj, "cursors")),
-            Next = FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "next")
+            Cursors = Cursors.FromJson((JObject)FacebookLoaderBase.ExtractObject(obj, "cursors")),
+            Next = FacebookLoaderBase.ExtractString(obj, "next")
         };
     }
 }
@@ -151,8 +151,8 @@ class Root
     {
         return new Root
         {
-            Data = FacebookLoader.Content.FacebookLoaderBase.ExtractObjectArray(obj, "data", Content.FromJson),
-            Paging = Paging.FromJson((JObject) FacebookLoader.Content.FacebookLoaderBase.ExtractObject(obj, "paging"))
+            Data = FacebookLoaderBase.ExtractObjectArray(obj, "data", Content.FromJson),
+            Paging = Paging.FromJson((JObject) FacebookLoaderBase.ExtractObject(obj, "paging"))
         };
     }
 }

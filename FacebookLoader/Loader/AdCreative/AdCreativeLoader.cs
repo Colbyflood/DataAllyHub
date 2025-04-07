@@ -11,13 +11,13 @@ namespace FacebookLoader.Loader.AdCreative;
 
 public class FacebookAdCreativesLoader : FacebookLoaderBase
 {
-    private const string FIELDS_LIST = "account_id,id,name,status,adset_id,campaign_id,created_time,updated_time,creative{id,status," +
+    private const string FieldsList = "account_id,id,name,status,adset_id,campaign_id,created_time,updated_time,creative{id,status," +
         "actor_id,instagram_actor_id,instagram_permalink_url,object_type,image_url,image_hash,thumbnail_url," +
         "thumbnail_id,product_set_id,url_tags,title,body,link_destination_display_url,product_data,template_url_spec," +
         "template_url,object_story_spec{page_id,link_data,video_data,template_data}}";
 
-    private const int LIMIT = 30;
-    private const int MAX_TEST_LOOPS = 4;
+    private const int Limit = 30;
+    private const int MaxTestLoops = 4;
 
     public FacebookAdCreativesLoader(FacebookParameters facebookParameters) : base(facebookParameters) { }
 
@@ -29,16 +29,7 @@ public class FacebookAdCreativesLoader : FacebookLoaderBase
     private static FacebookVideoData DigestVideoData(ObjectStorySpec spec)
     {
         var callToAction = DigestCallToAction(spec.VideoData.CallToAction);
-        return new FacebookVideoData(
-            spec.PageId,
-            spec.VideoData.VideoId,
-            spec.VideoData.Title,
-            spec.VideoData.Message,
-            spec.VideoData.LinkDescription,
-            callToAction,
-            spec.VideoData.ImageUrl,
-            spec.VideoData.ImageHash
-        );
+        return FacebookVideoData.Instance;
     }
 
     private static FacebookCreative DigestCreative(Creative creative)
@@ -76,13 +67,13 @@ public class FacebookAdCreativesLoader : FacebookLoaderBase
         );
     }
 
-    public FacebookAdCreativesResponse StartLoad(bool testMode = false)
+    public async Task<FacebookAdCreativesResponse> StartLoad(bool testMode = false)
     {
-        string url = $"{FacebookParameters.CreateUrlFor("ads")}?fields={FIELDS_LIST}&limit={LIMIT}&access_token={FacebookParameters.Token}";
-        return Load(url, testMode);
+        string url = $"{FacebookParameters.CreateUrlFor("ads")}?fields={FieldsList}&limit={Limit}&access_token={FacebookParameters.Token}";
+        return await Load(url, testMode);
     }
 
-    public async FacebookAdCreativesResponse Load(string startUrl, bool testMode = false)
+    public async Task<FacebookAdCreativesResponse> Load(string startUrl, bool testMode = false)
     {
         int loopCount = 0;
         string currentUrl = startUrl;
@@ -100,7 +91,7 @@ public class FacebookAdCreativesLoader : FacebookLoaderBase
                     records.Add(DigestItem(item));
                 }
 
-                if (string.IsNullOrEmpty(root.Paging.Next) || (testMode && loopCount >= MAX_TEST_LOOPS))
+                if (string.IsNullOrEmpty(root.Paging.Next) || (testMode && loopCount >= MaxTestLoops))
                     break;
 
                 currentUrl = root.Paging.Next;
@@ -130,7 +121,7 @@ class Cursors
 
 class Paging
 {
-    public FacebookLoader.Cursors Cursors { get; set; }
+    public Cursors Cursors { get; set; }
     public string Next { get; set; }
 }
 
@@ -149,7 +140,7 @@ class CallToAction
         {
             Value = new Value
             {
-                Link = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj.GetProperty("value"), "link")
+                Link = FacebookLoaderBase.ExtractString(obj.GetProperty("value"), "link")
             }
         };
         return callToAction;
@@ -170,13 +161,13 @@ class VideoData
     {
         return new VideoData
         {
-            VideoId = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "video_id"),
-            Title = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "title"),
-            Message = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "message"),
-            LinkDescription = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "link_description"),
+            VideoId = FacebookLoaderBase.ExtractString(obj, "video_id"),
+            Title = FacebookLoaderBase.ExtractString(obj, "title"),
+            Message = FacebookLoaderBase.ExtractString(obj, "message"),
+            LinkDescription = FacebookLoaderBase.ExtractString(obj, "link_description"),
             CallToAction = CallToAction.FromJson(obj.GetProperty("call_to_action")),
-            ImageUrl = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "image_url"),
-            ImageHash = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "image_hash")
+            ImageUrl = FacebookLoaderBase.ExtractString(obj, "image_url"),
+            ImageHash = FacebookLoaderBase.ExtractString(obj, "image_hash")
         };
     }
 }
@@ -190,7 +181,7 @@ class ObjectStorySpec
     {
         return new ObjectStorySpec
         {
-            PageId = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "page_id"),
+            PageId = FacebookLoaderBase.ExtractString(obj, "page_id"),
             VideoData = VideoData.FromJson(obj.GetProperty("video_data"))
         };
     }
@@ -225,14 +216,14 @@ class Content
     {
         return new Content
         {
-            AccountId = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "account_id"),
-            Id = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "id"),
-            Name = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "name"),
-            Status = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "status"),
-            AdsetId = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "adset_id"),
-            CampaignId = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "campaign_id"),
-            CreatedTime = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "created_time"),
-            UpdatedTime = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj, "updated_time"),
+            AccountId = FacebookLoaderBase.ExtractString(obj, "account_id"),
+            Id = FacebookLoaderBase.ExtractString(obj, "id"),
+            Name = FacebookLoaderBase.ExtractString(obj, "name"),
+            Status = FacebookLoaderBase.ExtractString(obj, "status"),
+            AdsetId = FacebookLoaderBase.ExtractString(obj, "adset_id"),
+            CampaignId = FacebookLoaderBase.ExtractString(obj, "campaign_id"),
+            CreatedTime = FacebookLoaderBase.ExtractString(obj, "created_time"),
+            UpdatedTime = FacebookLoaderBase.ExtractString(obj, "updated_time"),
             Creative = Creative.FromJson(obj.GetProperty("creative"))
         };
     }
@@ -241,27 +232,27 @@ class Content
 class Root
 {
     public List<Content> Data { get; set; }
-    public FacebookLoader.Paging Paging { get; set; }
+    public Paging Paging { get; set; }
 
-    public static FacebookLoader.Root FromJson(JsonElement obj)
+    public static Root FromJson(JsonElement obj)
     {
         var dataList = new List<Content>();
-        foreach (var item in global::FacebookLoader.Content.FacebookLoaderBase.ExtractObjectArray(obj, "data"))
+        foreach (var item in FacebookLoaderBase.ExtractObjectArray(obj, "data"))
         {
             dataList.Add(Content.FromJson(item));
         }
 
-        return new FacebookLoader.Root
+        return new Root
         {
             Data = dataList,
-            Paging = new FacebookLoader.Paging
+            Paging = new Paging
             {
-                Cursors = new FacebookLoader.Cursors
+                Cursors = new Cursors
                 {
-                    Before = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj.GetProperty("paging").GetProperty("cursors"), "before"),
-                    After = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj.GetProperty("paging").GetProperty("cursors"), "after")
+                    Before = FacebookLoaderBase.ExtractString(obj.GetProperty("paging").GetProperty("cursors"), "before"),
+                    After = FacebookLoaderBase.ExtractString(obj.GetProperty("paging").GetProperty("cursors"), "after")
                 },
-                Next = global::FacebookLoader.Content.FacebookLoaderBase.ExtractString(obj.GetProperty("paging"), "next")
+                Next = FacebookLoaderBase.ExtractString(obj.GetProperty("paging"), "next")
             }
         };
     }
