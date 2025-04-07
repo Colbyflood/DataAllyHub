@@ -67,13 +67,13 @@ public class AdCreativesLoader : FacebookLoaderBase
         );
     }
 
-    public async Task<FacebookAdCreativesResponse?> StartLoad(bool testMode = false)
+    public async Task<FacebookAdCreativesResponse?> StartLoadAsync(bool testMode = false)
     {
         string url = $"{FacebookParameters.CreateUrlFor("ads")}?fields={FieldsList}&limit={Limit}&access_token={FacebookParameters.Token}";
-        return await Load(url, testMode);
+        return await LoadAsync(url, testMode);
     }
 
-    public async Task<FacebookAdCreativesResponse?> Load(string startUrl, bool testMode = false)
+    public async Task<FacebookAdCreativesResponse?> LoadAsync(string startUrl, bool testMode = false)
     {
         int loopCount = 0;
         string currentUrl = startUrl;

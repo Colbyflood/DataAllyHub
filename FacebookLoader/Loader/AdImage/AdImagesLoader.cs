@@ -16,13 +16,13 @@ public class AdImagesLoader : FacebookLoaderBase
     
     public AdImagesLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) {}
 
-    public async Task<FacebookAdImagesResponse?> StartLoad(bool testMode = false)
+    public async Task<FacebookAdImagesResponse?> StartLoadAsync(bool testMode = false)
     {
         var url = $"{FacebookParameters.CreateUrlFor("adimages")}?fields={FieldsList}&limit={Limit}&access_token={FacebookParameters.Token}";
-        return await Load(url, testMode);
+        return await LoadAsync(url, testMode);
     }
 
-    public async Task<FacebookAdImagesResponse?> Load(string startUrl, bool testMode = false)
+    public async Task<FacebookAdImagesResponse?> LoadAsync(string startUrl, bool testMode = false)
     {
         int loopCount = 0;
         string currentUrl = startUrl;

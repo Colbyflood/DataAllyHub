@@ -3,6 +3,7 @@
 using FacebookLoader.Common;
 using FacebookLoader.Loader.AdCreative;
 using FacebookLoader.Loader.AdImage;
+using FacebookLoader.Loader.AdInsight;
 using Microsoft.Extensions.Configuration;
 
 Console.WriteLine("Facebook Loader Testbed");
@@ -29,9 +30,24 @@ try
 	// 	Console.WriteLine(content.Name);
 	// }
 
-	var adCreativeLoader = new AdCreativesLoader(facebookParameters, logger);
+	// var adCreativeLoader = new AdCreativesLoader(facebookParameters, logger);
+	//
+	// var response = await adCreativeLoader.StartLoad(true);
+	// if (response == null)
+	// {
+	// 	Console.WriteLine("Failed to load ad creatives");
+	// }
+	// else
+	// {
+	// 	foreach (var content in response.Content)
+	// 	{
+	// 		Console.WriteLine(content.Name);
+	// 	}
+	// }
+	//
+	var adInsightsLoader = new AdInsightsLoader(facebookParameters, logger);
 
-	var response = await adCreativeLoader.StartLoad(true);
+	var response = await adInsightsLoader.StartLoadAsync("2025-04-03", "2025-04-07", true);
 	if (response == null)
 	{
 		Console.WriteLine("Failed to load ad creatives");

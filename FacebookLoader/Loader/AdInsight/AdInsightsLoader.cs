@@ -22,7 +22,7 @@ public class AdInsightsLoader : FacebookLoaderBase
 
     public AdInsightsLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) {}
 
-    private async Task<FacebookAdInsightsResponse> StartLoadAsync(string startDate, string endDate, bool testMode = false)
+    public async Task<FacebookAdInsightsResponse?> StartLoadAsync(string startDate, string endDate, bool testMode = false)
     {
 	    var url =
 		    $"{FacebookParameters.CreateUrlFor("ads")}?fields={FieldsList}{PrepareInsights(startDate, endDate)}&limit={Limit}&access_token={FacebookParameters.Token}";
@@ -30,7 +30,7 @@ public class AdInsightsLoader : FacebookLoaderBase
 	    return await LoadAsync(url, testMode);
     }
 
-    private async Task<FacebookAdInsightsResponse> LoadAsync(string startUrl, bool testMode = false)
+    public async Task<FacebookAdInsightsResponse?> LoadAsync(string startUrl, bool testMode = false)
     {
 	    var loopCount = 0;
 	    var currentUrl = startUrl;
@@ -84,7 +84,7 @@ public class AdInsightsLoader : FacebookLoaderBase
 
     private string PrepareInsights(string startDate, string endDate)
     {
-        return $"insights.time_range(\"{{\\\"since\\\":\\\"{startDate}\\\",\\\"until\\\":\\\"{endDate}\\\"}}\").time_increment(1).limit(1000){InsightFields}";
+        return $"insights.time_range({{\"since\":\"{startDate}\",\"until\":\"{endDate}\"}}).time_increment(1).limit(1000){InsightFields}";
     }
     
     private List<string> DigestPreviews(Previews previews)
