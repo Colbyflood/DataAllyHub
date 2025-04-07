@@ -63,12 +63,12 @@ public class AdImagesLoader : FacebookLoaderBase
             }
             catch (FacebookHttpException fe)
             {
-                Console.WriteLine($"Caught FacebookHttpException at FacebookAdImagesLoader.Load(): {fe.Message}");
+                Logger.LogError($"Caught FacebookHttpException at FacebookAdImagesLoader.Load(): {fe.Message}");
                 return new FacebookAdImagesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Caught exception at FacebookAdImagesLoader.Load(): {ex.Message}");
+                Logger.LogError($"Caught exception at FacebookAdImagesLoader.Load(): {ex.Message}");
                 return new FacebookAdImagesResponse(records, false, currentUrl, true);
             }
         }

@@ -99,12 +99,12 @@ public class AdCreativesLoader : FacebookLoaderBase
             }
             catch (FacebookHttpException fe)
             {
-                Console.WriteLine($"Caught FacebookHttpException: {fe.Message}");
+                Logger.LogError($"Caught FacebookHttpException: {fe.Message}");
                 return new FacebookAdCreativesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Caught exception: {ex.Message}");
+                Logger.LogError($"Caught exception: {ex.Message}");
                 return new FacebookAdCreativesResponse(records, false, currentUrl, true);
             }
         }
