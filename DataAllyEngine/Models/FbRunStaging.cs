@@ -9,7 +9,7 @@ namespace DataAllyEngine.Models;
 [Table("fbrunstaging")]
 [Index("FbRunlogId", Name = "fbstaging_runlog_fk_idx")]
 [Index("FbRunlogId", "Sequence", Name = "fbstaging_runlog_uk", IsUnique = true)]
-public partial class Fbrunstaging
+public partial class FbRunStaging
 {
     [Key]
     [Column("id")]
@@ -26,5 +26,5 @@ public partial class Fbrunstaging
 
     [ForeignKey("FbRunlogId")]
     [InverseProperty("Fbrunstagings")]
-    public virtual Fbrunlog FbRunlog { get; set; } = null!;
+    public virtual FbRunLog FbRunlog { get; set; } = null!;
 }

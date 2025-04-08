@@ -8,7 +8,7 @@ namespace DataAllyEngine.Models;
 
 [Table("backfillsourcehold")]
 [Index("ChannelId", Name = "channel_id_UNIQUE", IsUnique = true)]
-public partial class Backfillsourcehold
+public partial class BackfillSourceHold
 {
     [Key]
     [Column("id")]

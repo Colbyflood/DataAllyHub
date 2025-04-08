@@ -8,7 +8,7 @@ namespace DataAllyEngine.Models;
 
 [Table("appkpi")]
 [Index("AdId", Name = "AppKpi_Ad_FK")]
-public partial class Appkpi
+public partial class AppKpi
 {
     [Key]
     [Column("id")]

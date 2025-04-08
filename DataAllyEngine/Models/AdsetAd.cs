@@ -9,7 +9,7 @@ namespace DataAllyEngine.Models;
 [Table("adsetad")]
 [Index("AdId", Name = "AdsetAd_Ad_FK")]
 [Index("AdsetId", Name = "AdsetAd_Adset_FK")]
-public partial class Adsetad
+public partial class AdsetAd
 {
     [Key]
     [Column("id")]

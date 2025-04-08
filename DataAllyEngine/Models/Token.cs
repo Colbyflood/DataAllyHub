@@ -35,12 +35,12 @@ public partial class Token
 
     [ForeignKey("ChannelTypeId")]
     [InverseProperty("Tokens")]
-    public virtual Channeltype ChannelType { get; set; } = null!;
+    public virtual ChannelType ChannelType { get; set; } = null!;
 
     [ForeignKey("CompanyId")]
     [InverseProperty("Tokens")]
     public virtual Company Company { get; set; } = null!;
 
     [InverseProperty("Token")]
-    public virtual ICollection<Tokenfbaccount> Tokenfbaccounts { get; set; } = new List<Tokenfbaccount>();
+    public virtual ICollection<TokenFbAccount> Tokenfbaccounts { get; set; } = new List<TokenFbAccount>();
 }

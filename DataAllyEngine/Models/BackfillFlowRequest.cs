@@ -9,7 +9,7 @@ namespace DataAllyEngine.Models;
 [Table("backfillflowrequest")]
 [Index("ChannelsourceflowId", Name = "channelsourceflow2_fk_idx")]
 [Index("ChannelsourceflowId", Name = "channelsourceflow_id_UNIQUE", IsUnique = true)]
-public partial class Backfillflowrequest
+public partial class BackfillFlowRequest
 {
     [Key]
     [Column("id")]

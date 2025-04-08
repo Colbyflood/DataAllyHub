@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DataAllyEngine.Models;
 
-[Table("accounttype")]
-[Index("Name", Name = "AcctType_Name_UQ", IsUnique = true)]
-public partial class Accounttype
+[Table("channeltype")]
+[Index("Name", Name = "ChannelType_Name_UQ", IsUnique = true)]
+public partial class ChannelType
 {
     [Key]
     [Column("id")]
@@ -18,6 +18,9 @@ public partial class Accounttype
     [StringLength(50)]
     public string Name { get; set; } = null!;
 
-    [InverseProperty("AccountType")]
-    public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
+    [InverseProperty("ChannelType")]
+    public virtual ICollection<Channel> Channels { get; set; } = new List<Channel>();
+
+    [InverseProperty("ChannelType")]
+    public virtual ICollection<Token> Tokens { get; set; } = new List<Token>();
 }

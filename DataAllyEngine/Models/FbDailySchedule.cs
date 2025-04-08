@@ -8,7 +8,7 @@ namespace DataAllyEngine.Models;
 
 [Table("fbdailyschedule")]
 [Index("ChannelId", Name = "channel_id_UNIQUE", IsUnique = true)]
-public partial class Fbdailyschedule
+public partial class FbDailySchedule
 {
     [Key]
     [Column("id")]

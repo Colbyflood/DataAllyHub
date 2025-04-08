@@ -38,5 +38,5 @@ public partial class Company
 
     [ForeignKey("Type")]
     [InverseProperty("Companies")]
-    public virtual Companytype? TypeNavigation { get; set; }
+    public virtual CompanyType? TypeNavigation { get; set; }
 }

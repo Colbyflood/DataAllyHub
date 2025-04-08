@@ -70,7 +70,7 @@ public partial class Channel
 
     [ForeignKey("ChannelTypeId")]
     [InverseProperty("Channels")]
-    public virtual Channeltype ChannelType { get; set; } = null!;
+    public virtual ChannelType ChannelType { get; set; } = null!;
 
     [InverseProperty("Channel")]
     public virtual ICollection<Channelsourceflow> Channelsourceflows { get; set; } = new List<Channelsourceflow>();
@@ -80,8 +80,8 @@ public partial class Channel
     public virtual Client Client { get; set; } = null!;
 
     [InverseProperty("Channel")]
-    public virtual Fbdailyschedule? Fbdailyschedule { get; set; }
+    public virtual FbDailySchedule? Fbdailyschedule { get; set; }
 
     [InverseProperty("Channel")]
-    public virtual ICollection<Fbrunlog> Fbrunlogs { get; set; } = new List<Fbrunlog>();
+    public virtual ICollection<FbRunLog> Fbrunlogs { get; set; } = new List<FbRunLog>();
 }

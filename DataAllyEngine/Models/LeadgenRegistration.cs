@@ -9,7 +9,7 @@ namespace DataAllyEngine.Models;
 [Table("leadgenregistration")]
 [Index("LeadgenkpiId", Name = "LeadGenRegistration_LeadGen_FK")]
 [Index("LeadgenkpiId", Name = "leadgenkpi_id_UNIQUE", IsUnique = true)]
-public partial class Leadgenregistration
+public partial class LeadgenRegistration
 {
     [Key]
     [Column("id")]
@@ -49,5 +49,5 @@ public partial class Leadgenregistration
 
     [ForeignKey("LeadgenkpiId")]
     [InverseProperty("Leadgenregistration")]
-    public virtual Leadgenkpi Leadgenkpi { get; set; } = null!;
+    public virtual LeadgenKpi LeadgenKpi { get; set; } = null!;
 }

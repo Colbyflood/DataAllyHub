@@ -8,7 +8,7 @@ namespace DataAllyEngine.Models;
 
 [Table("tokenfbaccount")]
 [Index("TokenId", "AccountNumber", Name = "TokenIdAccountNumberUK", IsUnique = true)]
-public partial class Tokenfbaccount
+public partial class TokenFbAccount
 {
     [Key]
     [Column("id")]

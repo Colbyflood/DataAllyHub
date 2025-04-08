@@ -9,7 +9,7 @@ namespace DataAllyEngine.Models;
 [Table("generalkpi")]
 [Index("AdId", Name = "GeneralKpi_Ad_FK")]
 [Index("AdId", "EffectiveDate", Name = "generalkpi_UK", IsUnique = true)]
-public partial class Generalkpi
+public partial class GeneralKpi
 {
     [Key]
     [Column("id")]

@@ -8,7 +8,7 @@ namespace DataAllyEngine.Models;
 
 [Table("fbrunlog")]
 [Index("ChannelId", Name = "fbrunlog_channel_fk_idx")]
-public partial class Fbrunlog
+public partial class FbRunLog
 {
     [Key]
     [Column("id")]
@@ -39,17 +39,17 @@ public partial class Fbrunlog
     public virtual Channel Channel { get; set; } = null!;
 
     [InverseProperty("FbRunlog")]
-    public virtual ICollection<Fbrunproblem> Fbrunproblems { get; set; } = new List<Fbrunproblem>();
+    public virtual ICollection<FbRunProblem> Fbrunproblems { get; set; } = new List<FbRunProblem>();
 
     [InverseProperty("FbRunlog")]
-    public virtual ICollection<Fbrunstaging> Fbrunstagings { get; set; } = new List<Fbrunstaging>();
+    public virtual ICollection<FbRunStaging> Fbrunstagings { get; set; } = new List<FbRunStaging>();
 
     [InverseProperty("AdCreativeRunlog")]
-    public virtual ICollection<Fbsavecontent> FbsavecontentAdCreativeRunlogs { get; set; } = new List<Fbsavecontent>();
+    public virtual ICollection<FbSaveContent> FbsavecontentAdCreativeRunlogs { get; set; } = new List<FbSaveContent>();
 
     [InverseProperty("AdImageRunlog")]
-    public virtual ICollection<Fbsavecontent> FbsavecontentAdImageRunlogs { get; set; } = new List<Fbsavecontent>();
+    public virtual ICollection<FbSaveContent> FbsavecontentAdImageRunlogs { get; set; } = new List<FbSaveContent>();
 
     [InverseProperty("AdInsightRunlog")]
-    public virtual ICollection<Fbsavecontent> FbsavecontentAdInsightRunlogs { get; set; } = new List<Fbsavecontent>();
+    public virtual ICollection<FbSaveContent> FbsavecontentAdInsightRunlogs { get; set; } = new List<FbSaveContent>();
 }

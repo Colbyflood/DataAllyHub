@@ -8,7 +8,7 @@ namespace DataAllyEngine.Models;
 
 [Table("companytype")]
 [Index("Name", Name = "companytype_name_UK", IsUnique = true)]
-public partial class Companytype
+public partial class CompanyType
 {
     [Key]
     [Column("id")]

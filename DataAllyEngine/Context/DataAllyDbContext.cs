@@ -18,23 +18,23 @@ public partial class DataAllyDbContext : DbContext
 
     public virtual DbSet<Account> Accounts { get; set; }
 
-    public virtual DbSet<Accounttype> Accounttypes { get; set; }
+    public virtual DbSet<AccountType> Accounttypes { get; set; }
 
     public virtual DbSet<Ad> Ads { get; set; }
 
     public virtual DbSet<Adset> Adsets { get; set; }
 
-    public virtual DbSet<Adsetad> Adsetads { get; set; }
+    public virtual DbSet<AdsetAd> Adsetads { get; set; }
 
-    public virtual DbSet<Appkpi> Appkpis { get; set; }
+    public virtual DbSet<AppKpi> Appkpis { get; set; }
 
     public virtual DbSet<Attribution> Attributions { get; set; }
 
-    public virtual DbSet<Backfillflowrequest> Backfillflowrequests { get; set; }
+    public virtual DbSet<BackfillFlowRequest> Backfillflowrequests { get; set; }
 
-    public virtual DbSet<Backfillrequest> Backfillrequests { get; set; }
+    public virtual DbSet<BackfillRequest> Backfillrequests { get; set; }
 
-    public virtual DbSet<Backfillsourcehold> Backfillsourceholds { get; set; }
+    public virtual DbSet<BackfillSourceHold> Backfillsourceholds { get; set; }
 
     public virtual DbSet<Campaign> Campaigns { get; set; }
 
@@ -42,59 +42,59 @@ public partial class DataAllyDbContext : DbContext
 
     public virtual DbSet<Channelsourceflow> Channelsourceflows { get; set; }
 
-    public virtual DbSet<Channeltype> Channeltypes { get; set; }
+    public virtual DbSet<ChannelType> Channeltypes { get; set; }
 
     public virtual DbSet<Client> Clients { get; set; }
 
     public virtual DbSet<Company> Companies { get; set; }
 
-    public virtual DbSet<Companytype> Companytypes { get; set; }
+    public virtual DbSet<CompanyType> Companytypes { get; set; }
 
-    public virtual DbSet<Ecommercechannel> Ecommercechannels { get; set; }
+    public virtual DbSet<EcommerceChannel> Ecommercechannels { get; set; }
 
-    public virtual DbSet<Ecommercekpi> Ecommercekpis { get; set; }
+    public virtual DbSet<EcommerceKpi> Ecommercekpis { get; set; }
 
-    public virtual DbSet<Ecommercetotal> Ecommercetotals { get; set; }
+    public virtual DbSet<EcommerceTotal> Ecommercetotals { get; set; }
 
-    public virtual DbSet<Ecommercewebsite> Ecommercewebsites { get; set; }
+    public virtual DbSet<EcommerceWebsite> Ecommercewebsites { get; set; }
 
-    public virtual DbSet<Fbdailyschedule> Fbdailyschedules { get; set; }
+    public virtual DbSet<FbDailySchedule> Fbdailyschedules { get; set; }
 
-    public virtual DbSet<Fbrunlog> Fbrunlogs { get; set; }
+    public virtual DbSet<FbRunLog> Fbrunlogs { get; set; }
 
-    public virtual DbSet<Fbrunproblem> Fbrunproblems { get; set; }
+    public virtual DbSet<FbRunProblem> Fbrunproblems { get; set; }
 
-    public virtual DbSet<Fbrunstaging> Fbrunstagings { get; set; }
+    public virtual DbSet<FbRunStaging> Fbrunstagings { get; set; }
 
-    public virtual DbSet<Fbsavecontent> Fbsavecontents { get; set; }
+    public virtual DbSet<FbSaveContent> Fbsavecontents { get; set; }
 
-    public virtual DbSet<Generalkpi> Generalkpis { get; set; }
+    public virtual DbSet<GeneralKpi> Generalkpis { get; set; }
 
     public virtual DbSet<Industry> Industries { get; set; }
 
-    public virtual DbSet<Leadgenapplication> Leadgenapplications { get; set; }
+    public virtual DbSet<LeadgenApplication> Leadgenapplications { get; set; }
 
-    public virtual DbSet<Leadgenappointment> Leadgenappointments { get; set; }
+    public virtual DbSet<LeadgenAppointment> Leadgenappointments { get; set; }
 
-    public virtual DbSet<Leadgencontact> Leadgencontacts { get; set; }
+    public virtual DbSet<LeadgenContact> Leadgencontacts { get; set; }
 
-    public virtual DbSet<Leadgenkpi> Leadgenkpis { get; set; }
+    public virtual DbSet<LeadgenKpi> Leadgenkpis { get; set; }
 
-    public virtual DbSet<Leadgenlead> Leadgenleads { get; set; }
+    public virtual DbSet<LeadgenLead> Leadgenleads { get; set; }
 
-    public virtual DbSet<Leadgenlocation> Leadgenlocations { get; set; }
+    public virtual DbSet<LeadgenLocation> Leadgenlocations { get; set; }
 
-    public virtual DbSet<Leadgenregistration> Leadgenregistrations { get; set; }
+    public virtual DbSet<LeadgenRegistration> Leadgenregistrations { get; set; }
 
-    public virtual DbSet<Leadgensubscription> Leadgensubscriptions { get; set; }
+    public virtual DbSet<LeadgenSubscription> Leadgensubscriptions { get; set; }
 
-    public virtual DbSet<Leadgentrial> Leadgentrials { get; set; }
+    public virtual DbSet<LeadgenTrial> Leadgentrials { get; set; }
 
     public virtual DbSet<Token> Tokens { get; set; }
 
-    public virtual DbSet<Tokenfbaccount> Tokenfbaccounts { get; set; }
+    public virtual DbSet<TokenFbAccount> Tokenfbaccounts { get; set; }
 
-    public virtual DbSet<Videokpi> Videokpis { get; set; }
+    public virtual DbSet<VideoKpi> Videokpis { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -117,7 +117,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("Acct_Company_FK");
         });
 
-        modelBuilder.Entity<Accounttype>(entity =>
+        modelBuilder.Entity<AccountType>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
         });
@@ -140,7 +140,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("Adset_Campaign_FK");
         });
 
-        modelBuilder.Entity<Adsetad>(entity =>
+        modelBuilder.Entity<AdsetAd>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -153,7 +153,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("AdsetAd_Adset_FK");
         });
 
-        modelBuilder.Entity<Appkpi>(entity =>
+        modelBuilder.Entity<AppKpi>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -165,7 +165,7 @@ public partial class DataAllyDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
         });
 
-        modelBuilder.Entity<Backfillflowrequest>(entity =>
+        modelBuilder.Entity<BackfillFlowRequest>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -174,7 +174,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("channelsourceflow2_fk");
         });
 
-        modelBuilder.Entity<Backfillrequest>(entity =>
+        modelBuilder.Entity<BackfillRequest>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -183,7 +183,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("channelsourceflow1_fk");
         });
 
-        modelBuilder.Entity<Backfillsourcehold>(entity =>
+        modelBuilder.Entity<BackfillSourceHold>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
         });
@@ -221,7 +221,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("channel_filesequence_fk");
         });
 
-        modelBuilder.Entity<Channeltype>(entity =>
+        modelBuilder.Entity<ChannelType>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
         });
@@ -246,40 +246,40 @@ public partial class DataAllyDbContext : DbContext
             entity.HasOne(d => d.TypeNavigation).WithMany(p => p.Companies).HasConstraintName("companytype_id_FK");
         });
 
-        modelBuilder.Entity<Companytype>(entity =>
+        modelBuilder.Entity<CompanyType>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
         });
 
-        modelBuilder.Entity<Ecommercechannel>(entity =>
+        modelBuilder.Entity<EcommerceChannel>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Ecommercekpi).WithOne(p => p.Ecommercechannel).HasConstraintName("EcommerceChannel_ECommerce_FK");
+            entity.HasOne(d => d.EcommerceKpi).WithOne(p => p.Ecommercechannel).HasConstraintName("EcommerceChannel_ECommerce_FK");
         });
 
-        modelBuilder.Entity<Ecommercekpi>(entity =>
+        modelBuilder.Entity<EcommerceKpi>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.HasOne(d => d.Ad).WithMany(p => p.Ecommercekpis).HasConstraintName("EcommerceKpi_Ad_FK");
         });
 
-        modelBuilder.Entity<Ecommercetotal>(entity =>
+        modelBuilder.Entity<EcommerceTotal>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Ecommercekpi).WithOne(p => p.Ecommercetotal).HasConstraintName("EcommerceTotal_ECommerce_FK");
+            entity.HasOne(d => d.EcommerceKpi).WithOne(p => p.Ecommercetotal).HasConstraintName("EcommerceTotal_ECommerce_FK");
         });
 
-        modelBuilder.Entity<Ecommercewebsite>(entity =>
+        modelBuilder.Entity<EcommerceWebsite>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Ecommercekpi).WithOne(p => p.Ecommercewebsite).HasConstraintName("EcommerceWebsite_ECommerce_FK");
+            entity.HasOne(d => d.EcommerceKpi).WithOne(p => p.Ecommercewebsite).HasConstraintName("EcommerceWebsite_ECommerce_FK");
         });
 
-        modelBuilder.Entity<Fbdailyschedule>(entity =>
+        modelBuilder.Entity<FbDailySchedule>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -288,7 +288,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("fbdaily_channel_fk");
         });
 
-        modelBuilder.Entity<Fbrunlog>(entity =>
+        modelBuilder.Entity<FbRunLog>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -297,7 +297,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("fbrunlog_channel_fk");
         });
 
-        modelBuilder.Entity<Fbrunproblem>(entity =>
+        modelBuilder.Entity<FbRunProblem>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -306,7 +306,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("fbrunproblem_fbrunlog_fk");
         });
 
-        modelBuilder.Entity<Fbrunstaging>(entity =>
+        modelBuilder.Entity<FbRunStaging>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -315,7 +315,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("fbstaging_runlog_fk");
         });
 
-        modelBuilder.Entity<Fbsavecontent>(entity =>
+        modelBuilder.Entity<FbSaveContent>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -332,7 +332,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("fbsave_ad_insight_fk");
         });
 
-        modelBuilder.Entity<Generalkpi>(entity =>
+        modelBuilder.Entity<GeneralKpi>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -346,67 +346,67 @@ public partial class DataAllyDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
         });
 
-        modelBuilder.Entity<Leadgenapplication>(entity =>
+        modelBuilder.Entity<LeadgenApplication>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Leadgenkpi).WithOne(p => p.Leadgenapplication).HasConstraintName("LeadGenApplication_LeadGen_FK");
+            entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgenapplication).HasConstraintName("LeadGenApplication_LeadGen_FK");
         });
 
-        modelBuilder.Entity<Leadgenappointment>(entity =>
+        modelBuilder.Entity<LeadgenAppointment>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Leadgenkpi).WithOne(p => p.Leadgenappointment).HasConstraintName("LeadGenAppointment_LeadGen_FK");
+            entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgenappointment).HasConstraintName("LeadGenAppointment_LeadGen_FK");
         });
 
-        modelBuilder.Entity<Leadgencontact>(entity =>
+        modelBuilder.Entity<LeadgenContact>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Leadgenkpi).WithOne(p => p.Leadgencontact).HasConstraintName("LeadGenContact_LeadGen_FK");
+            entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgencontact).HasConstraintName("LeadGenContact_LeadGen_FK");
         });
 
-        modelBuilder.Entity<Leadgenkpi>(entity =>
+        modelBuilder.Entity<LeadgenKpi>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.HasOne(d => d.Ad).WithMany(p => p.Leadgenkpis).HasConstraintName("LeadGenKpi_Ad_FK");
         });
 
-        modelBuilder.Entity<Leadgenlead>(entity =>
+        modelBuilder.Entity<LeadgenLead>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Leadgenkpi).WithOne(p => p.Leadgenlead).HasConstraintName("LeadGenLead_LeadGen_FK");
+            entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgenlead).HasConstraintName("LeadGenLead_LeadGen_FK");
         });
 
-        modelBuilder.Entity<Leadgenlocation>(entity =>
+        modelBuilder.Entity<LeadgenLocation>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Leadgenkpi).WithOne(p => p.Leadgenlocation).HasConstraintName("LeadGenLocation_LeadGen_FK");
+            entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgenlocation).HasConstraintName("LeadGenLocation_LeadGen_FK");
         });
 
-        modelBuilder.Entity<Leadgenregistration>(entity =>
+        modelBuilder.Entity<LeadgenRegistration>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Leadgenkpi).WithOne(p => p.Leadgenregistration).HasConstraintName("LeadGenRegistration_LeadGen_FK");
+            entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgenregistration).HasConstraintName("LeadGenRegistration_LeadGen_FK");
         });
 
-        modelBuilder.Entity<Leadgensubscription>(entity =>
+        modelBuilder.Entity<LeadgenSubscription>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Leadgenkpi).WithOne(p => p.Leadgensubscription).HasConstraintName("LeadGenSubscription_LeadGen_FK");
+            entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgensubscription).HasConstraintName("LeadGenSubscription_LeadGen_FK");
         });
 
-        modelBuilder.Entity<Leadgentrial>(entity =>
+        modelBuilder.Entity<LeadgenTrial>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.HasOne(d => d.Leadgenkpi).WithOne(p => p.Leadgentrial).HasConstraintName("LeadGenTrial_LeadGen_FK");
+            entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgentrial).HasConstraintName("LeadGenTrial_LeadGen_FK");
         });
 
         modelBuilder.Entity<Token>(entity =>
@@ -424,7 +424,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("token_company_fk");
         });
 
-        modelBuilder.Entity<Tokenfbaccount>(entity =>
+        modelBuilder.Entity<TokenFbAccount>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -433,7 +433,7 @@ public partial class DataAllyDbContext : DbContext
                 .HasConstraintName("TokenFBAccount_TokenId_FK");
         });
 
-        modelBuilder.Entity<Videokpi>(entity =>
+        modelBuilder.Entity<VideoKpi>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 

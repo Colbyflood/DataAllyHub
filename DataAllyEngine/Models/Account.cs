@@ -36,7 +36,7 @@ public partial class Account
 
     [ForeignKey("AccountTypeId")]
     [InverseProperty("Accounts")]
-    public virtual Accounttype AccountType { get; set; } = null!;
+    public virtual AccountType AccountType { get; set; } = null!;
 
     [InverseProperty("Account")]
     public virtual ICollection<Client> Clients { get; set; } = new List<Client>();

@@ -52,7 +52,7 @@ public partial class Adset
     public virtual ICollection<Ad> Ads { get; set; } = new List<Ad>();
 
     [InverseProperty("Adset")]
-    public virtual ICollection<Adsetad> Adsetads { get; set; } = new List<Adsetad>();
+    public virtual ICollection<AdsetAd> Adsetads { get; set; } = new List<AdsetAd>();
 
     [ForeignKey("CampaignId")]
     [InverseProperty("Adsets")]

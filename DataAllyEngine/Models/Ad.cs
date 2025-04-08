@@ -53,20 +53,20 @@ public partial class Ad
     public virtual Adset Adset { get; set; } = null!;
 
     [InverseProperty("Ad")]
-    public virtual ICollection<Adsetad> Adsetads { get; set; } = new List<Adsetad>();
+    public virtual ICollection<AdsetAd> Adsetads { get; set; } = new List<AdsetAd>();
 
     [InverseProperty("Ad")]
-    public virtual ICollection<Appkpi> Appkpis { get; set; } = new List<Appkpi>();
+    public virtual ICollection<AppKpi> Appkpis { get; set; } = new List<AppKpi>();
 
     [InverseProperty("Ad")]
-    public virtual ICollection<Ecommercekpi> Ecommercekpis { get; set; } = new List<Ecommercekpi>();
+    public virtual ICollection<EcommerceKpi> Ecommercekpis { get; set; } = new List<EcommerceKpi>();
 
     [InverseProperty("Ad")]
-    public virtual ICollection<Generalkpi> Generalkpis { get; set; } = new List<Generalkpi>();
+    public virtual ICollection<GeneralKpi> Generalkpis { get; set; } = new List<GeneralKpi>();
 
     [InverseProperty("Ad")]
-    public virtual ICollection<Leadgenkpi> Leadgenkpis { get; set; } = new List<Leadgenkpi>();
+    public virtual ICollection<LeadgenKpi> Leadgenkpis { get; set; } = new List<LeadgenKpi>();
 
     [InverseProperty("Ad")]
-    public virtual ICollection<Videokpi> Videokpis { get; set; } = new List<Videokpi>();
+    public virtual ICollection<VideoKpi> Videokpis { get; set; } = new List<VideoKpi>();
 }

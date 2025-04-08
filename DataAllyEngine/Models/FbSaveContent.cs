@@ -10,7 +10,7 @@ namespace DataAllyEngine.Models;
 [Index("AdCreativeRunlogId", Name = "fbsave_ad_creative_fb_idx")]
 [Index("AdImageRunlogId", Name = "fbsave_ad_image_fk_idx")]
 [Index("AdInsightRunlogId", Name = "fbsave_ad_insight_fk_idx")]
-public partial class Fbsavecontent
+public partial class FbSaveContent
 {
     [Key]
     [Column("id")]
@@ -48,13 +48,13 @@ public partial class Fbsavecontent
 
     [ForeignKey("AdCreativeRunlogId")]
     [InverseProperty("FbsavecontentAdCreativeRunlogs")]
-    public virtual Fbrunlog AdCreativeRunlog { get; set; } = null!;
+    public virtual FbRunLog AdCreativeRunlog { get; set; } = null!;
 
     [ForeignKey("AdImageRunlogId")]
     [InverseProperty("FbsavecontentAdImageRunlogs")]
-    public virtual Fbrunlog AdImageRunlog { get; set; } = null!;
+    public virtual FbRunLog AdImageRunlog { get; set; } = null!;
 
     [ForeignKey("AdInsightRunlogId")]
     [InverseProperty("FbsavecontentAdInsightRunlogs")]
-    public virtual Fbrunlog AdInsightRunlog { get; set; } = null!;
+    public virtual FbRunLog AdInsightRunlog { get; set; } = null!;
 }

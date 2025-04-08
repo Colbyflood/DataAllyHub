@@ -41,10 +41,10 @@ public partial class Channelsourceflow
     public DateTime CreatedUtc { get; set; }
 
     [InverseProperty("Channelsourceflow")]
-    public virtual Backfillflowrequest? Backfillflowrequest { get; set; }
+    public virtual BackfillFlowRequest? Backfillflowrequest { get; set; }
 
     [InverseProperty("Channelsourceflow")]
-    public virtual Backfillrequest? Backfillrequest { get; set; }
+    public virtual BackfillRequest? Backfillrequest { get; set; }
 
     [ForeignKey("ChannelId")]
     [InverseProperty("Channelsourceflows")]

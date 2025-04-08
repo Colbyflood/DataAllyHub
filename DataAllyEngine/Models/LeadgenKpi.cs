@@ -9,7 +9,7 @@ namespace DataAllyEngine.Models;
 [Table("leadgenkpi")]
 [Index("AdId", Name = "LeadGenKpi_Ad_FK")]
 [Index("AdId", "EffectiveDate", Name = "leadgenkpi_UK", IsUnique = true)]
-public partial class Leadgenkpi
+public partial class LeadgenKpi
 {
     [Key]
     [Column("id")]
@@ -32,26 +32,26 @@ public partial class Leadgenkpi
     public virtual Ad Ad { get; set; } = null!;
 
     [InverseProperty("Leadgenkpi")]
-    public virtual Leadgenapplication? Leadgenapplication { get; set; }
+    public virtual LeadgenApplication? Leadgenapplication { get; set; }
 
     [InverseProperty("Leadgenkpi")]
-    public virtual Leadgenappointment? Leadgenappointment { get; set; }
+    public virtual LeadgenAppointment? Leadgenappointment { get; set; }
 
     [InverseProperty("Leadgenkpi")]
-    public virtual Leadgencontact? Leadgencontact { get; set; }
+    public virtual LeadgenContact? Leadgencontact { get; set; }
 
     [InverseProperty("Leadgenkpi")]
-    public virtual Leadgenlead? Leadgenlead { get; set; }
+    public virtual LeadgenLead? Leadgenlead { get; set; }
 
     [InverseProperty("Leadgenkpi")]
-    public virtual Leadgenlocation? Leadgenlocation { get; set; }
+    public virtual LeadgenLocation? Leadgenlocation { get; set; }
 
     [InverseProperty("Leadgenkpi")]
-    public virtual Leadgenregistration? Leadgenregistration { get; set; }
+    public virtual LeadgenRegistration? Leadgenregistration { get; set; }
 
     [InverseProperty("Leadgenkpi")]
-    public virtual Leadgensubscription? Leadgensubscription { get; set; }
+    public virtual LeadgenSubscription? Leadgensubscription { get; set; }
 
     [InverseProperty("Leadgenkpi")]
-    public virtual Leadgentrial? Leadgentrial { get; set; }
+    public virtual LeadgenTrial? Leadgentrial { get; set; }
 }

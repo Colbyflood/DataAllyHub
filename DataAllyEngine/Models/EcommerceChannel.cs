@@ -9,7 +9,7 @@ namespace DataAllyEngine.Models;
 [Table("ecommercechannel")]
 [Index("EcommercekpiId", Name = "EcommerceChannel_ECommerce_FK")]
 [Index("EcommercekpiId", Name = "ecommercekpi_id_UK", IsUnique = true)]
-public partial class Ecommercechannel
+public partial class EcommerceChannel
 {
     [Key]
     [Column("id")]
@@ -60,5 +60,5 @@ public partial class Ecommercechannel
 
     [ForeignKey("EcommercekpiId")]
     [InverseProperty("Ecommercechannel")]
-    public virtual Ecommercekpi Ecommercekpi { get; set; } = null!;
+    public virtual EcommerceKpi EcommerceKpi { get; set; } = null!;
 }
