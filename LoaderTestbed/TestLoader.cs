@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using FacebookLoader.Common;
+using FacebookLoader.Content;
 using FacebookLoader.Loader.AdCreative;
 using FacebookLoader.Loader.AdImage;
 using FacebookLoader.Loader.AdInsight;
@@ -24,15 +25,25 @@ try
 {
 	// var adImagesLoader = new AdImagesLoader(facebookParameters, logger);
 	//
-	// var response = await adImagesLoader.StartLoad(true);
+	// var response = await adImagesLoader.StartLoadAsync(true);
 	// foreach (var content in response.Content)
 	// {
 	// 	Console.WriteLine(content.Name);
 	// }
+	// Console.WriteLine("Converting to JSON");
+	// var json = response.ToJson();
+	// Console.WriteLine(json);
+	// 	
+	// Console.WriteLine("Rehydrating objects");
+	// var newContent = FacebookAdImagesResponse.FromJson(json);
+	// foreach (var content in newContent.Content)
+	// {
+	// 	Console.WriteLine($"NOW: {content.Name}");
+	// }
 
 	// var adCreativeLoader = new AdCreativesLoader(facebookParameters, logger);
 	//
-	// var response = await adCreativeLoader.StartLoad(true);
+	// var response = await adCreativeLoader.StartLoadAsync(true);
 	// if (response == null)
 	// {
 	// 	Console.WriteLine("Failed to load ad creatives");
@@ -43,10 +54,21 @@ try
 	// 	{
 	// 		Console.WriteLine(content.Name);
 	// 	}
-	// }
 	//
+	// 	Console.WriteLine("Converting to JSON");
+	// 	var json = response.ToJson();
+	// 	Console.WriteLine(json);
+	// 	
+	// 	Console.WriteLine("Rehydrating objects");
+	// 	var newContent = FacebookAdCreativesResponse.FromJson(json);
+	// 	foreach (var content in newContent.Content)
+	// 	{
+	// 		Console.WriteLine($"NOW: {content.Name}");
+	// 	}
+	// }
+	
 	var adInsightsLoader = new AdInsightsLoader(facebookParameters, logger);
-
+	
 	var response = await adInsightsLoader.StartLoadAsync("2025-04-03", "2025-04-07", true);
 	if (response == null)
 	{
@@ -57,6 +79,17 @@ try
 		foreach (var content in response.Content)
 		{
 			Console.WriteLine(content.Name);
+		}
+		
+		Console.WriteLine("Converting to JSON");
+		var json = response.ToJson();
+		Console.WriteLine(json);
+		
+		Console.WriteLine("Rehydrating objects");
+		var newContent = FacebookAdInsightsResponse.FromJson(json);
+		foreach (var content in newContent.Content)
+		{
+			Console.WriteLine($"NOW: {content.Name}");
 		}
 	}
 }

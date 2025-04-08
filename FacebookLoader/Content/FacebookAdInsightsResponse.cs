@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace FacebookLoader.Content;
 
 public class FacebookAdInsightsResponse
@@ -9,6 +11,7 @@ public class FacebookAdInsightsResponse
 	public bool TokenExpired { get; }
 	public bool Throttled { get; }
 
+	[JsonConstructor]
 	public FacebookAdInsightsResponse(
 		List<FacebookAdInsight> content,
 		bool isSuccessful = true,
@@ -23,5 +26,15 @@ public class FacebookAdInsightsResponse
 		NotPermitted = notPermitted;
 		TokenExpired = tokenExpired;
 		Throttled = throttled;
+	}
+	
+	public static FacebookAdInsightsResponse? FromJson(string json)
+	{
+		return JsonConvert.DeserializeObject<FacebookAdInsightsResponse>(json);
+	}
+	
+	public string ToJson()
+	{
+		return JsonConvert.SerializeObject(this, Formatting.None);
 	}
 }
