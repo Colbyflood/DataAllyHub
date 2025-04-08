@@ -84,4 +84,23 @@ public class LoaderProxy : ILoaderProxy
 		}
 		context.SaveChanges();	
 	}
+
+	public int GetNextSequenceByRunlogId(int runlogId)
+	{
+		var maxSequence = context.Fbrunstagings
+			.Where(record => record.FbRunlogId == runlogId)
+			.Select(record => record.Sequence)
+			.DefaultIfEmpty(0)
+			.Max();
+		return maxSequence + 1;
+	}
+
+	public void WriteFbRunStaging(FbRunStaging runStaging)
+	{
+		if (runStaging.Id <= 0)
+		{
+			context.Fbrunstagings.Add(runStaging);
+		}
+		context.SaveChanges();	
+	}
 }

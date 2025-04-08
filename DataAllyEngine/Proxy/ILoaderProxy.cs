@@ -24,4 +24,7 @@ public interface ILoaderProxy
 	
 	void WriteFbRunProblem(FbRunProblem runProblem);
 	
+	int GetNextSequenceByRunlogId(int runlogId);
+	void WriteFbRunStaging(FbRunStaging runStaging);
+	
 }
