@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using System.Threading.Tasks;
+using DataAllyEngine.AwsServices;
+using Newtonsoft.Json;
 
 namespace DataAllyEngine.Controllers;
 
@@ -43,16 +45,28 @@ public class SnsController : ControllerBase
     {
         using (var reader = new StreamReader(Request.Body))
         {
-            var message = await reader.ReadToEndAsync();
-            // Process the message
-            Console.WriteLine("Received SNS message: " + message);
+            var body = await reader.ReadToEndAsync();
 
-            // Handle the subscription confirmation
-            if (Request.Headers.ContainsKey("x-amz-sns-message-type") &&
-                Request.Headers["x-amz-sns-message-type"] == "SubscriptionConfirmation")
+            // Deserialize the SNS message using Newtonsoft.Json
+            var snsMessage = JsonConvert.DeserializeObject<SnsMessage>(body);
+            if (snsMessage == null || snsMessage.Type == null)
             {
-                // Extract the SubscribeURL from the message and confirm the subscription
-                // This step requires additional parsing to extract and confirm the URL
+                return BadRequest();
+            }
+
+            if (snsMessage.Type == "SubscriptionConfirmation")
+            {
+                // Confirm the subscription
+                using var httpClient = new HttpClient();
+                await httpClient.GetAsync(snsMessage.SubscribeURL);
+            }
+            else if (snsMessage.Type == "Notification")
+            {
+                // Process the notification
+                Console.WriteLine($"Received message: {snsMessage.Message}");
+                
+                //var customMessage = JsonConvert.DeserializeObject<CustomMessage>(snsMessage.Message);
+                // Implement your message processing logic here
             }
         }
 
