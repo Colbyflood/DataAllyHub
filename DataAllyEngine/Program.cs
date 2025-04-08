@@ -1,6 +1,7 @@
 using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
 using DataAllyEngine.Context;
+using DataAllyEngine.Proxy;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,9 @@ builder.Services.Add(new ServiceDescriptor(typeof(IConfigurationLoader), xmlConf
 // create db contexts for each of the domains
 builder.Services.AddDbContext<DataAllyDbContext>(options =>
     options.UseMySQL(xmlConfigurationLoader.GetKeyValueFor(Names.DB_CONNECTION_STRING_KEY)));
+
+// Add injectable proxies
+builder.Services.AddScoped<ILoaderProxy, LoaderProxy>();
 
 
 // Add services to the container.
