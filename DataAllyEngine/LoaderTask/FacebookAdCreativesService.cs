@@ -34,7 +34,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
         return runlog;
     }
 
-    public async Task<bool> StartAdCreativesLoad(FbRunLog runlog)
+    private async Task<bool> StartAdCreativesLoad(FbRunLog runlog)
     {
         logging.LogInformation($"Requesting and processing ad creatives for scope {runlog.ScopeType} in runlog {runlog.Id}");
 
@@ -87,7 +87,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
         var loader = new AdCreativesLoader(facebookParameters, logging);
         var response = await loader.LoadAsync(url);
 
-        if (response.Content.Count > 0)
+        if (response?.Content.Count > 0)
         {
             var content = response.ToJson();
 
