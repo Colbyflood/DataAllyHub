@@ -24,8 +24,8 @@ public class StatusNotificationService : IStatusNotificationService
 				return;
 			}
 
-			var subject = $"Notice: MakeMyCap {serviceName} service started";
-			var body = $"This is just a notification to alert you to the fact that the {serviceName} service on the MakeMyCap server has started up.\r\n\r\nThere is nothing to do unless this startup was unexpected.";
+			var subject = $"Notice: DataAllyHub {serviceName} service started";
+			var body = $"This is just a notification to alert you to the fact that the {serviceName} service on the DataAllyHub server has started up.\r\n\r\nThere is nothing to do unless this startup was unexpected.";
 			
 			emailQueueService.Add(recipients, subject, body);
 		}
@@ -46,8 +46,8 @@ public class StatusNotificationService : IStatusNotificationService
 				return;
 			}
 
-			var subject = $"Notice: MakeMyCap {serviceName} service stopped";
-			var body = $"This is just a notification to alert you to the fact that the {serviceName} service on the MakeMyCap server has stopped/shut down.\r\n\r\nThere is nothing to do unless this shutdown was unexpected or is not followed by a startup notification.";
+			var subject = $"Notice: DataAllyHub {serviceName} service stopped";
+			var body = $"This is just a notification to alert you to the fact that the {serviceName} service on the DataAllyHub server has stopped/shut down.\r\n\r\nThere is nothing to do unless this shutdown was unexpected or is not followed by a startup notification.";
 			
 			emailQueueService.Add(recipients, subject, body);
 		}

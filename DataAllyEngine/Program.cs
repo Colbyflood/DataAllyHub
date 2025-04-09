@@ -2,6 +2,9 @@ using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
 using DataAllyEngine.Context;
 using DataAllyEngine.Proxy;
+using DataAllyEngine.Services.DailySchedule;
+using DataAllyEngine.Services.Email;
+using DataAllyEngine.Services.Notification;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,8 +23,19 @@ builder.Services.Add(new ServiceDescriptor(typeof(IConfigurationLoader), xmlConf
 builder.Services.AddDbContext<DataAllyDbContext>(options =>
     options.UseMySQL(xmlConfigurationLoader.GetKeyValueFor(Names.DB_CONNECTION_STRING_KEY)));
 
+
+// Add singleton injectables
+builder.Services.AddSingleton<IEmailQueueContainer, EmailQueueContainer>();
+
+
 // Add injectable proxies
 builder.Services.AddScoped<ILoaderProxy, LoaderProxy>();
+builder.Services.AddScoped<IStatusNotificationService, StatusNotificationService>();
+
+
+// Add background services
+builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
+builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
 
 
 // Add services to the container.

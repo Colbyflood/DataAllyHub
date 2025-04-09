@@ -4,29 +4,28 @@ namespace DataAllyEngine.Services.Email;
 
 public class EmailQueueService : IEmailQueueService
 {
-	public const string SENDGRID_SENDER = "SendGridSender";
+	// ReSharper disable once MemberCanBePrivate.Global
+	// ReSharper disable once InconsistentNaming
+	public const string EMAIL_SENDER = "EmailSender";
 
-	private readonly IEmailProxy emailProxy;
 	private readonly string defaultSender;
+	private readonly IEmailQueueContainer emailQueueContainer;
 	private readonly ILogger<EmailQueueService> logger;
 	
-	public EmailQueueService(IConfigurationLoader configurationLoader, IEmailProxy emailProxy, ILogger<EmailQueueService> logger)
+	public EmailQueueService(IConfigurationLoader configurationLoader, IEmailQueueContainer emailQueueContainer, ILogger<EmailQueueService> logger)
 	{
-		this.emailProxy = emailProxy;
+		this.emailQueueContainer = emailQueueContainer;
 		this.logger = logger;
-		
-		defaultSender = configurationLoader.GetKeyValueFor(SENDGRID_SENDER);
+		defaultSender = configurationLoader.GetKeyValueFor(EMAIL_SENDER);
 	}
 	
-	public void Add(string recipient, string subject, string body, string sender = null)
+	public void Add(string recipient, string subject, string body, string? sender = null)
 	{
-		var recipients = new List<string>();
-		recipients.Add(recipient);
-		Add(recipients, subject, body, sender);
+		Add([recipient], subject, body, sender);
 	}
 
-	public void Add(List<string> recipients, string subject, string body, string sender = null)
+	public void Add(List<string> recipients, string subject, string body, string? sender = null)
 	{
-		emailProxy.QueueMessage(string.IsNullOrEmpty(sender) ? defaultSender : sender, recipients, subject, body);
+		emailQueueContainer.InsertEmail(new QueuedEmail(string.IsNullOrEmpty(sender) ? sender : defaultSender, recipients, subject, body));
 	}
 }
