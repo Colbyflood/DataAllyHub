@@ -2,29 +2,29 @@ using DataAllyEngine.Common;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using FacebookLoader.Common;
-using FacebookLoader.Loader.AdInsight;
+using FacebookLoader.Loader.AdCreative;
 
 namespace DataAllyEngine.LoaderTask;
 
-public class FacebookAdInsightsService : FacebookServiceBase
+public class FacebookAdCreativesService : FacebookServiceBase
 {
-	public FacebookAdInsightsService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging) 
+	public FacebookAdCreativesService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging) 
 		: base(channel, loaderProxy, facebookParameters, logging)
 	{
 	}
 
-    public async Task<FbRunLog> InitiateAdInsightLoad(string scopeType, DateTime startDate, DateTime endDate)
+    public async Task<FbRunLog> InitiateAdCreativeLoad(string scopeType)
     {
-        logging.LogInformation($"Requesting loading of ad insights for channel {channel.Id} in scope {scopeType} between {startDate} and {endDate}");
+        logging.LogInformation($"Requesting loading of ad creatives for channel {channel.Id} in scope {scopeType}");
 
         var runlog = new FbRunLog();
         runlog.ChannelId = channel.Id;
-        runlog.FeedType = Names.FEED_TYPE_AD_INSIGHT;
+        runlog.FeedType = Names.FEED_TYPE_AD_CREATIVE;
         runlog.ScopeType = scopeType;
         runlog.StartedUtc = DateTime.UtcNow;
         loaderProxy.WriteFbRunLog(runlog);
 
-        var success = await StartAdInsightLoad(runlog, startDate, endDate);
+        var success = await StartAdCreativeLoad(runlog);
         if (success)
         {
             runlog.FinishedUtc = DateTime.UtcNow;
@@ -34,16 +34,16 @@ public class FacebookAdInsightsService : FacebookServiceBase
         return runlog;
     }
 
-    public async Task<bool> StartAdInsightLoad(FbRunLog runlog, DateTime startDate, DateTime endDate)
+    public async Task<bool> StartAdCreativeLoad(FbRunLog runlog)
     {
-        logging.LogInformation($"Requesting and processing ad insights for scope {runlog.ScopeType} in runlog {runlog.Id}");
+        logging.LogInformation($"Requesting and processing ad creatives for scope {runlog.ScopeType} in runlog {runlog.Id}");
 
-        var loader = new AdInsightsLoader(facebookParameters, logging);
-        var response = await loader.StartLoadAsync(startDate.ToString("yyyy-MM-dd"), endDate.ToString("yyyy-MM-dd"));
+        var loader = new AdCreativesLoader(facebookParameters, logging);
+        var response = await loader.StartLoadAsync();
 
         if (response == null)
         {
-            logging.LogError($"Failed to load ad insights and response is null for {runlog.Id}");
+            logging.LogError($"Failed to load ad creatives and response is null for {runlog.Id}");
             LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null);
             return false;
         }
@@ -80,11 +80,11 @@ public class FacebookAdInsightsService : FacebookServiceBase
         return response.IsSuccessful;
     }
 
-    public async Task<bool> ResumeAdInsightLoad(FbRunLog runlog, string url)
+    public async Task<bool> ResumeAdCreativeLoad(FbRunLog runlog, string url)
     {
-        logging.LogInformation($"Resuming and processing ad insights for scope {runlog.ScopeType} in runlog {runlog.Id}");
+        logging.LogInformation($"Resuming and processing ad creatives for scope {runlog.ScopeType} in runlog {runlog.Id}");
 
-        var loader = new AdInsightsLoader(facebookParameters, logging);
+        var loader = new AdCreativesLoader(facebookParameters, logging);
         var response = await loader.LoadAsync(url);
 
         if (response.Content.Count > 0)
