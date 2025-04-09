@@ -120,5 +120,4 @@ public class LoaderRunner
 		await service.ResumeAdInsightsLoad(runlog, url);
 		logger.LogInformation($"Exiting resumed AdInsightLoadTask for channel {runlog.ChannelId}");
 	}
-
 }

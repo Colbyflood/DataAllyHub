@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "2QQADel/agI=",
+  "dgSpecHash": "36+YdYnguhc=",
   "success": true,
   "projectFilePath": "C:\\Code\\DataAllyHub\\DataAllyEngine\\DataAllyEngine.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\lafor\\.nuget\\packages\\awssdk.core\\3.7.402.34\\awssdk.core.3.7.402.34.nupkg.sha512",
+    "C:\\Users\\lafor\\.nuget\\packages\\awssdk.core\\3.7.402.36\\awssdk.core.3.7.402.36.nupkg.sha512",
     "C:\\Users\\lafor\\.nuget\\packages\\awssdk.s3\\3.7.416.4\\awssdk.s3.3.7.416.4.nupkg.sha512",
+    "C:\\Users\\lafor\\.nuget\\packages\\awssdk.simpleemail\\3.7.402.73\\awssdk.simpleemail.3.7.402.73.nupkg.sha512",
     "C:\\Users\\lafor\\.nuget\\packages\\awssdk.simplenotificationservice\\3.7.400.128\\awssdk.simplenotificationservice.3.7.400.128.nupkg.sha512",
     "C:\\Users\\lafor\\.nuget\\packages\\bouncycastle.cryptography\\2.3.1\\bouncycastle.cryptography.2.3.1.nupkg.sha512",
     "C:\\Users\\lafor\\.nuget\\packages\\google.protobuf\\3.26.1\\google.protobuf.3.26.1.nupkg.sha512",

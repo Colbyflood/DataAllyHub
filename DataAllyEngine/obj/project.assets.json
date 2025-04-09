@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     "net8.0": {
-      "AWSSDK.Core/3.7.402.34": {
+      "AWSSDK.Core/3.7.402.36": {
         "type": "package",
         "compile": {
           "lib/net8.0/AWSSDK.Core.dll": {
@@ -27,6 +27,22 @@
         },
         "runtime": {
           "lib/net8.0/AWSSDK.S3.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "AWSSDK.SimpleEmail/3.7.402.73": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "[3.7.402.36, 4.0.0)"
+        },
+        "compile": {
+          "lib/net8.0/AWSSDK.SimpleEmail.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/AWSSDK.SimpleEmail.dll": {
             "related": ".pdb;.xml"
           }
         }
@@ -1305,15 +1321,15 @@
     }
   },
   "libraries": {
-    "AWSSDK.Core/3.7.402.34": {
-      "sha512": "T7cNu0VNl/bPZVPFVXhoaXyqtedhX6xplv/u9UF/FOn2WCxNVLDSEHoZZ8n719hJStGZsh5m6zaMq4+sehuUFg==",
+    "AWSSDK.Core/3.7.402.36": {
+      "sha512": "Xrsw7P8z8ZxClciRXY4Rdb31FLhuXq57IGAisb0C15cClM/gThyy2Us0dnS0gXPdSOYuC21fk/pmLX+GDRopFw==",
       "type": "package",
-      "path": "awssdk.core/3.7.402.34",
+      "path": "awssdk.core/3.7.402.36",
       "hasTools": true,
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "awssdk.core.3.7.402.34.nupkg.sha512",
+        "awssdk.core.3.7.402.36.nupkg.sha512",
         "awssdk.core.nuspec",
         "images/AWSLogo.png",
         "lib/net35/AWSSDK.Core.dll",
@@ -1362,6 +1378,38 @@
         "lib/netstandard2.0/AWSSDK.S3.dll",
         "lib/netstandard2.0/AWSSDK.S3.pdb",
         "lib/netstandard2.0/AWSSDK.S3.xml",
+        "tools/install.ps1",
+        "tools/uninstall.ps1"
+      ]
+    },
+    "AWSSDK.SimpleEmail/3.7.402.73": {
+      "sha512": "dQwqguUUCoJnJJBP2zQQiivNw5Pz0d8bYffxdiLB10p/Ywx2XTlkFpbp1gt9OaXCgERBkCKJK0mJLyqgOhyD6Q==",
+      "type": "package",
+      "path": "awssdk.simpleemail/3.7.402.73",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "analyzers/dotnet/cs/AWSSDK.SimpleEmail.CodeAnalysis.dll",
+        "analyzers/dotnet/cs/SharedAnalysisCode.dll",
+        "awssdk.simpleemail.3.7.402.73.nupkg.sha512",
+        "awssdk.simpleemail.nuspec",
+        "images/AWSLogo.png",
+        "lib/net35/AWSSDK.SimpleEmail.dll",
+        "lib/net35/AWSSDK.SimpleEmail.pdb",
+        "lib/net35/AWSSDK.SimpleEmail.xml",
+        "lib/net45/AWSSDK.SimpleEmail.dll",
+        "lib/net45/AWSSDK.SimpleEmail.pdb",
+        "lib/net45/AWSSDK.SimpleEmail.xml",
+        "lib/net8.0/AWSSDK.SimpleEmail.dll",
+        "lib/net8.0/AWSSDK.SimpleEmail.pdb",
+        "lib/net8.0/AWSSDK.SimpleEmail.xml",
+        "lib/netcoreapp3.1/AWSSDK.SimpleEmail.dll",
+        "lib/netcoreapp3.1/AWSSDK.SimpleEmail.pdb",
+        "lib/netcoreapp3.1/AWSSDK.SimpleEmail.xml",
+        "lib/netstandard2.0/AWSSDK.SimpleEmail.dll",
+        "lib/netstandard2.0/AWSSDK.SimpleEmail.pdb",
+        "lib/netstandard2.0/AWSSDK.SimpleEmail.xml",
         "tools/install.ps1",
         "tools/uninstall.ps1"
       ]
@@ -3754,6 +3802,7 @@
   "projectFileDependencyGroups": {
     "net8.0": [
       "AWSSDK.S3 >= 3.7.416.4",
+      "AWSSDK.SimpleEmail >= 3.7.402.73",
       "AWSSDK.SimpleNotificationService >= 3.7.400.128",
       "FacebookLoader >= 1.0.0",
       "Microsoft.EntityFrameworkCore >= 8.0.14",
@@ -3820,6 +3869,10 @@
           "AWSSDK.S3": {
             "target": "Package",
             "version": "[3.7.416.4, )"
+          },
+          "AWSSDK.SimpleEmail": {
+            "target": "Package",
+            "version": "[3.7.402.73, )"
           },
           "AWSSDK.SimpleNotificationService": {
             "target": "Package",
