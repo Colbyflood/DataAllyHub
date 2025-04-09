@@ -31,7 +31,7 @@ builder.Services.AddSingleton<IEmailQueueContainer, EmailQueueContainer>();
 
 // Add injectable proxies
 builder.Services.AddScoped<ILoaderProxy, LoaderProxy>();
-builder.Services.AddScoped<ILoaderProxy, LoaderProxy>();
+builder.Services.AddScoped<ISchedulerProxy, SchedulerProxy>();
 
 // Add services
 builder.Services.AddScoped<IStatusNotificationService, StatusNotificationService>();
