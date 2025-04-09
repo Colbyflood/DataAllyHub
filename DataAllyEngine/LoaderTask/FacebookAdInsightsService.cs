@@ -13,7 +13,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
 	{
 	}
 
-    public async Task<FbRunLog> InitiateAdInsightLoad(string scopeType, DateTime startDate, DateTime endDate)
+    public async Task<FbRunLog> InitiateAdInsightsLoad(string scopeType, DateTime startDate, DateTime endDate)
     {
         logging.LogInformation($"Requesting loading of ad insights for channel {channel.Id} in scope {scopeType} between {startDate} and {endDate}");
 
@@ -24,7 +24,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
         runlog.StartedUtc = DateTime.UtcNow;
         loaderProxy.WriteFbRunLog(runlog);
 
-        var success = await StartAdInsightLoad(runlog, startDate, endDate);
+        var success = await StartAdInsightsLoad(runlog, startDate, endDate);
         if (success)
         {
             runlog.FinishedUtc = DateTime.UtcNow;
@@ -34,7 +34,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
         return runlog;
     }
 
-    public async Task<bool> StartAdInsightLoad(FbRunLog runlog, DateTime startDate, DateTime endDate)
+    public async Task<bool> StartAdInsightsLoad(FbRunLog runlog, DateTime startDate, DateTime endDate)
     {
         logging.LogInformation($"Requesting and processing ad insights for scope {runlog.ScopeType} in runlog {runlog.Id}");
 
@@ -80,7 +80,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
         return response.IsSuccessful;
     }
 
-    public async Task<bool> ResumeAdInsightLoad(FbRunLog runlog, string url)
+    public async Task<bool> ResumeAdInsightsLoad(FbRunLog runlog, string url)
     {
         logging.LogInformation($"Resuming and processing ad insights for scope {runlog.ScopeType} in runlog {runlog.Id}");
 

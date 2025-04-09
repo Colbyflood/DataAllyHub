@@ -2,29 +2,29 @@ using DataAllyEngine.Common;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using FacebookLoader.Common;
-using FacebookLoader.Loader.AdCreative;
+using FacebookLoader.Loader.AdImage;
 
 namespace DataAllyEngine.LoaderTask;
 
-public class FacebookAdCreativesService : FacebookServiceBase
+public class FacebookAdImagesService : FacebookServiceBase
 {
-	public FacebookAdCreativesService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging) 
+	public FacebookAdImagesService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging) 
 		: base(channel, loaderProxy, facebookParameters, logging)
 	{
 	}
 
-    public async Task<FbRunLog> InitiateAdCreativesLoad(string scopeType)
+    public async Task<FbRunLog> InitiateAdImagesLoad(string scopeType)
     {
-        logging.LogInformation($"Requesting loading of ad creatives for channel {channel.Id} in scope {scopeType}");
+        logging.LogInformation($"Requesting loading of ad images for channel {channel.Id} in scope {scopeType}");
 
         var runlog = new FbRunLog();
         runlog.ChannelId = channel.Id;
-        runlog.FeedType = Names.FEED_TYPE_AD_CREATIVE;
+        runlog.FeedType = Names.FEED_TYPE_AD_IMAGE;
         runlog.ScopeType = scopeType;
         runlog.StartedUtc = DateTime.UtcNow;
         loaderProxy.WriteFbRunLog(runlog);
 
-        var success = await StartAdCreativesLoad(runlog);
+        var success = await StartAdImagesLoad(runlog);
         if (success)
         {
             runlog.FinishedUtc = DateTime.UtcNow;
@@ -34,16 +34,16 @@ public class FacebookAdCreativesService : FacebookServiceBase
         return runlog;
     }
 
-    public async Task<bool> StartAdCreativesLoad(FbRunLog runlog)
+    public async Task<bool> StartAdImagesLoad(FbRunLog runlog)
     {
-        logging.LogInformation($"Requesting and processing ad creatives for scope {runlog.ScopeType} in runlog {runlog.Id}");
+        logging.LogInformation($"Requesting and processing ad images for scope {runlog.ScopeType} in runlog {runlog.Id}");
 
-        var loader = new AdCreativesLoader(facebookParameters, logging);
+        var loader = new AdImagesLoader(facebookParameters, logging);
         var response = await loader.StartLoadAsync();
 
         if (response == null)
         {
-            logging.LogError($"Failed to load ad creatives and response is null for {runlog.Id}");
+            logging.LogError($"Failed to load ad images and response is null for {runlog.Id}");
             LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null);
             return false;
         }
@@ -80,11 +80,11 @@ public class FacebookAdCreativesService : FacebookServiceBase
         return response.IsSuccessful;
     }
 
-    public async Task<bool> ResumeAdCreativesLoad(FbRunLog runlog, string url)
+    public async Task<bool> ResumeAdImagesLoad(FbRunLog runlog, string url)
     {
-        logging.LogInformation($"Resuming and processing ad creatives for scope {runlog.ScopeType} in runlog {runlog.Id}");
+        logging.LogInformation($"Resuming and processing ad images for scope {runlog.ScopeType} in runlog {runlog.Id}");
 
-        var loader = new AdCreativesLoader(facebookParameters, logging);
+        var loader = new AdImagesLoader(facebookParameters, logging);
         var response = await loader.LoadAsync(url);
 
         if (response.Content.Count > 0)
