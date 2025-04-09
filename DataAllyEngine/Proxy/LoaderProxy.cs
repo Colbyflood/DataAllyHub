@@ -24,21 +24,6 @@ public class LoaderProxy : ILoaderProxy
 		return context.Channeltypes.SingleOrDefault(record => record.Name.ToLower() == channelName.ToLower());
 	}
 
-	public Client? GetClientById(int clientId)
-	{
-		return context.Clients.SingleOrDefault(record => record.Id == clientId);
-	}
-
-	public Account? GetAccountById(int accountId)
-	{
-		return context.Accounts.SingleOrDefault(record => record.Id == accountId);
-	}
-
-	public Token? GetTokenByCompanyAndChannelType(int companyId, ChannelType channelType)
-	{
-		return context.Tokens.SingleOrDefault(record => record.CompanyId == companyId && record.ChannelTypeId == channelType.Id);
-	}
-
 	public FbDailySchedule? GetFbDailyScheduleByChannelId(int channelId)
 	{
 		return context.Fbdailyschedules.SingleOrDefault(record => record.ChannelId == channelId);

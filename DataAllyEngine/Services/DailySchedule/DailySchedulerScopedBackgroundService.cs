@@ -1,4 +1,6 @@
-﻿namespace DataAllyEngine.Services.DailySchedule;
+﻿using DataAllyEngine.Services.Notification;
+
+namespace DataAllyEngine.Services.DailySchedule;
 
 public class DailySchedulerScopedBackgroundService : BackgroundService
 {

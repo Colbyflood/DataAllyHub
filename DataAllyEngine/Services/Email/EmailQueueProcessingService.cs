@@ -2,11 +2,8 @@
 
 public class EmailQueueProcessingService : IEmailQueueProcessingService
 {
-	private const int ONE_MINUTE = 2;
-	private const int PROCESSING_TIMEOUT_MSEC = ONE_MINUTE * 60 * 1000;
+	private const int PROCESSING_TIMEOUT_MSEC = 15 * 1000;
 	
-	private const int FAILURE_HOURS = 48;
-
 	private readonly IEmailQueueContainer emailQueueContainer;
 	private readonly IEmailSender emailSender;
 	private readonly ILogger<EmailQueueProcessingService> logger;
@@ -41,6 +38,7 @@ public class EmailQueueProcessingService : IEmailQueueProcessingService
 			{
 				logger.LogInformation($"{nameof(EmailQueueProcessingService)} has received a queued message to transmit.");
 				SendQueuedMessage(queuedEmail);
+				return true;
 			}
 		}
 		catch (Exception ex)

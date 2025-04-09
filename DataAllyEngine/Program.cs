@@ -2,6 +2,7 @@ using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
 using DataAllyEngine.Context;
 using DataAllyEngine.Proxy;
+using DataAllyEngine.Schedule;
 using DataAllyEngine.Services.DailySchedule;
 using DataAllyEngine.Services.Email;
 using DataAllyEngine.Services.Notification;
@@ -30,7 +31,11 @@ builder.Services.AddSingleton<IEmailQueueContainer, EmailQueueContainer>();
 
 // Add injectable proxies
 builder.Services.AddScoped<ILoaderProxy, LoaderProxy>();
+builder.Services.AddScoped<ILoaderProxy, LoaderProxy>();
+
+// Add services
 builder.Services.AddScoped<IStatusNotificationService, StatusNotificationService>();
+builder.Services.AddScoped<IDailySchedulerService, DailySchedulerService>();
 
 
 // Add background services

@@ -8,11 +8,6 @@ public interface ILoaderProxy
 	
 	ChannelType? GetChannelTypeByName(string channelName);
 	
-	Client? GetClientById(int clientId);
-	
-	Account? GetAccountById(int accountId);
-	
-	Token? GetTokenByCompanyAndChannelType(int companyId, ChannelType channelType);
 	
 	FbDailySchedule? GetFbDailyScheduleByChannelId(int channelId);
 	void WriteFbDailySchedule(FbDailySchedule dailySchedule);
@@ -26,5 +21,4 @@ public interface ILoaderProxy
 	
 	int GetNextSequenceByRunlogId(int runlogId);
 	void WriteFbRunStaging(FbRunStaging runStaging);
-	
 }
