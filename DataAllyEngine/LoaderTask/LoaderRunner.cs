@@ -26,13 +26,21 @@ public class LoaderRunner
 		Task.Run(() => StartAdCreativesLoadTask(facebookParameters, channel, scopeType, loaderProxy, logging));
 	}
 
-	public void ResumeAdCreativesLoad(FacebookParameters facebookParameters, FbRunLog runlog, string url)
+	public void ResumeAdImagesLoad(FacebookParameters facebookParameters, FbRunLog runlog, string url)
 	{
 		Task.Run(() => ResumeAdCreativesLoadTask(facebookParameters, runlog, url, loaderProxy, logging));
 	}
 
 
+	public void StartAdImagessLoad(FacebookParameters facebookParameters, Channel channel, string scopeType)
+	{
+		Task.Run(() => StartAdImagesLoadTask(facebookParameters, channel, scopeType, loaderProxy, logging));
+	}
 
+	public void ResumeAdCreativesLoad(FacebookParameters facebookParameters, FbRunLog runlog, string url)
+	{
+		Task.Run(() => ResumeAdImagesLoadTask(facebookParameters, runlog, url, loaderProxy, logging));
+	}
 
 	private static async Task StartAdCreativesLoadTask(FacebookParameters facebookParameters, Channel channel, string scopeType, ILoaderProxy loaderProxy, ILogging logger)
 	{
@@ -41,7 +49,6 @@ public class LoaderRunner
 		await service.InitiateAdCreativesLoad(scopeType);
 		logger.LogInformation($"Exiting started AdCreativeLoadTask for channel {channel.Id}");
 	}
-
 
 	private static async Task ResumeAdCreativesLoadTask(FacebookParameters facebookParameters, FbRunLog runlog, string url, ILoaderProxy loaderProxy, ILogging logger)
 	{
@@ -55,6 +62,28 @@ public class LoaderRunner
 		var service = new FacebookAdCreativesService(channel, loaderProxy, facebookParameters, logger);
 		await service.ResumeAdCreativesLoad(runlog, url);
 		logger.LogInformation($"Exiting resumed AdCreativeLoadTask for channel {runlog.ChannelId}");
+	}
+	
+	private static async Task StartAdImagesLoadTask(FacebookParameters facebookParameters, Channel channel, string scopeType, ILoaderProxy loaderProxy, ILogging logger)
+	{
+		logger.LogInformation($"Starting AdImageLoadTask for channel {channel.Id}");
+		var service = new FacebookAdImagesService(channel, loaderProxy, facebookParameters, logger);
+		await service.InitiateAdImagesLoad(scopeType);
+		logger.LogInformation($"Exiting started AdImageLoadTask for channel {channel.Id}");
+	}
+	
+	private static async Task ResumeAdImagesLoadTask(FacebookParameters facebookParameters, FbRunLog runlog, string url, ILoaderProxy loaderProxy, ILogging logger)
+	{
+		logger.LogInformation($"Resuming AdImageLoadTask for channel {runlog.ChannelId}");
+		var channel = loaderProxy.GetChannelById(runlog.ChannelId);
+		if (channel == null)
+		{
+			logger.LogError($"Resuming AdImageLoadTask for channel {runlog.ChannelId} failed because channel {runlog.ChannelId} not found");
+			return;
+		}
+		var service = new FacebookAdImagesService(channel, loaderProxy, facebookParameters, logger);
+		await service.ResumeAdImagesLoad(runlog, url);
+		logger.LogInformation($"Exiting resumed AdImageLoadTask for channel {runlog.ChannelId}");
 	}
 
 }
