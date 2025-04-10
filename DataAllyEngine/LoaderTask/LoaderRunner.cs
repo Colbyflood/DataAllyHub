@@ -1,14 +1,11 @@
-﻿using DataAllyEngine.Common;
-using DataAllyEngine.Models;
+﻿using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using FacebookLoader.Common;
-using FacebookLoader.Loader.AdCreative;
-using FacebookLoader.Loader.AdImage;
-using FacebookLoader.Loader.AdInsight;
+
 
 namespace DataAllyEngine.LoaderTask;
 
-public class LoaderRunner
+public class LoaderRunner : ILoaderRunner
 {
 	private readonly ILoaderProxy loaderProxy;
 	private readonly ILogger<LoaderRunner> logger;

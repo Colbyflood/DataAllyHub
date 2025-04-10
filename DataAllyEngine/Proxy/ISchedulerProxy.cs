@@ -15,6 +15,8 @@ public interface ISchedulerProxy
 	Client? GetClientById(int clientId);
 	
 	Account? GetAccountById(int accountId);
+	
+	Company? GetCompanyByChannelId(int channelId);
 		
 	Token? GetTokenByCompanyAndChannelType(int companyId, ChannelType channelType);
 	

@@ -47,6 +47,26 @@ public class SchedulerProxy : ISchedulerProxy
 	{
 		return context.Accounts.SingleOrDefault(record => record.Id == accountId);
 	}
+
+	public Company? GetCompanyByChannelId(int channelId)
+	{
+		var channel = context.Channels.SingleOrDefault(record => record.Id == channelId);
+		if (channel == null)
+		{
+			return null;
+		}
+		var client = context.Clients.SingleOrDefault(record => record.Id == channel.ClientId);
+		if (client == null)
+		{
+			return null;
+		}
+		var account = context.Accounts.SingleOrDefault(record => record.Id == client.AccountId);
+		if (account == null)
+		{
+			return null;
+		}
+		return context.Companies.SingleOrDefault(record => record.Id == account.CompanyId);
+	}
 	
 	public Token? GetTokenByCompanyAndChannelType(int companyId, ChannelType channelType)
 	{

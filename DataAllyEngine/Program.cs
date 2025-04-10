@@ -1,6 +1,7 @@
 using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
 using DataAllyEngine.Context;
+using DataAllyEngine.LoaderTask;
 using DataAllyEngine.Proxy;
 using DataAllyEngine.Schedule;
 using DataAllyEngine.Services.DailySchedule;
@@ -34,6 +35,7 @@ builder.Services.AddScoped<ILoaderProxy, LoaderProxy>();
 builder.Services.AddScoped<ISchedulerProxy, SchedulerProxy>();
 
 // Add services
+builder.Services.AddScoped<ILoaderRunner, LoaderRunner>();
 builder.Services.AddScoped<IStatusNotificationService, StatusNotificationService>();
 builder.Services.AddScoped<IDailySchedulerService, DailySchedulerService>();
 
