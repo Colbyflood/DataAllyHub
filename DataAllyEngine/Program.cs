@@ -3,7 +3,6 @@ using DataAllyEngine.Configuration;
 using DataAllyEngine.Context;
 using DataAllyEngine.LoaderTask;
 using DataAllyEngine.Proxy;
-using DataAllyEngine.Schedule;
 using DataAllyEngine.Services.DailySchedule;
 using DataAllyEngine.Services.Email;
 using DataAllyEngine.Services.Notification;

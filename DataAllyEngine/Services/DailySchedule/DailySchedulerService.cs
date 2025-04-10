@@ -2,17 +2,18 @@ using DataAllyEngine.Common;
 using DataAllyEngine.LoaderTask;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
-using DataAllyEngine.Services.DailySchedule;
+using FacebookLoader.Common;
 
-namespace DataAllyEngine.Schedule;
+namespace DataAllyEngine.Services.DailySchedule;
 
 public class DailySchedulerService : IDailySchedulerService
 {
+	// ReSharper disable InconsistentNaming
 	private const int ONE_MINUTE = 1;
 	private const int ONE_MINUTE_MSEC = ONE_MINUTE * 60 * 1000;
 	private const int MAXIMUM_STARTS_PER_MINUTE = 10;		// approx 600 per hour
 	private const string FACEBOOK_CHANNEL_NAME = "Facebook";
-
+	private const int RUNLOGS_PER_CANDIDATE = 3;
 	
 	private readonly ISchedulerProxy schedulerProxy;
 	private readonly ILoaderRunner loaderRunner;
@@ -47,6 +48,8 @@ public class DailySchedulerService : IDailySchedulerService
 		}
 		
 		var now = DateTime.UtcNow;
+		var windowStartTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, DateTimeKind.Utc);
+			
 		var candidates = GetPendingSchedulesFor(now);
 		var candidateCount = 0;
 		if (candidates.Count > MAXIMUM_STARTS_PER_MINUTE)
@@ -67,7 +70,27 @@ public class DailySchedulerService : IDailySchedulerService
 				logger.LogError($"Could not find company for candidate with channel Id {candidate.ChannelId} ({channel.ChannelAccountName})");
 				continue;
 			}
-
+			
+			FbRunLog? adImageRunLog = null;
+			FbRunLog? adCreativeRunLog = null;
+			FbRunLog? adInsightRunLog = null;
+			var runlogs = schedulerProxy.GetFbRunLogsByChannelIdAfterDate(candidate.ChannelId, windowStartTime);
+			foreach (var runlog in runlogs)
+			{
+				if (runlog.FeedType == Names.FEED_TYPE_AD_IMAGE)
+				{
+					adImageRunLog = runlog;
+				}
+				else if (runlog.FeedType == Names.FEED_TYPE_AD_CREATIVE)
+				{
+					adCreativeRunLog = runlog;
+				}
+				else if (runlog.FeedType == Names.FEED_TYPE_AD_INSIGHT)
+				{
+					adInsightRunLog = runlog;
+				}
+			}
+			
 			var token = schedulerProxy.GetTokenByCompanyAndChannelType(company.Id, channelType);
 			if (token == null)
 			{
@@ -84,21 +107,31 @@ public class DailySchedulerService : IDailySchedulerService
 			}
 			
 			
-			logger.LogInformation($"Launching daily loads for channel Id {candidate.ChannelId} ({channel.ChannelAccountName})");
-			
-			
-			
-			loaderRunner.StartAdInsightsLoad(now, candidate);
-			loaderRunner.StartAdImagesLoad();
-			loaderRunner.StartAdCreativesLoad();
-			
+			logger.LogInformation($"Launching previously unstarted daily loads for channel Id {candidate.ChannelId} ({channel.ChannelAccountName})");
+
+			var facebookParameters = new FacebookParameters(channel.ChannelAccountId, token.Token1);
+			if (adImageRunLog == null)
+			{
+				loaderRunner.StartAdImagesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY);
+			}
+
+			if (adCreativeRunLog == null)
+			{
+				loaderRunner.StartAdCreativesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY);
+			}
+
+			if (adInsightRunLog == null)
+			{
+				var yesterday = windowStartTime.AddDays(-1);
+				loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY, yesterday, now);
+			}
+
 			++candidateCount;
 			if (candidateCount >= MAXIMUM_STARTS_PER_MINUTE)
 			{
 				break;
 			}
 		}
-
 	}
 
 	private List<FbDailySchedule> GetPendingSchedulesFor(DateTime utcNow)
@@ -112,7 +145,7 @@ public class DailySchedulerService : IDailySchedulerService
 		var candidates = new List<FbDailySchedule>();
 		possibles.ForEach(possible =>
 		{
-			if (!schedulerProxy.GetFbRunLogsByChannelIdAfterDate(possible.ChannelId, utcNow).Any())
+			if (schedulerProxy.GetFbRunLogsByChannelIdAfterDate(possible.ChannelId, utcNow).Count < RUNLOGS_PER_CANDIDATE)
 			{
 				candidates.Add(possible);
 			}
@@ -122,25 +155,25 @@ public class DailySchedulerService : IDailySchedulerService
 
 	private void MarkTokenFailure(Channel channel, bool isTokenDisabled, FbRunLog? adImageRunLog, FbRunLog? adCreativeRunLog, FbRunLog? adInsightRunLog)
 	{
-		logger.LogWarning($"Token failure for channel Id {channel.ChannelId} ({channel.ChannelAccountName})");
+		logger.LogWarning($"Token failure for channel Id {channel.Id} ({channel.ChannelAccountName})");
 		
 		var now = DateTime.UtcNow;
 		var problem = isTokenDisabled ? Names.FB_PROBLEM_DISABLED_TOKEN : Names.FB_PROBLEM_BAD_TOKEN;
 
 
-		if (adImageRunLog != null)
+		if (adImageRunLog == null)
 		{
 			adImageRunLog = CreateRunLog(channel.Id, now, Names.FEED_TYPE_AD_IMAGE, Names.SCOPE_TYPE_DAILY);
 		}
 		LogProblem(adImageRunLog, now, problem);
 
-		if (adCreativeRunLog != null)
+		if (adCreativeRunLog == null)
 		{
 			adCreativeRunLog = CreateRunLog(channel.Id, now, Names.FEED_TYPE_AD_CREATIVE, Names.SCOPE_TYPE_DAILY);
 		}
 		LogProblem(adCreativeRunLog, now, problem);
 
-		if (adInsightRunLog != null)
+		if (adInsightRunLog == null)
 		{
 			adInsightRunLog = CreateRunLog(channel.Id, now, Names.FEED_TYPE_AD_INSIGHT, Names.SCOPE_TYPE_DAILY);
 		}
