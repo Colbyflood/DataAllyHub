@@ -6,6 +6,7 @@ using DataAllyEngine.Proxy;
 using DataAllyEngine.Services.DailySchedule;
 using DataAllyEngine.Services.Email;
 using DataAllyEngine.Services.Notification;
+using DataAllyEngine.Services.RestartProbe;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +38,7 @@ builder.Services.AddScoped<ISchedulerProxy, SchedulerProxy>();
 builder.Services.AddScoped<ILoaderRunner, LoaderRunner>();
 builder.Services.AddScoped<IStatusNotificationService, StatusNotificationService>();
 builder.Services.AddScoped<IDailySchedulerService, DailySchedulerService>();
+builder.Services.AddScoped<IRestartProbeService, RestartProbeService>();
 
 
 // Add background services

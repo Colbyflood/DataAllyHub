@@ -25,10 +25,12 @@ public interface ISchedulerProxy
 	List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, DateTime date);
 	
 	List<FbRunLog> GetFbRunLogsByChannelIdAndScopeTypeInDateRange(int channelId, string scopeType, DateTime startDate, DateTime endDate);
+
+	List<FbRunLog> GetIncompleteFbRunLogsSince(DateTime startDateUtc);
 	
 	void WriteFbRunLog(FbRunLog runLog);
 		
-	List<FbRunProblem> GetFbRunProblemByRunlogIdOrderByDescendingCreated(int runlogId);
+	List<FbRunProblem> GetFbRunProblemsByRunlogIdOrderByDescendingCreated(int runlogId);
 	
 	void WriteFbRunProblem(FbRunProblem runProblem);
 }

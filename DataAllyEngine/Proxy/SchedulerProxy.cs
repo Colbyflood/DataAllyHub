@@ -90,6 +90,13 @@ public class SchedulerProxy : ISchedulerProxy
 			.ToList();
 	}
 
+	public List<FbRunLog> GetIncompleteFbRunLogsSince(DateTime startDateUtc)
+	{
+		return context.Fbrunlogs.Where(record => record.StartedUtc >= startDateUtc && record.FinishedUtc == null)
+			.OrderBy(record => record.StartedUtc)
+			.ToList();
+	}
+
 	
 	public void WriteFbRunLog(FbRunLog runLog)
 	{
@@ -100,7 +107,7 @@ public class SchedulerProxy : ISchedulerProxy
 		context.SaveChanges();
 	}
 
-	public List<FbRunProblem> GetFbRunProblemByRunlogIdOrderByDescendingCreated(int runlogId)
+	public List<FbRunProblem> GetFbRunProblemsByRunlogIdOrderByDescendingCreated(int runlogId)
 	{
 		return context.Fbrunproblems.Where(record => record.FbRunlogId == runlogId)
 			.OrderByDescending(record => record.CreatedUtc)
