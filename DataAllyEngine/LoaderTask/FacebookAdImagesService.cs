@@ -34,7 +34,7 @@ public class FacebookAdImagesService : FacebookServiceBase
         return runlog;
     }
 
-    private async Task<bool> StartAdImagesLoad(FbRunLog runlog)
+    public async Task<bool> StartAdImagesLoad(FbRunLog runlog)
     {
         logging.LogInformation($"Requesting and processing ad images for scope {runlog.ScopeType} in runlog {runlog.Id}");
 

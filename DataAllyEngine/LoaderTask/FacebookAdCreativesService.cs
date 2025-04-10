@@ -34,7 +34,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
         return runlog;
     }
 
-    private async Task<bool> StartAdCreativesLoad(FbRunLog runlog)
+    public async Task<bool> StartAdCreativesLoad(FbRunLog runlog)
     {
         logging.LogInformation($"Requesting and processing ad creatives for scope {runlog.ScopeType} in runlog {runlog.Id}");
 

@@ -34,7 +34,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
         return runlog;
     }
 
-    private async Task<bool> StartAdInsightsLoad(FbRunLog runlog, DateTime startDate, DateTime endDate)
+    public async Task<bool> StartAdInsightsLoad(FbRunLog runlog, DateTime startDate, DateTime endDate)
     {
         logging.LogInformation($"Requesting and processing ad insights for scope {runlog.ScopeType} in runlog {runlog.Id}");
 
