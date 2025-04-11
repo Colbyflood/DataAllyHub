@@ -2,49 +2,49 @@ namespace DataAllyEngine.ContentProcessingTask;
 
 public class KpiProcessor
 {
-    private readonly Channel _channel;
-    private readonly DbConnection _dbConnection;
+    private readonly Channel channel;
+    private readonly DbConnection dbConnection;
 
-    private readonly AppKpiProxy _appKpiProxy;
-    private readonly GeneralKpiProxy _generalKpiProxy;
-    private readonly EcommerceKpiProxy _ecommerceKpiProxy;
-    private readonly EcommerceChannelProxy _ecommerceChannelProxy;
-    private readonly EcommerceMobileProxy _ecommerceMobileProxy;
-    private readonly EcommerceTotalProxy _ecommerceTotalProxy;
-    private readonly EcommerceWebsiteProxy _ecommerceWebsiteProxy;
-    private readonly LeadGenKpiProxy _leadgenKpiProxy;
-    private readonly LeadGenApplicationProxy _leadgenApplicationProxy;
-    private readonly LeadGenAppointmentProxy _leadgenAppointmentProxy;
-    private readonly LeadGenContactProxy _leadgenContactProxy;
-    private readonly LeadGenLeadProxy _leadgenLeadProxy;
-    private readonly LeadGenLocationProxy _leadgenLocationProxy;
-    private readonly LeadGenRegistrationProxy _leadgenRegistrationProxy;
-    private readonly LeadGenSubscriptionProxy _leadgenSubscriptionProxy;
-    private readonly LeadGenTrialProxy _leadgenTrialProxy;
-    private readonly VideoKpiProxy _videoKpiProxy;
+    private readonly AppKpiProxy appKpiProxy;
+    private readonly GeneralKpiProxy generalKpiProxy;
+    private readonly EcommerceKpiProxy ecommerceKpiProxy;
+    private readonly EcommerceChannelProxy ecommerceChannelProxy;
+    private readonly EcommerceMobileProxy ecommerceMobileProxy;
+    private readonly EcommerceTotalProxy ecommerceTotalProxy;
+    private readonly EcommerceWebsiteProxy ecommerceWebsiteProxy;
+    private readonly LeadGenKpiProxy leadgenKpiProxy;
+    private readonly LeadGenApplicationProxy leadgenApplicationProxy;
+    private readonly LeadGenAppointmentProxy leadgenAppointmentProxy;
+    private readonly LeadGenContactProxy leadgenContactProxy;
+    private readonly LeadGenLeadProxy leadgenLeadProxy;
+    private readonly LeadGenLocationProxy leadgenLocationProxy;
+    private readonly LeadGenRegistrationProxy leadgenRegistrationProxy;
+    private readonly LeadGenSubscriptionProxy leadgenSubscriptionProxy;
+    private readonly LeadGenTrialProxy leadgenTrialProxy;
+    private readonly VideoKpiProxy videoKpiProxy;
 
     public KpiProcessor(Channel channel, DbConnection dbConnection)
     {
-        _channel = channel;
-        _dbConnection = dbConnection;
+        channel = channel;
+        dbConnection = dbConnection;
 
-        _appKpiProxy = new AppKpiProxy(dbConnection);
-        _generalKpiProxy = new GeneralKpiProxy(dbConnection);
-        _ecommerceKpiProxy = new EcommerceKpiProxy(dbConnection);
-        _ecommerceChannelProxy = new EcommerceChannelProxy(dbConnection);
-        _ecommerceMobileProxy = new EcommerceMobileProxy(dbConnection);
-        _ecommerceTotalProxy = new EcommerceTotalProxy(dbConnection);
-        _ecommerceWebsiteProxy = new EcommerceWebsiteProxy(dbConnection);
-        _leadgenKpiProxy = new LeadGenKpiProxy(dbConnection);
-        _leadgenApplicationProxy = new LeadGenApplicationProxy(dbConnection);
-        _leadgenAppointmentProxy = new LeadGenAppointmentProxy(dbConnection);
-        _leadgenContactProxy = new LeadGenContactProxy(dbConnection);
-        _leadgenLeadProxy = new LeadGenLeadProxy(dbConnection);
-        _leadgenLocationProxy = new LeadGenLocationProxy(dbConnection);
-        _leadgenRegistrationProxy = new LeadGenRegistrationProxy(dbConnection);
-        _leadgenSubscriptionProxy = new LeadGenSubscriptionProxy(dbConnection);
-        _leadgenTrialProxy = new LeadGenTrialProxy(dbConnection);
-        _videoKpiProxy = new VideoKpiProxy(dbConnection);
+        appKpiProxy = new AppKpiProxy(dbConnection);
+        generalKpiProxy = new GeneralKpiProxy(dbConnection);
+        ecommerceKpiProxy = new EcommerceKpiProxy(dbConnection);
+        ecommerceChannelProxy = new EcommerceChannelProxy(dbConnection);
+        ecommerceMobileProxy = new EcommerceMobileProxy(dbConnection);
+        ecommerceTotalProxy = new EcommerceTotalProxy(dbConnection);
+        ecommerceWebsiteProxy = new EcommerceWebsiteProxy(dbConnection);
+        leadgenKpiProxy = new LeadGenKpiProxy(dbConnection);
+        leadgenApplicationProxy = new LeadGenApplicationProxy(dbConnection);
+        leadgenAppointmentProxy = new LeadGenAppointmentProxy(dbConnection);
+        leadgenContactProxy = new LeadGenContactProxy(dbConnection);
+        leadgenLeadProxy = new LeadGenLeadProxy(dbConnection);
+        leadgenLocationProxy = new LeadGenLocationProxy(dbConnection);
+        leadgenRegistrationProxy = new LeadGenRegistrationProxy(dbConnection);
+        leadgenSubscriptionProxy = new LeadGenSubscriptionProxy(dbConnection);
+        leadgenTrialProxy = new LeadGenTrialProxy(dbConnection);
+        videoKpiProxy = new VideoKpiProxy(dbConnection);
     }
 
     public void ImportKpis(Ad ad, FacebookInsight entry)
@@ -54,7 +54,7 @@ public class KpiProcessor
         var effectiveDate = entry.DateStart;
         var createdDate = DateTime.Now;
 
-        var appKpi = _appKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
+        var appKpi = appKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
         if (appKpi == null)
         {
             appKpi = new AppKpi
@@ -63,10 +63,10 @@ public class KpiProcessor
                 EffectiveDate = effectiveDate,
                 Created = createdDate
             };
-            _appKpiProxy.Save(appKpi);
+            appKpiProxy.Save(appKpi);
         }
 
-        var ecommerceKpi = _ecommerceKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
+        var ecommerceKpi = ecommerceKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
         if (ecommerceKpi == null)
         {
             ecommerceKpi = new EcommerceKpi
@@ -75,34 +75,34 @@ public class KpiProcessor
                 EffectiveDate = effectiveDate,
                 Created = createdDate
             };
-            _ecommerceKpiProxy.Save(ecommerceKpi);
+            ecommerceKpiProxy.Save(ecommerceKpi);
         }
 
-        var ecommerceChannel = _ecommerceChannelProxy.GetByParent(ecommerceKpi.Id) ?? new EcommerceChannel
+        var ecommerceChannel = ecommerceChannelProxy.GetByParent(ecommerceKpi.Id) ?? new EcommerceChannel
         {
             EcommerceKpiId = ecommerceKpi.Id
         };
-        _ecommerceChannelProxy.Save(ecommerceChannel);
+        ecommerceChannelProxy.Save(ecommerceChannel);
 
-        var ecommerceMobile = _ecommerceMobileProxy.GetByParent(ecommerceKpi.Id) ?? new EcommerceMobile
+        var ecommerceMobile = ecommerceMobileProxy.GetByParent(ecommerceKpi.Id) ?? new EcommerceMobile
         {
             EcommerceKpiId = ecommerceKpi.Id
         };
-        _ecommerceMobileProxy.Save(ecommerceMobile);
+        ecommerceMobileProxy.Save(ecommerceMobile);
 
-        var ecommerceTotal = _ecommerceTotalProxy.GetByParent(ecommerceKpi.Id) ?? new EcommerceTotal
+        var ecommerceTotal = ecommerceTotalProxy.GetByParent(ecommerceKpi.Id) ?? new EcommerceTotal
         {
             EcommerceKpiId = ecommerceKpi.Id
         };
-        _ecommerceTotalProxy.Save(ecommerceTotal);
+        ecommerceTotalProxy.Save(ecommerceTotal);
 
-        var ecommerceWebsite = _ecommerceWebsiteProxy.GetByParent(ecommerceKpi.Id) ?? new EcommerceWebsite
+        var ecommerceWebsite = ecommerceWebsiteProxy.GetByParent(ecommerceKpi.Id) ?? new EcommerceWebsite
         {
             EcommerceKpiId = ecommerceKpi.Id
         };
-        _ecommerceWebsiteProxy.Save(ecommerceWebsite);
+        ecommerceWebsiteProxy.Save(ecommerceWebsite);
 
-        var generalKpi = _generalKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
+        var generalKpi = generalKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
         if (generalKpi == null)
         {
             generalKpi = new GeneralKpi
@@ -114,9 +114,9 @@ public class KpiProcessor
         }
 
         generalKpi.IsActive = ad.AdDeactivated == null;
-        _generalKpiProxy.Save(generalKpi);
+        generalKpiProxy.Save(generalKpi);
 
-        var leadgenKpi = _leadgenKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
+        var leadgenKpi = leadgenKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
         if (leadgenKpi == null)
         {
             leadgenKpi = new LeadGenKpi
@@ -125,58 +125,58 @@ public class KpiProcessor
                 EffectiveDate = effectiveDate,
                 Created = createdDate
             };
-            _leadgenKpiProxy.Save(leadgenKpi);
+            leadgenKpiProxy.Save(leadgenKpi);
         }
 
-        var leadgenApplication = _leadgenApplicationProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenApplication
+        var leadgenApplication = leadgenApplicationProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenApplication
         {
             LeadGenKpiId = leadgenKpi.Id
         };
-        _leadgenApplicationProxy.Save(leadgenApplication);
+        leadgenApplicationProxy.Save(leadgenApplication);
 
-        var leadgenAppointment = _leadgenAppointmentProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenAppointment
+        var leadgenAppointment = leadgenAppointmentProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenAppointment
         {
             LeadGenKpiId = leadgenKpi.Id
         };
-        _leadgenAppointmentProxy.Save(leadgenAppointment);
+        leadgenAppointmentProxy.Save(leadgenAppointment);
 
-        var leadgenContact = _leadgenContactProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenContact
+        var leadgenContact = leadgenContactProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenContact
         {
             LeadGenKpiId = leadgenKpi.Id
         };
-        _leadgenContactProxy.Save(leadgenContact);
+        leadgenContactProxy.Save(leadgenContact);
 
-        var leadgenLead = _leadgenLeadProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenLead
+        var leadgenLead = leadgenLeadProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenLead
         {
             LeadGenKpiId = leadgenKpi.Id
         };
-        _leadgenLeadProxy.Save(leadgenLead);
+        leadgenLeadProxy.Save(leadgenLead);
 
-        var leadgenLocation = _leadgenLocationProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenLocation
+        var leadgenLocation = leadgenLocationProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenLocation
         {
             LeadGenKpiId = leadgenKpi.Id
         };
-        _leadgenLocationProxy.Save(leadgenLocation);
+        leadgenLocationProxy.Save(leadgenLocation);
 
-        var leadgenRegistration = _leadgenRegistrationProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenRegistration
+        var leadgenRegistration = leadgenRegistrationProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenRegistration
         {
             LeadGenKpiId = leadgenKpi.Id
         };
-        _leadgenRegistrationProxy.Save(leadgenRegistration);
+        leadgenRegistrationProxy.Save(leadgenRegistration);
 
-        var leadgenSubscription = _leadgenSubscriptionProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenSubscription
+        var leadgenSubscription = leadgenSubscriptionProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenSubscription
         {
             LeadGenKpiId = leadgenKpi.Id
         };
-        _leadgenSubscriptionProxy.Save(leadgenSubscription);
+        leadgenSubscriptionProxy.Save(leadgenSubscription);
 
-        var leadgenTrial = _leadgenTrialProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenTrial
+        var leadgenTrial = leadgenTrialProxy.GetByParent(leadgenKpi.Id) ?? new LeadGenTrial
         {
             LeadGenKpiId = leadgenKpi.Id
         };
-        _leadgenTrialProxy.Save(leadgenTrial);
+        leadgenTrialProxy.Save(leadgenTrial);
 
-        var videoKpi = _videoKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
+        var videoKpi = videoKpiProxy.GetByAdAndEffectiveDate(ad.Id, effectiveDate);
         if (videoKpi == null)
         {
             videoKpi = new VideoKpi
@@ -185,7 +185,7 @@ public class KpiProcessor
                 EffectiveDate = effectiveDate,
                 Created = createdDate
             };
-            _videoKpiProxy.Save(videoKpi);
+            videoKpiProxy.Save(videoKpi);
         }
 
         LoadAppKpi(entry, appKpi);
@@ -197,31 +197,31 @@ public class KpiProcessor
 
         // Final save with updated timestamp
         appKpi.Updated = createdDate;
-        _appKpiProxy.Save(appKpi);
+        appKpiProxy.Save(appKpi);
 
         ecommerceKpi.Updated = createdDate;
-        _ecommerceKpiProxy.Save(ecommerceKpi);
-        _ecommerceChannelProxy.Save(ecommerceChannel);
-        _ecommerceMobileProxy.Save(ecommerceMobile);
-        _ecommerceTotalProxy.Save(ecommerceTotal);
-        _ecommerceWebsiteProxy.Save(ecommerceWebsite);
+        ecommerceKpiProxy.Save(ecommerceKpi);
+        ecommerceChannelProxy.Save(ecommerceChannel);
+        ecommerceMobileProxy.Save(ecommerceMobile);
+        ecommerceTotalProxy.Save(ecommerceTotal);
+        ecommerceWebsiteProxy.Save(ecommerceWebsite);
 
         generalKpi.Updated = createdDate;
-        _generalKpiProxy.Save(generalKpi);
+        generalKpiProxy.Save(generalKpi);
 
         leadgenKpi.Updated = createdDate;
-        _leadgenKpiProxy.Save(leadgenKpi);
-        _leadgenApplicationProxy.Save(leadgenApplication);
-        _leadgenAppointmentProxy.Save(leadgenAppointment);
-        _leadgenContactProxy.Save(leadgenContact);
-        _leadgenLeadProxy.Save(leadgenLead);
-        _leadgenLocationProxy.Save(leadgenLocation);
-        _leadgenRegistrationProxy.Save(leadgenRegistration);
-        _leadgenSubscriptionProxy.Save(leadgenSubscription);
-        _leadgenTrialProxy.Save(leadgenTrial);
+        leadgenKpiProxy.Save(leadgenKpi);
+        leadgenApplicationProxy.Save(leadgenApplication);
+        leadgenAppointmentProxy.Save(leadgenAppointment);
+        leadgenContactProxy.Save(leadgenContact);
+        leadgenLeadProxy.Save(leadgenLead);
+        leadgenLocationProxy.Save(leadgenLocation);
+        leadgenRegistrationProxy.Save(leadgenRegistration);
+        leadgenSubscriptionProxy.Save(leadgenSubscription);
+        leadgenTrialProxy.Save(leadgenTrial);
 
         videoKpi.Updated = createdDate;
-        _videoKpiProxy.Save(videoKpi);
+        videoKpiProxy.Save(videoKpi);
     }
 
     private static void LoadGeneralKpi(FacebookInsight entry, GeneralKpi generalKpi)
