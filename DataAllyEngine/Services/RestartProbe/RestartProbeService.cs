@@ -92,23 +92,39 @@ public class RestartProbeService : IRestartProbeService
 			var facebookParameters = new FacebookParameters(channel.ChannelAccountId, token.Token1);
 			if (runlog.FeedType == Names.FEED_TYPE_AD_IMAGE)
 			{
-				if (mostRecentThrottle == null)
+				if (mostRecentThrottle == null || mostRecentThrottle.RestartUrl == null)
 				{
-					loaderRunner.StartAdImagesLoad();
+					loaderRunner.StartAdImagesLoad(facebookParameters, runlog);
 				}
 				else
 				{
-					loaderRunner.ResumeAdImagesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY);
+					loaderRunner.ResumeAdImagesLoad(facebookParameters, runlog, mostRecentThrottle.RestartUrl);
 				}
 			}
 			else if (runlog.FeedType == Names.FEED_TYPE_AD_CREATIVE)
 			{
-				loaderRunner.ResumeAdCreativesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY);
+				if (mostRecentThrottle == null || mostRecentThrottle.RestartUrl == null)
+				{
+					loaderRunner.StartAdCreativesLoad(facebookParameters, runlog);
+				}
+				else
+				{
+					loaderRunner.ResumeAdCreativesLoad(facebookParameters, runlog, mostRecentThrottle.RestartUrl);
+				}
 			}
 			else if (runlog.FeedType == Names.FEED_TYPE_AD_INSIGHT)
 			{
-				var yesterday = windowStartTime.AddDays(-1);
-				loaderRunner.ResumeAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY, yesterday, now);
+				if (mostRecentThrottle == null || mostRecentThrottle.RestartUrl == null)
+				{
+					var endTime = new DateTime(runlog.StartedUtc.Year, runlog.StartedUtc.Month, runlog.StartedUtc.Day, runlog.StartedUtc.Hour, 0, 0, DateTimeKind.Utc);
+					var startTime = endTime.AddDays(-1);
+
+					loaderRunner.StartAdInsightsLoad(facebookParameters, runlog, startTime, endTime);
+				}
+				else
+				{
+					loaderRunner.ResumeAdInsightsLoad(facebookParameters, runlog, mostRecentThrottle.RestartUrl);
+				}
 			}
 			
 		}
