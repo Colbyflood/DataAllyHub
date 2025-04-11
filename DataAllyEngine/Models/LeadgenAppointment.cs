@@ -67,6 +67,5 @@ public partial class LeadgenAppointment
     public decimal? CostPerOfflineAppointmentsScheduled { get; set; }
 
     [ForeignKey("LeadgenkpiId")]
-    [InverseProperty("Leadgenappointment")]
     public virtual LeadgenKpi LeadgenKpi { get; set; } = null!;
 }

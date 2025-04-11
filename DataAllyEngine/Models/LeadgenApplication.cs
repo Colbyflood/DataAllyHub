@@ -63,6 +63,5 @@ public partial class LeadgenApplication
     public decimal? CostPerOfflineSubmitApplications { get; set; }
 
     [ForeignKey("LeadgenkpiId")]
-    [InverseProperty("Leadgenapplication")]
     public virtual LeadgenKpi LeadgenKpi { get; set; } = null!;
 }

@@ -63,6 +63,5 @@ public partial class LeadgenLocation
     public decimal? CostPerOfflineFindLocations { get; set; }
 
     [ForeignKey("LeadgenkpiId")]
-    [InverseProperty("Leadgenlocation")]
     public virtual LeadgenKpi LeadgenKpi { get; set; } = null!;
 }

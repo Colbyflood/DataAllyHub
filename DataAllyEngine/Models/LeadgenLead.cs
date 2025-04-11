@@ -40,6 +40,5 @@ public partial class LeadgenLead
     public decimal? CostPerWebsiteLead { get; set; }
 
     [ForeignKey("LeadgenkpiId")]
-    [InverseProperty("Leadgenlead")]
     public virtual LeadgenKpi LeadgenKpi { get; set; } = null!;
 }

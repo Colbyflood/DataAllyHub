@@ -31,27 +31,27 @@ public partial class LeadgenKpi
     [InverseProperty("Leadgenkpis")]
     public virtual Ad Ad { get; set; } = null!;
 
-    [InverseProperty("Leadgenkpi")]
+    [InverseProperty("LeadgenKpi")]
     public virtual LeadgenApplication? Leadgenapplication { get; set; }
 
-    [InverseProperty("Leadgenkpi")]
+    [InverseProperty("LeadgenKpi")]
     public virtual LeadgenAppointment? Leadgenappointment { get; set; }
 
-    [InverseProperty("Leadgenkpi")]
+    [InverseProperty("LeadgenKpi")]
     public virtual LeadgenContact? Leadgencontact { get; set; }
 
-    [InverseProperty("Leadgenkpi")]
+    [InverseProperty("LeadgenKpi")]
     public virtual LeadgenLead? Leadgenlead { get; set; }
 
-    [InverseProperty("Leadgenkpi")]
+    [InverseProperty("LeadgenKpi")]
     public virtual LeadgenLocation? Leadgenlocation { get; set; }
 
-    [InverseProperty("Leadgenkpi")]
+    [InverseProperty("LeadgenKpi")]
     public virtual LeadgenRegistration? Leadgenregistration { get; set; }
 
-    [InverseProperty("Leadgenkpi")]
+    [InverseProperty("LeadgenKpi")]
     public virtual LeadgenSubscription? Leadgensubscription { get; set; }
 
-    [InverseProperty("Leadgenkpi")]
+    [InverseProperty("LeadgenKpi")]
     public virtual LeadgenTrial? Leadgentrial { get; set; }
 }

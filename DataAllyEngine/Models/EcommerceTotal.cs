@@ -74,6 +74,5 @@ public partial class EcommerceTotal
     public decimal? TotalRoa { get; set; }
 
     [ForeignKey("EcommercekpiId")]
-    [InverseProperty("Ecommercetotal")]
     public virtual EcommerceKpi EcommerceKpi { get; set; } = null!;
 }

@@ -47,6 +47,5 @@ public partial class LeadgenTrial
     public decimal? OfflineTrialsStartedValue { get; set; }
 
     [ForeignKey("LeadgenkpiId")]
-    [InverseProperty("Leadgentrial")]
     public virtual LeadgenKpi LeadgenKpi { get; set; } = null!;
 }

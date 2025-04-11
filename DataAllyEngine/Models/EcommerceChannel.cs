@@ -59,6 +59,5 @@ public partial class EcommerceChannel
     public decimal? ChannelRoa { get; set; }
 
     [ForeignKey("EcommercekpiId")]
-    [InverseProperty("Ecommercechannel")]
     public virtual EcommerceKpi EcommerceKpi { get; set; } = null!;
 }

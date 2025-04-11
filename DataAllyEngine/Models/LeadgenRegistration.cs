@@ -48,6 +48,5 @@ public partial class LeadgenRegistration
     public decimal? MobileAppRegistrationsCompletedValue { get; set; }
 
     [ForeignKey("LeadgenkpiId")]
-    [InverseProperty("Leadgenregistration")]
     public virtual LeadgenKpi LeadgenKpi { get; set; } = null!;
 }

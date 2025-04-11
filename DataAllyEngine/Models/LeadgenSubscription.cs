@@ -52,6 +52,5 @@ public partial class LeadgenSubscription
     public decimal? CostPerWebsiteSubscriptions { get; set; }
 
     [ForeignKey("LeadgenkpiId")]
-    [InverseProperty("Leadgensubscription")]
     public virtual LeadgenKpi LeadgenKpi { get; set; } = null!;
 }

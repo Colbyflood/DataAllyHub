@@ -31,12 +31,12 @@ public partial class EcommerceKpi
     [InverseProperty("Ecommercekpis")]
     public virtual Ad Ad { get; set; } = null!;
 
-    [InverseProperty("Ecommercekpi")]
+    [InverseProperty("EcommerceKpi")]
     public virtual EcommerceChannel? Ecommercechannel { get; set; }
 
-    [InverseProperty("Ecommercekpi")]
+    [InverseProperty("EcommerceKpi")]
     public virtual EcommerceTotal? Ecommercetotal { get; set; }
 
-    [InverseProperty("Ecommercekpi")]
+    [InverseProperty("EcommerceKpi")]
     public virtual EcommerceWebsite? Ecommercewebsite { get; set; }
 }
