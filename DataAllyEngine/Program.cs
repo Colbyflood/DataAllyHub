@@ -36,6 +36,9 @@ builder.Services.AddScoped<ISchedulerProxy, SchedulerProxy>();
 
 // Add services
 builder.Services.AddScoped<ILoaderRunner, LoaderRunner>();
+builder.Services.AddScoped<IEmailSender, AmazonSesEmailSender>();
+builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
+builder.Services.AddScoped<IEmailQueueProcessingService, EmailQueueProcessingService>();
 builder.Services.AddScoped<IStatusNotificationService, StatusNotificationService>();
 builder.Services.AddScoped<IDailySchedulerService, DailySchedulerService>();
 builder.Services.AddScoped<IRestartProbeService, RestartProbeService>();
@@ -44,6 +47,7 @@ builder.Services.AddScoped<IRestartProbeService, RestartProbeService>();
 // Add background services
 builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
 builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
+builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
 
 
 // Add services to the container.
