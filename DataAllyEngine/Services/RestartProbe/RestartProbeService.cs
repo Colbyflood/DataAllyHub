@@ -24,9 +24,9 @@ public class RestartProbeService : IRestartProbeService
 	
 	private readonly ISchedulerProxy schedulerProxy;
 	private readonly ILoaderRunner loaderRunner;
-	private readonly ILogger<RestartProbeService> logger;
+	private readonly ILogger<IRestartProbeService> logger;
 
-	public RestartProbeService(ISchedulerProxy schedulerProxy, ILoaderRunner loaderRunner, ILogger<RestartProbeService> logger)
+	public RestartProbeService(ISchedulerProxy schedulerProxy, ILoaderRunner loaderRunner, ILogger<IRestartProbeService> logger)
 	{
 		this.schedulerProxy = schedulerProxy;
 		this.loaderRunner = loaderRunner;

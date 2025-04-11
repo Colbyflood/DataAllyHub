@@ -61,6 +61,9 @@ public partial class Channel
     [Column("updated", TypeName = "datetime")]
     public DateTime? Updated { get; set; }
 
+    [InverseProperty("Channel")]
+    public virtual ICollection<Asset> Assets { get; set; } = new List<Asset>();
+    
     [ForeignKey("AttributionId")]
     [InverseProperty("Channels")]
     public virtual Attribution? Attribution { get; set; }

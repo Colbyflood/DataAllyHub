@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using DataAllyEngine.Models;
+﻿using DataAllyEngine.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAllyEngine.Context;
@@ -24,9 +22,15 @@ public partial class DataAllyDbContext : DbContext
 
     public virtual DbSet<Adset> Adsets { get; set; }
 
+    public virtual DbSet<AdCopy> Adcopies { get; set; }
+
+    public virtual DbSet<AdMetadata> Admetadatas { get; set; }
+
     public virtual DbSet<AdsetAd> Adsetads { get; set; }
 
     public virtual DbSet<AppKpi> Appkpis { get; set; }
+
+    public virtual DbSet<Asset> Assets { get; set; }
 
     public virtual DbSet<Attribution> Attributions { get; set; }
 
@@ -89,6 +93,8 @@ public partial class DataAllyDbContext : DbContext
     public virtual DbSet<LeadgenSubscription> Leadgensubscriptions { get; set; }
 
     public virtual DbSet<LeadgenTrial> Leadgentrials { get; set; }
+    
+    public virtual DbSet<Thumbnail> Thumbnails { get; set; }
 
     public virtual DbSet<Token> Tokens { get; set; }
 
@@ -139,6 +145,24 @@ public partial class DataAllyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Adset_Campaign_FK");
         });
+        
+        modelBuilder.Entity<AdCopy>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.HasOne(d => d.Ad).WithMany(p => p.Adcopies)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("adcopy_ad_fk");
+        });
+        
+        modelBuilder.Entity<AdMetadata>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.HasOne(d => d.Ad).WithOne(p => p.AdMetadata)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("AdMetadata_Ad_FK");
+        });
 
         modelBuilder.Entity<AdsetAd>(entity =>
         {
@@ -158,6 +182,18 @@ public partial class DataAllyDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.HasOne(d => d.Ad).WithMany(p => p.Appkpis).HasConstraintName("AppKpi_Ad_FK");
+        });
+        
+        modelBuilder.Entity<Asset>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.Property(e => e.AssetKey).HasComment("for image and video - this will be the hash from  fb\\nfor carousel it will be the ad_id\\nfor dpa or catalog it will be the product set id");
+            entity.Property(e => e.AssetType).HasComment("values are IMAGE, VIDEO, DPA, CATALOG, CAROUSEL");
+
+            entity.HasOne(d => d.Channel).WithMany(p => p.Assets)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("asset_channel_fk");
         });
 
         modelBuilder.Entity<Attribution>(entity =>
@@ -407,6 +443,11 @@ public partial class DataAllyDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgentrial).HasConstraintName("LeadGenTrial_LeadGen_FK");
+        });
+        
+        modelBuilder.Entity<Thumbnail>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
         });
 
         modelBuilder.Entity<Token>(entity =>

@@ -6,6 +6,7 @@ using DataAllyEngine.Proxy;
 using DataAllyEngine.Services.DailySchedule;
 using DataAllyEngine.Services.Email;
 using DataAllyEngine.Services.Notification;
+using DataAllyEngine.Services.ProcessContent;
 using DataAllyEngine.Services.RestartProbe;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,12 +43,14 @@ builder.Services.AddScoped<IEmailQueueProcessingService, EmailQueueProcessingSer
 builder.Services.AddScoped<IStatusNotificationService, StatusNotificationService>();
 builder.Services.AddScoped<IDailySchedulerService, DailySchedulerService>();
 builder.Services.AddScoped<IRestartProbeService, RestartProbeService>();
+builder.Services.AddScoped<IProcessContentService, ProcessContentService>();
 
 
 // Add background services
 builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
 builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
 builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
+builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
 
 
 // Add services to the container.

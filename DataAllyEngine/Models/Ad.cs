@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,10 +46,16 @@ public partial class Ad
     [Column("updated", TypeName = "datetime")]
     public DateTime? Updated { get; set; }
 
+    [InverseProperty("Ad")]
+    public virtual ICollection<AdCopy> Adcopies { get; set; } = new List<AdCopy>();
+
+    [InverseProperty("Ad")]
+    public virtual AdMetadata? AdMetadata { get; set; }
+    
     [ForeignKey("AdsetId")]
     [InverseProperty("Ads")]
     public virtual Adset Adset { get; set; } = null!;
-
+    
     [InverseProperty("Ad")]
     public virtual ICollection<AdsetAd> Adsetads { get; set; } = new List<AdsetAd>();
 

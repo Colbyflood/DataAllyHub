@@ -17,9 +17,9 @@ public class DailySchedulerService : IDailySchedulerService
 	
 	private readonly ISchedulerProxy schedulerProxy;
 	private readonly ILoaderRunner loaderRunner;
-	private readonly ILogger<DailySchedulerService> logger;
+	private readonly ILogger<IDailySchedulerService> logger;
 
-	public DailySchedulerService(ISchedulerProxy schedulerProxy, ILoaderRunner loaderRunner, ILogger<DailySchedulerService> logger)
+	public DailySchedulerService(ISchedulerProxy schedulerProxy, ILoaderRunner loaderRunner, ILogger<IDailySchedulerService> logger)
 	{
 		this.schedulerProxy = schedulerProxy;
 		this.loaderRunner = loaderRunner;
