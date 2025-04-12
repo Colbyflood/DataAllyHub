@@ -26,13 +26,13 @@ public interface IContentProcessorProxy
 
 	List<Ad> GetAdsByChannelAdId(string channelAdId);
 	
-	Adset? GetAdsetByChannelAdsetId(int channelAdsetId);
+	Adset? GetAdsetByChannelAdsetId(string channelAdsetId);
 	void WriteAdset(Adset adset);
 	
-	Campaign? GetCampaignByChannelCampaignId(int channelCampaignId);
+	Campaign? GetCampaignByChannelCampaignId(string channelCampaignId);
 	void WriteCampaign(Campaign campaign);
 	
-	Ad? GetAdByChannelAdId(int channelAdId);
+	Ad? GetAdByChannelAdId(string channelAdId);
 	void WriteAd(Ad ad);
 	
 	AdMetadata? GetAdMetadataByAdId(int adId);
@@ -42,10 +42,9 @@ public interface IContentProcessorProxy
 	AdCopy? GetAdCopyByAdIdAndHashCode(int adId, string hashCode);
 	void WriteAdCopy(AdCopy adCopy);
 	
-	Asset? GetAssetByChannelTypeAndKey(string channelType, string key);
+	Asset? GetAssetByChannelIdTypeNameAndKey(int channelId, string assetTypeName, string key);
 	void WriteAsset(Asset asset);
 
-	Thumbnail? GetThumbnailByFilenameAndChannelAdId(string filename, int channelAdId);
+	Thumbnail? GetThumbnailByFilenameAndChannelAdId(string filename, string channelAdId);
 	void WriteThumbnail(Thumbnail thumbnail);
-
 }

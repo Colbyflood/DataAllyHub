@@ -6,9 +6,9 @@ namespace DataAllyEngine.Proxy;
 public class KpiProxy : IKpiProxy
 {
 	private readonly DataAllyDbContext context;
-	private readonly ILogger<ILoaderProxy> logger;
+	private readonly ILogger<IKpiProxy> logger;
 	
-	public KpiProxy(DataAllyDbContext context, ILogger<ILoaderProxy> logger)
+	public KpiProxy(DataAllyDbContext context, ILogger<IKpiProxy> logger)
 	{
 		this.context = context;
 		this.logger = logger;
