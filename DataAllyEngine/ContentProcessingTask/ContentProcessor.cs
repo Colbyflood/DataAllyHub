@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Drawing;
 using System.Net;
 using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
@@ -137,36 +138,36 @@ public class ContentProcessor : IContentProcessor
     private int PrepareAdHierarchy(string channelAdSetId, string adSetName, string channelCampaignId,
         string campaignName, int attributionSetting, string campaignCreated, Channel channel)
     {
-        var Adset = contentProcessorProxy.GetAdsetByChannelAdsetId(channelAdSetId)
+        var Adset = contentProcessorProxy.GetAdsetByChannelAdsetId(channelAdSetId);
         if (Adset == null)
         {
-            Adset = CreateAdSet(channelAdSetId, adSetName, channelCampaignId, campaignName, attributionSetting, campaignCreated);
+            Adset = CreateAdSet(channel, channelAdSetId, adSetName, channelCampaignId, campaignName, attributionSetting, campaignCreated);
         }
         return Adset.Id;
     }
 
-    private Adset CreateAdSet(string channelAdSetId, string adSetName, string channelCampaignId,
+    private Adset CreateAdSet(Channel channel, string channelAdSetId, string adSetName, string channelCampaignId,
         string campaignName, int attributionSetting, string campaignCreated)
     {
         var campaign = contentProcessorProxy.GetCampaignByChannelCampaignId(channelCampaignId);
         if (campaign == null)
         {
-            campaign = CreateCampaign(channelCampaignId, campaignName, attributionSetting, campaignCreated, "");
+            campaign = CreateCampaign(channel, channelCampaignId, campaignName, attributionSetting, campaignCreated, "");
         }
 
         var Adset = new Adset
         {
             CampaignId = campaign.Id,
-            ChannelAdSetId = channelAdSetId,
+            ChannelAdsetId = channelAdSetId,
             Name = adSetName,
             Created = campaign.Created
         };
 
-        adSetProxy.Save(Adset);
+        contentProcessorProxy.WriteAdset(Adset);
         return Adset;
     }
 
-    private Campaign CreateCampaign(string channelCampaignId, string campaignName, int attributionSetting,
+    private Campaign CreateCampaign(Channel channel, string channelCampaignId, string campaignName, int attributionSetting,
         string campaignCreated, string objective)
     {
         var campaign = new Campaign
@@ -244,6 +245,94 @@ public class ContentProcessor : IContentProcessor
 
         return ad;
     }
+    
+    private Asset PrepareAsset(Channel channel, FacebookAdCreative record)
+    {
+        var assetType = record.Creative.ObjectType.ToUpper();
+        var asset = contentProcessorProxy.GetAssetByChannelIdTypeNameAndKey(channel.Id, assetType, record.Creative.Id);
+
+        if (asset == null)
+        {
+            asset = new Asset
+            {
+                AssetType = assetType,
+                AssetKey = record.Creative.Id.ToUpper(),
+                ChannelId = channel.Id,
+                Url = record.Creative.ThumbnailUrl,
+                Created = record.CreatedTime,
+                Updated = record.UpdatedTime
+            };
+
+            contentProcessorProxy.WriteAsset(asset);
+        }
+
+        ProcessThumbnail(asset, record.Id);
+
+        return asset;
+    }
+    
+    private Thumbnail? ProcessThumbnail(Asset asset, string channelAdId)
+    {
+        if (string.IsNullOrWhiteSpace(asset.Url) || !asset.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine($"[WARN] Unable to process image for asset {asset.AssetType} {asset.AssetKey} because url is empty or not http");
+            return null;
+        }
+
+        var filename = ExtractFilenameFromUrl(asset.Url);
+        var thumbnail = contentProcessorProxy.GetThumbnailByFilenameAndChannelAdId(filename, channelAdId);
+        if (thumbnail != null)
+            return thumbnail;
+
+        Image? image = null;
+        try
+        {
+            image = ThumbnailTools.FetchThumbnail(asset.Url);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Error downloading {asset.Url} for asset {asset.AssetType} {asset.AssetKey}: {ex}");
+        }
+
+        if (image == null)
+        {
+            Console.WriteLine($"[WARN] No image for asset {asset.AssetType} {asset.AssetKey}");
+            return null;
+        }
+
+        var uuid = ThumbnailTools.GenerateGuid();
+        var binId = ThumbnailTools.HashToBinId(uuid);
+
+        try
+        {
+            var extension = DeriveExtensionFromFilename(filename);
+            var s3Key = ThumbnailTools.AssembleS3Key(uuid, extension, binId);
+            var imageBytes = ThumbnailTools.ConvertImageToBytes(image);
+            ThumbnailTools.SaveThumbnail(imageBytes, thumbnailBucket, s3Key);
+
+            thumbnail = new Thumbnail
+            {
+                ChannelAdId = channelAdId,
+                Filename = filename,
+                Guid = uuid,
+                BinId = binId,
+                Extension = extension
+            };
+
+            contentProcessorProxy.WriteThumbnail(thumbnail);
+
+            asset.ThumbnailGuid = uuid;
+            contentProcessorProxy.WriteAsset(asset);
+
+            return thumbnail;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] Unable to save thumbnail for {filename} as {uuid} for {asset.AssetType} {asset.AssetKey}: {ex}");
+            return null;
+        }
+    }
+
 
     private void CreateAdCopy(int adId, string? title, string? copy)
     {

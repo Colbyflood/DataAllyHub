@@ -18,7 +18,6 @@ public class KpiProcessor
         this.logger = logger;
     }
 
-
     private static DateTime ParseEffectiveDate(string effectiveDateString)
     {
         if (DateTime.TryParse(effectiveDateString, out var dateTime))
@@ -30,7 +29,6 @@ public class KpiProcessor
             throw new FormatException("Invalid effective date");
         }
     }
-    
     
     public void ImportKpis(Ad ad, FacebookInsight entry)
     {
