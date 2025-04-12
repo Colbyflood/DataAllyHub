@@ -1,8 +1,12 @@
+using DataAllyEngine.LoaderTask;
+using DataAllyEngine.Proxy;
+using DataAllyEngine.Services.DailySchedule;
+
 namespace DataAllyEngine.Services.ProcessContent;
 
 public class ProcessContentService : IProcessContentService
 {
-	public ProcessContentService(IContentProcessorProxy contentProcessorProxy, ILoaderRunner loaderRunner, ILogger<DailySchedulerService> logger)
+	public ProcessContentService(IContentProcessorProxy contentProcessorProxy, IKpiProxy kpiProxy, ILoaderRunner loaderRunner, ILogger<DailySchedulerService> logger)
 	{
 		this.schedulerProxy = schedulerProxy;
 		this.loaderRunner = loaderRunner;

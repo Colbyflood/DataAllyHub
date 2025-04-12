@@ -14,6 +14,7 @@ public class ContentProcessor : IContentProcessors
     // private readonly DbConnection dbConnection;
 
     private readonly IContentProcessorProxy contentProcessorProxy;
+    private readonly IKpiProxy kpiProxy;
     private readonly ILogger<IContentProcessor> logger;
     
     // private readonly FbRunStagingProxy fbRunStagingProxy;
@@ -25,9 +26,10 @@ public class ContentProcessor : IContentProcessors
     // private readonly AdCopyProxy adCopyProxy;
     // private readonly ThumbnailProxy thumbnailProxy;
 
-    public ContentProcessor(IContentProcessorProxy contentProcessorProxy, ILogger<IContentProcessor> logger)
+    public ContentProcessor(IContentProcessorProxy contentProcessorProxy,  IKpiProxy kpiProxy, ILogger<IContentProcessor> logger)
     {
         this.contentProcessorProxy = contentProcessorProxy;
+        kpiProxy = kpiProxy;
         this.logger = logger;
     }
 

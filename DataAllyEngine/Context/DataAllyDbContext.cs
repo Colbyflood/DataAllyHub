@@ -57,6 +57,8 @@ public partial class DataAllyDbContext : DbContext
     public virtual DbSet<EcommerceChannel> Ecommercechannels { get; set; }
 
     public virtual DbSet<EcommerceKpi> Ecommercekpis { get; set; }
+    
+    public virtual DbSet<EcommerceMobile> Ecommercemobiles { get; set; }
 
     public virtual DbSet<EcommerceTotal> Ecommercetotals { get; set; }
 
@@ -299,6 +301,13 @@ public partial class DataAllyDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.HasOne(d => d.Ad).WithMany(p => p.Ecommercekpis).HasConstraintName("EcommerceKpi_Ad_FK");
+        });
+        
+        modelBuilder.Entity<EcommerceMobile>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.HasOne(d => d.EcommerceKpi).WithOne(p => p.Ecommercemobile).HasConstraintName("EcommerceMobile_ECommerce_FK");
         });
 
         modelBuilder.Entity<EcommerceTotal>(entity =>

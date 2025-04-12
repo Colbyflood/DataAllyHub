@@ -33,6 +33,9 @@ public partial class EcommerceKpi
 
     [InverseProperty("EcommerceKpi")]
     public virtual EcommerceChannel? Ecommercechannel { get; set; }
+    
+    [InverseProperty("Ecommercekpi")]
+    public virtual EcommerceMobile? Ecommercemobile { get; set; }
 
     [InverseProperty("EcommerceKpi")]
     public virtual EcommerceTotal? Ecommercetotal { get; set; }

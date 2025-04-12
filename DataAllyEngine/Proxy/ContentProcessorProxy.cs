@@ -1,6 +1,6 @@
 namespace DataAllyEngine.Proxy;
 
-public class ContentProcessorProxy
+public class ContentProcessorProxy : IContentProcessorProxy
 {
 	
 }

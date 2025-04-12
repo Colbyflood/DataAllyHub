@@ -35,11 +35,12 @@ builder.Services.AddSingleton<IEmailQueueContainer, EmailQueueContainer>();
 // Add injectable proxies
 builder.Services.AddScoped<ILoaderProxy, LoaderProxy>();
 builder.Services.AddScoped<ISchedulerProxy, SchedulerProxy>();
+builder.Services.AddScoped<IContentProcessorProxy, ContentProcessorProxy>();
+builder.Services.AddScoped<IKpiProxy, KpiProxy>();
 
 
 // Add services
 builder.Services.AddScoped<ILoaderRunner, LoaderRunner>();
-builder.Services.AddScoped<IKpiProcessor, KpiProcessor>();
 builder.Services.AddScoped<IContentProcessor, ContentProcessor>();
 builder.Services.AddScoped<IEmailSender, AmazonSesEmailSender>();
 builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
