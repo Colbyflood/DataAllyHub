@@ -24,6 +24,8 @@ public interface IContentProcessorProxy
 	List<FbRunStaging> LoadFbRunStagingForRunlog(int runlogId);
 	void DeleteFbRunStaging(FbRunStaging staging);
 
+	List<Ad> GetAdsByChannelAdId(string channelAdId);
+	
 	Adset? GetAdsetByChannelAdsetId(int channelAdsetId);
 	void WriteAdset(Adset adset);
 	

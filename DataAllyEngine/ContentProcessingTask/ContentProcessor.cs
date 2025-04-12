@@ -1,48 +1,49 @@
 using System.Data.Common;
+using System.Net;
 using DataAllyEngine.Common;
 using DataAllyEngine.Models;
+using DataAllyEngine.Proxy;
 using FacebookLoader.Content;
 
 namespace DataAllyEngine.ContentProcessingTask;
 
-public class ContentProcessor
+public class ContentProcessor : IContentProcessors
 {
     private readonly Channel channel;
     private readonly string thumbnailBucket;
-    private readonly DbConnection dbConnection;
+    // private readonly DbConnection dbConnection;
 
-    private readonly FbRunStagingProxy fbRunStagingProxy;
-    private readonly CampaignProxy campaignProxy;
-    private readonly AdSetProxy adSetProxy;
-    private readonly AdProxy adProxy;
-    private readonly AssetProxy assetProxy;
-    private readonly AdMetadataProxy adMetadataProxy;
-    private readonly AdCopyProxy adCopyProxy;
-    private readonly ThumbnailProxy thumbnailProxy;
+    private readonly IContentProcessorProxy contentProcessorProxy;
+    private readonly ILogger<IContentProcessor> logger;
+    
+    // private readonly FbRunStagingProxy fbRunStagingProxy;
+    // private readonly CampaignProxy campaignProxy;
+    // private readonly AdSetProxy adSetProxy;
+    // private readonly AdProxy adProxy;
+    // private readonly AssetProxy assetProxy;
+    // private readonly AdMetadataProxy adMetadataProxy;
+    // private readonly AdCopyProxy adCopyProxy;
+    // private readonly ThumbnailProxy thumbnailProxy;
 
-    public ContentProcessor(Channel channel, string thumbnailBucket, DbConnection dbConnection)
+    public ContentProcessor(IContentProcessorProxy contentProcessorProxy, ILogger<IContentProcessor> logger)
+    {
+        this.contentProcessorProxy = contentProcessorProxy;
+        this.logger = logger;
+    }
+
+    public void ProcessContentFor(Channel channel)
     {
         channel = channel;
         thumbnailBucket = thumbnailBucket;
-        dbConnection = dbConnection;
-
-        fbRunStagingProxy = new FbRunStagingProxy(dbConnection);
-        campaignProxy = new CampaignProxy(dbConnection);
-        adSetProxy = new AdSetProxy(dbConnection);
-        adProxy = new AdProxy(dbConnection);
-        assetProxy = new AssetProxy(dbConnection);
-        adMetadataProxy = new AdMetadataProxy(dbConnection);
-        adCopyProxy = new AdCopyProxy(dbConnection);
-        thumbnailProxy = new ThumbnailProxy(dbConnection);
     }
 
     public void Process(FbRunLog runlog)
     {
-        if (runlog.FeedType == FbRunLog.FEED_TYPE_AD_INSIGHT)
+        if (runlog.FeedType == Names.FEED_TYPE_AD_INSIGHT)
         {
             ProcessAdInsights(runlog);
         }
-        else if (runlog.FeedType == FbRunLog.FEED_TYPE_AD_CREATIVE)
+        else if (runlog.FeedType == Names.FEED_TYPE_AD_CREATIVE)
         {
             ProcessAdCreatives(runlog);
         }
@@ -54,13 +55,13 @@ public class ContentProcessor
 
     private void ProcessAdCreatives(FbRunLog runlog)
     {
-        var stagingEntries = fbRunStagingProxy.GetByRunlog(runlog.Id);
+        var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         foreach (var entry in stagingEntries)
         {
             Console.WriteLine("Deserializing a staging entry for ad creatives");
             foreach (var record in FacebookAdCreativeTools.Deserialize(entry.Content))
             {
-                var adsetId = PrepareAdHierarchy(record.AdSetId, $"AdSet {record.AdSetId}",
+                var adsetId = PrepareAdHierarchy(record.AdSetId, $"Adset {record.AdSetId}",
                                                  record.CampaignId, $"Campaign {record.CampaignId}",
                                                  0, record.CreatedTime, channel);
                 PrepareAd(adsetId, record);
@@ -71,7 +72,7 @@ public class ContentProcessor
 
     private void ProcessAdImages(FbRunLog runlog)
     {
-        var stagingEntries = fbRunStagingProxy.GetByRunlog(runlog.Id);
+        var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         Console.WriteLine("Deserializing a staging entry for ad images");
         foreach (var entry in stagingEntries)
         {
@@ -85,7 +86,7 @@ public class ContentProcessor
 
     private void ProcessAdInsights(FbRunLog runlog)
     {
-        var stagingEntries = fbRunStagingProxy.GetByRunlog(runlog.Id);
+        var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         if (stagingEntries == null || !stagingEntries.Any()) return;
 
         var kpiProcessor = new KpiProcessor(channel, dbConnection);
@@ -104,7 +105,7 @@ public class ContentProcessor
     {
         foreach (var entry in stagingEntries)
         {
-            fbRunStagingProxy.Delete(entry);
+            contentProcessorProxy.DeleteFbRunStaging(entry);
         }
     }
 
@@ -144,24 +145,24 @@ public class ContentProcessor
     private int PrepareAdHierarchy(string channelAdSetId, string adSetName, string channelCampaignId,
         string campaignName, int attributionSetting, string campaignCreated, Channel channel)
     {
-        var adSet = adSetProxy.GetByChannelAdSetId(channelAdSetId);
-        if (adSet == null)
+        var Adset = contentProcessorProxy.GetAdsetByChannelAdsetId(channelAdSetId)
+        if (Adset == null)
         {
-            adSet = CreateAdSet(channelAdSetId, adSetName, channelCampaignId, campaignName, attributionSetting, campaignCreated);
+            Adset = CreateAdSet(channelAdSetId, adSetName, channelCampaignId, campaignName, attributionSetting, campaignCreated);
         }
-        return adSet.Id;
+        return Adset.Id;
     }
 
-    private AdSet CreateAdSet(string channelAdSetId, string adSetName, string channelCampaignId,
+    private Adset CreateAdSet(string channelAdSetId, string adSetName, string channelCampaignId,
         string campaignName, int attributionSetting, string campaignCreated)
     {
-        var campaign = campaignProxy.GetByChannelCampaignId(channelCampaignId);
+        var campaign = contentProcessorProxy.GetCampaignByChannelCampaignId(channelCampaignId);
         if (campaign == null)
         {
             campaign = CreateCampaign(channelCampaignId, campaignName, attributionSetting, campaignCreated, "");
         }
 
-        var adSet = new AdSet
+        var Adset = new Adset
         {
             CampaignId = campaign.Id,
             ChannelAdSetId = channelAdSetId,
@@ -169,8 +170,8 @@ public class ContentProcessor
             Created = campaign.Created
         };
 
-        adSetProxy.Save(adSet);
-        return adSet;
+        adSetProxy.Save(Adset);
+        return Adset;
     }
 
     private Campaign CreateCampaign(string channelCampaignId, string campaignName, int attributionSetting,
@@ -186,7 +187,7 @@ public class ContentProcessor
             Created = campaignCreated
         };
 
-        campaignProxy.Save(campaign);
+        contentProcessorProxy.WriteCampaign(campaign);
         return campaign;
     }
 
@@ -195,7 +196,7 @@ public class ContentProcessor
     {
         var asset = PrepareAsset(record);
         Ad? ad = null;
-        var ads = adProxy.GetByChannelAdId(record.Id);
+        var ads = contentProcessorProxy.GetAdsByChannelAdId(record.Id)
         if (ads != null && ads.Any())
         {
             ad = ads.FirstOrDefault(a => a.AssetId == asset.Id);
@@ -216,7 +217,7 @@ public class ContentProcessor
                 Created = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
             };
 
-            adProxy.Save(ad);
+            contentProcessorProxy.WriteAd(ad);
             CreateAdCopy(ad.Id, record.Creative.Title, record.Creative.Body);
         }
         else if ((ad.AdDeactivated != null && record.Status.ToUpper() == "ACTIVE") ||
@@ -227,7 +228,7 @@ public class ContentProcessor
             adProxy.Save(ad);
         }
 
-        var adMetadata = adMetadataProxy.GetByAdId(ad.Id);
+        var adMetadata = contentProcessorProxy.GetAdMetadataByAdId(ad.Id);
         if (adMetadata == null)
         {
             adMetadata = new AdMetadata
@@ -246,7 +247,7 @@ public class ContentProcessor
         {
             adMetadata.Status = record.Status;
             adMetadata.Updated = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
-            adMetadataProxy.Save(adMetadata);
+            contentProcessorProxy.WriteAdMetadata(adMetadata);
         }
 
         return ad;
@@ -258,7 +259,7 @@ public class ContentProcessor
         var cleanCopy = copy ?? "";
         var hashCode = HashTools.HashTitleAndBody(cleanTitle, cleanCopy);
 
-        var existing = adCopyProxy.GetByAdAndHashCode(adId, hashCode);
+        var existing = contentProcessorProxy.GetAdCopyByAdIdAndHashCode(adId, hashCode);
         if (existing == null)
         {
             var adCopy = new AdCopy
@@ -268,7 +269,7 @@ public class ContentProcessor
                 Copy = cleanCopy,
                 Hash = hashCode
             };
-            adCopyProxy.Save(adCopy);
+            contentProcessorProxy.WriteAdCopy(adCopy);
         }
     }
 }

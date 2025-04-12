@@ -1,50 +1,47 @@
+using DataAllyEngine.Models;
+using DataAllyEngine.Proxy;
+using FacebookLoader.Content;
+
 namespace DataAllyEngine.ContentProcessingTask;
 
-public class KpiProcessor
+public class KpiProcessor : IKpiProcessors
 {
     private readonly Channel channel;
-    private readonly DbConnection dbConnection;
 
-    private readonly AppKpiProxy appKpiProxy;
-    private readonly GeneralKpiProxy generalKpiProxy;
-    private readonly EcommerceKpiProxy ecommerceKpiProxy;
-    private readonly EcommerceChannelProxy ecommerceChannelProxy;
-    private readonly EcommerceMobileProxy ecommerceMobileProxy;
-    private readonly EcommerceTotalProxy ecommerceTotalProxy;
-    private readonly EcommerceWebsiteProxy ecommerceWebsiteProxy;
-    private readonly LeadGenKpiProxy leadgenKpiProxy;
-    private readonly LeadGenApplicationProxy leadgenApplicationProxy;
-    private readonly LeadGenAppointmentProxy leadgenAppointmentProxy;
-    private readonly LeadGenContactProxy leadgenContactProxy;
-    private readonly LeadGenLeadProxy leadgenLeadProxy;
-    private readonly LeadGenLocationProxy leadgenLocationProxy;
-    private readonly LeadGenRegistrationProxy leadgenRegistrationProxy;
-    private readonly LeadGenSubscriptionProxy leadgenSubscriptionProxy;
-    private readonly LeadGenTrialProxy leadgenTrialProxy;
-    private readonly VideoKpiProxy videoKpiProxy;
+    private readonly IContentProcessorProxy contentProcessorProxy;
+    private readonly ILogger<IContentProcessor> logger;
+    
+    public KpiProcessor(IContentProcessorProxy contentProcessorProxy, ILogger<IContentProcessor> logger)
+    {
+        this.contentProcessorProxy = contentProcessorProxy;
+        this.logger = logger;
+    }
 
-    public KpiProcessor(Channel channel, DbConnection dbConnection)
+
+    // private readonly DbConnection dbConnection;
+    //
+    // private readonly AppKpiProxy appKpiProxy;
+    // private readonly GeneralKpiProxy generalKpiProxy;
+    // private readonly EcommerceKpiProxy ecommerceKpiProxy;
+    // private readonly EcommerceChannelProxy ecommerceChannelProxy;
+    // private readonly EcommerceMobileProxy ecommerceMobileProxy;
+    // private readonly EcommerceTotalProxy ecommerceTotalProxy;
+    // private readonly EcommerceWebsiteProxy ecommerceWebsiteProxy;
+    // private readonly LeadGenKpiProxy leadgenKpiProxy;
+    // private readonly LeadGenApplicationProxy leadgenApplicationProxy;
+    // private readonly LeadGenAppointmentProxy leadgenAppointmentProxy;
+    // private readonly LeadGenContactProxy leadgenContactProxy;
+    // private readonly LeadGenLeadProxy leadgenLeadProxy;
+    // private readonly LeadGenLocationProxy leadgenLocationProxy;
+    // private readonly LeadGenRegistrationProxy leadgenRegistrationProxy;
+    // private readonly LeadGenSubscriptionProxy leadgenSubscriptionProxy;
+    // private readonly LeadGenTrialProxy leadgenTrialProxy;
+    // private readonly VideoKpiProxy videoKpiProxy;
+
+    public void ProcessChannel(Channel channel)
     {
         channel = channel;
-        dbConnection = dbConnection;
-
-        appKpiProxy = new AppKpiProxy(dbConnection);
-        generalKpiProxy = new GeneralKpiProxy(dbConnection);
-        ecommerceKpiProxy = new EcommerceKpiProxy(dbConnection);
-        ecommerceChannelProxy = new EcommerceChannelProxy(dbConnection);
-        ecommerceMobileProxy = new EcommerceMobileProxy(dbConnection);
-        ecommerceTotalProxy = new EcommerceTotalProxy(dbConnection);
-        ecommerceWebsiteProxy = new EcommerceWebsiteProxy(dbConnection);
-        leadgenKpiProxy = new LeadGenKpiProxy(dbConnection);
-        leadgenApplicationProxy = new LeadGenApplicationProxy(dbConnection);
-        leadgenAppointmentProxy = new LeadGenAppointmentProxy(dbConnection);
-        leadgenContactProxy = new LeadGenContactProxy(dbConnection);
-        leadgenLeadProxy = new LeadGenLeadProxy(dbConnection);
-        leadgenLocationProxy = new LeadGenLocationProxy(dbConnection);
-        leadgenRegistrationProxy = new LeadGenRegistrationProxy(dbConnection);
-        leadgenSubscriptionProxy = new LeadGenSubscriptionProxy(dbConnection);
-        leadgenTrialProxy = new LeadGenTrialProxy(dbConnection);
-        videoKpiProxy = new VideoKpiProxy(dbConnection);
+/ ..
     }
 
     public void ImportKpis(Ad ad, FacebookInsight entry)

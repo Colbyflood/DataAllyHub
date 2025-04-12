@@ -1,5 +1,6 @@
 using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
+using DataAllyEngine.ContentProcessingTask;
 using DataAllyEngine.Context;
 using DataAllyEngine.LoaderTask;
 using DataAllyEngine.Proxy;
@@ -35,8 +36,11 @@ builder.Services.AddSingleton<IEmailQueueContainer, EmailQueueContainer>();
 builder.Services.AddScoped<ILoaderProxy, LoaderProxy>();
 builder.Services.AddScoped<ISchedulerProxy, SchedulerProxy>();
 
+
 // Add services
 builder.Services.AddScoped<ILoaderRunner, LoaderRunner>();
+builder.Services.AddScoped<IKpiProcessor, KpiProcessor>();
+builder.Services.AddScoped<IContentProcessor, ContentProcessor>();
 builder.Services.AddScoped<IEmailSender, AmazonSesEmailSender>();
 builder.Services.AddScoped<IEmailQueueService, EmailQueueService>();
 builder.Services.AddScoped<IEmailQueueProcessingService, EmailQueueProcessingService>();
