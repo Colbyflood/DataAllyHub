@@ -28,28 +28,28 @@ public interface IKpiProxy
 	LeadgenKpi? GetLeadgenKpiAdIdAndEffectiveDate(int adId, DateTime effectiveDate);
 	void WriteLeadgenKpi(LeadgenKpi leadgenKpi);
 	
-	LeadgenApplication? GetLeadgenApplicationByParentId(int ecommerceKpiId);
+	LeadgenApplication? GetLeadgenApplicationByParentId(int leadgenKpiId);
 	void WriteLeadgenApplication(LeadgenApplication leadgenApplication);
 	
-	LeadgenAppointment? GetLeadgenAppointmentByParentId(int ecommerceKpiId);
+	LeadgenAppointment? GetLeadgenAppointmentByParentId(int leadgenKpiId);
 	void WriteLeadgenAppointment(LeadgenAppointment leadgenAppointment);
 	
-	LeadgenContact? GetLeadgenContactByParentId(int ecommerceKpiId);
+	LeadgenContact? GetLeadgenContactByParentId(int leadgenKpiId);
 	void WriteLeadgenContact(LeadgenContact leadgenContact);
 	
-	LeadgenLead? GetLeadgenLeadByParentId(int ecommerceKpiId);
-	void WriteLeadgenLead(LeadgenLead leadgenLe);
+	LeadgenLead? GetLeadgenLeadByParentId(int leadgenKpiId);
+	void WriteLeadgenLead(LeadgenLead leadgenLead);
 	
-	LeadgenLocation? GetLeadgenLocationByParentId(int ecommerceKpiId);
+	LeadgenLocation? GetLeadgenLocationByParentId(int leadgenKpiId);
 	void WriteLeadgenLocation(LeadgenLocation leadgenLocation);
 	
-	LeadgenRegistration? GetLeadgenRegistrationByParentId(int ecommerceKpiId);
+	LeadgenRegistration? GetLeadgenRegistrationByParentId(int leadgenKpiId);
 	void WriteLeadgenRegistration(LeadgenRegistration leadgenRegistration);
 	
-	LeadgenSubscription? GetLeadgenSubscriptionByParentId(int ecommerceKpiId);
+	LeadgenSubscription? GetLeadgenSubscriptionByParentId(int leadgenKpiId);
 	void WriteLeadgenSubscription(LeadgenSubscription leadgenSubscription);
 	
-	LeadgenTrial? GetLeadgenTrialByParentId(int ecommerceKpiId);
+	LeadgenTrial? GetLeadgenTrialByParentId(int leadgenKpiId);
 	void WriteLeadgenTrial(LeadgenTrial leadgenTrial);
 	
 	VideoKpi? GetVideoKpiByAdIdAndEffectiveDate(int adId, DateTime effectiveDate);
