@@ -1,45 +1,35 @@
 using System.Data.Common;
 using System.Net;
 using DataAllyEngine.Common;
+using DataAllyEngine.Configuration;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using FacebookLoader.Content;
 
 namespace DataAllyEngine.ContentProcessingTask;
 
-public class ContentProcessor : IContentProcessors
+public class ContentProcessor : IContentProcessor
 {
-    private readonly Channel channel;
     private readonly string thumbnailBucket;
-    // private readonly DbConnection dbConnection;
 
     private readonly IContentProcessorProxy contentProcessorProxy;
     private readonly IKpiProxy kpiProxy;
     private readonly ILogger<IContentProcessor> logger;
     
-    // private readonly FbRunStagingProxy fbRunStagingProxy;
-    // private readonly CampaignProxy campaignProxy;
-    // private readonly AdSetProxy adSetProxy;
-    // private readonly AdProxy adProxy;
-    // private readonly AssetProxy assetProxy;
-    // private readonly AdMetadataProxy adMetadataProxy;
-    // private readonly AdCopyProxy adCopyProxy;
-    // private readonly ThumbnailProxy thumbnailProxy;
-
-    public ContentProcessor(IContentProcessorProxy contentProcessorProxy,  IKpiProxy kpiProxy, ILogger<IContentProcessor> logger)
+    public ContentProcessor(IContentProcessorProxy contentProcessorProxy, IKpiProxy kpiProxy, IConfigurationLoader configurationLoader, ILogger<IContentProcessor> logger)
     {
         this.contentProcessorProxy = contentProcessorProxy;
-        kpiProxy = kpiProxy;
+        this.kpiProxy = kpiProxy;
+        thumbnailBucket = configurationLoader.GetKeyValueFor(Names.THUMBNAIL_BUCKET_KEY);
         this.logger = logger;
     }
 
     public void ProcessContentFor(Channel channel)
     {
-        channel = channel;
-        thumbnailBucket = thumbnailBucket;
+
     }
 
-    public void Process(FbRunLog runlog)
+    private void Process(FbRunLog runlog)
     {
         if (runlog.FeedType == Names.FEED_TYPE_AD_INSIGHT)
         {
@@ -111,7 +101,7 @@ public class ContentProcessor : IContentProcessors
         }
     }
 
-    public static string NormalizeNameFor(string name)
+    private static string NormalizeNameFor(string name)
     {
         var workingName = name.ToUpper();
         while (true)

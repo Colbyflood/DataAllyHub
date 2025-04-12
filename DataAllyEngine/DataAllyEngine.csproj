@@ -11,6 +11,7 @@
     <PackageReference Include="AWSSDK.S3" Version="3.7.416.4" />
     <PackageReference Include="AWSSDK.SimpleEmail" Version="3.7.402.73" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.400.128" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.14" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.14">
       <PrivateAssets>all</PrivateAssets>
@@ -21,6 +22,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MySql.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.4" />
     <PackageReference Include="System.Text.Json" Version="9.0.3" />
   </ItemGroup>
 

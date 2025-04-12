@@ -4,6 +4,7 @@ public class Names
 {
     // ReSharper disable InconsistentNaming
     public const string DB_CONNECTION_STRING_KEY = "DataAllyDatabase";
+    public const string THUMBNAIL_BUCKET_KEY = "ThumbnailBucket";
 
     public const string FEED_TYPE_AD_CREATIVE = "AdCreative";
     public const string FEED_TYPE_AD_INSIGHT = "AdInsight";
