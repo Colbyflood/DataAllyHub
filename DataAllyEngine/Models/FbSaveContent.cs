@@ -45,6 +45,9 @@ public partial class FbSaveContent
 
     [Column("attempts")]
     public int Attempts { get; set; }
+    
+    [Column("sequence")]
+    public int Sequence { get; set; }
 
     [ForeignKey("AdCreativeRunlogId")]
     [InverseProperty("FbsavecontentAdCreativeRunlogs")]

@@ -57,9 +57,16 @@ public class ContentProcessor : IContentProcessor
         foreach (var entry in stagingEntries)
         {
             Console.WriteLine("Deserializing a staging entry for ad creatives");
-            foreach (var record in FacebookAdCreativeTools.Deserialize(entry.Content))
+            
+            var facebookAdCreativesResponse = FacebookAdCreativesResponse.FromJson(entry.Content);
+            if (facebookAdCreativesResponse == null)
             {
-                var adsetId = PrepareAdHierarchy(record.AdSetId, $"Adset {record.AdsetId}",
+                logger.LogWarning($"Empty facebook ad creatives response for runlog {runlog.Id}");
+                continue;
+            }
+            foreach (var record in facebookAdCreativesResponse.Content)
+            {
+                var adsetId = PrepareAdHierarchy(record.AdsetId, $"Adset {record.AdsetId}",
                                                  record.CampaignId, $"Campaign {record.CampaignId}",
                                                  0, record.CreatedTime, channel);
                 PrepareAd(adsetId, channel, record);
@@ -74,7 +81,13 @@ public class ContentProcessor : IContentProcessor
         Console.WriteLine("Deserializing a staging entry for ad images");
         foreach (var entry in stagingEntries)
         {
-            foreach (var record in FacebookAdImageTools.Deserialize(entry.Content))
+            var facebookAdImagesResponse = FacebookAdImagesResponse.FromJson(entry.Content);
+            if (facebookAdImagesResponse == null)
+            {
+                logger.LogWarning($"Empty facebook ad images response for runlog {runlog.Id}");
+                continue;
+            }
+            foreach (var record in facebookAdImagesResponse.Content)
             {
                 PrepareImages(channel, record);
             }
@@ -420,7 +433,7 @@ public class ContentProcessor : IContentProcessor
             return CreateCampaign(channel, campaignId, campaignName, 0, createdDate, objective);
         }
 
-        var savedName = campaign.Name ?? string.Empty;
+        var savedName = campaign.Name;
         var savedObjective = campaign.Objective ?? string.Empty;
         var recordName = campaignName ?? string.Empty;
         var recordObjective = objective ?? string.Empty;

@@ -19,7 +19,7 @@ public class RestartProbeService : IRestartProbeService
 
 	private const int PREEMPT_STUCK_MINUTES_BEFORE = 30;
 
-	private const int MAXIMUM_DAYS_LOOKBACK = 7;
+	private const int MAXIMUM_DAYS_LOOKBACK = 1;
 	private const int MAXIMUM_HOURS_LOOKBACK = MAXIMUM_DAYS_LOOKBACK * 24;
 	
 	private readonly ISchedulerProxy schedulerProxy;
@@ -148,8 +148,6 @@ public class RestartProbeService : IRestartProbeService
             var problem = GetCurrentProblem(runlog);
             if (problem == null)
             {
-                logger.LogInformation($"PROBLEM: {runlog.Id} not found");
-
                 if (startedTime < preemptTimeWindow)
                 {
 	                logger.LogInformation($"Preempting possible stuck process and marking run runlog item {runlog.Id} as stalled ");
@@ -159,8 +157,6 @@ public class RestartProbeService : IRestartProbeService
 
                 continue;
             }
-
-            logger.LogInformation($"PROBLEM: {runlog.Id} is of reason {problem.Reason}");
 
             if (problem.Reason == Names.FB_PROBLEM_NO_TOKEN ||
                 problem.Reason == Names.FB_PROBLEM_BAD_TOKEN ||
@@ -192,7 +188,6 @@ public class RestartProbeService : IRestartProbeService
                 }
             }
 
-            logger.LogInformation($"PROBLEM: {runlog.Id} is of reason {problem.Reason} GOT ONE");
             stalled.Add(runlog);
         }
 

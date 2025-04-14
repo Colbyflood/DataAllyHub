@@ -24,6 +24,8 @@ public interface ISchedulerProxy
 	
 	List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, DateTime date);
 	
+	List<FbRunLog> GetFinishedFbRunLogsAfterDate(DateTime date);
+	
 	List<FbRunLog> GetFbRunLogsByChannelIdAndScopeTypeInDateRange(int channelId, string scopeType, DateTime startDate, DateTime endDate);
 
 	List<FbRunLog> GetIncompleteFbRunLogsSince(DateTime startDateUtc);
@@ -33,4 +35,8 @@ public interface ISchedulerProxy
 	List<FbRunProblem> GetFbRunProblemsByRunlogIdOrderByDescendingCreated(int runlogId);
 	
 	void WriteFbRunProblem(FbRunProblem runProblem);
+	
+	FbSaveContent? LoadFbSaveContentContainingRunlog(int runlogId);
+	
+	void WriteFbSaveContent(FbSaveContent saveContent);
 }

@@ -83,6 +83,11 @@ public class SchedulerProxy : ISchedulerProxy
 		return context.Fbrunlogs.Where(record => record.ChannelId == channelId && record.StartedUtc >= date).ToList();
 	}
 
+	public List<FbRunLog> GetFinishedFbRunLogsAfterDate(DateTime date)
+	{
+		return context.Fbrunlogs.Where(record => record.StartedUtc >= date && record.FinishedUtc != null).ToList();
+	}
+
 	public List<FbRunLog> GetFbRunLogsByChannelIdAndScopeTypeInDateRange(int channelId, string scopeType, DateTime startDate, DateTime endDate)
 	{
 		return context.Fbrunlogs
@@ -121,5 +126,19 @@ public class SchedulerProxy : ISchedulerProxy
 			context.Fbrunproblems.Add(runProblem);
 		}
 		context.SaveChanges();	
+	}
+	
+	public FbSaveContent? LoadFbSaveContentContainingRunlog(int runlogId)
+	{
+		return context.Fbsavecontents.FirstOrDefault(f => f.AdCreativeRunlogId == runlogId || f.AdImageRunlogId == runlogId || f.AdInsightRunlogId == runlogId);
+	}
+
+	public void WriteFbSaveContent(FbSaveContent saveContent)
+	{
+		if (saveContent.Id <= 0)
+		{
+			context.Fbsavecontents.Add(saveContent);
+		}
+		context.SaveChanges();
 	}
 }
