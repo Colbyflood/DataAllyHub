@@ -176,6 +176,12 @@ public class ContentProcessorProxy : IContentProcessorProxy
 		context.SaveChanges();
 	}
 
+	public Asset? GetAssetByChannelIdAndKey(int channelId, string key)
+	{
+		return context.Assets.FirstOrDefault(a => a.ChannelId == channelId && a.AssetKey.ToLower() == key.ToLower());
+
+	}
+
 	public Asset? GetAssetByChannelIdTypeNameAndKey(int channelId, string assetTypeName, string key)
 	{
 		return context.Assets.FirstOrDefault(a => a.ChannelId == channelId && a.AssetType.ToLower() == assetTypeName.ToLower() && a.AssetKey.ToLower() == key.ToLower());

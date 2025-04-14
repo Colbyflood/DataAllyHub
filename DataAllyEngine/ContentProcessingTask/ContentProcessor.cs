@@ -1,6 +1,4 @@
-using System.Data.Common;
 using System.Drawing;
-using System.Net;
 using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
 using DataAllyEngine.Models;
@@ -25,28 +23,35 @@ public class ContentProcessor : IContentProcessor
         this.logger = logger;
     }
 
-    public void ProcessContentFor(Channel channel)
-    {
-
-    }
-
-    private void Process(FbRunLog runlog)
+    public void ProcessContentFor(Channel channel, FbRunLog runlog)
     {
         if (runlog.FeedType == Names.FEED_TYPE_AD_INSIGHT)
         {
-            ProcessAdInsights(runlog);
+            ProcessAdInsights(channel, runlog);
         }
         else if (runlog.FeedType == Names.FEED_TYPE_AD_CREATIVE)
         {
-            ProcessAdCreatives(runlog);
+            ProcessAdCreatives(channel, runlog);
         }
         else
         {
-            ProcessAdImages(runlog);
+            ProcessAdImages(channel, runlog);
+        }
+    }
+    
+    private static DateTime ParseDate(string dateString)
+    {
+        if (DateTime.TryParse(dateString, out var dateTime))
+        {
+            return dateTime.Date;
+        }
+        else
+        {
+            throw new FormatException("Invalid effective date");
         }
     }
 
-    private void ProcessAdCreatives(FbRunLog runlog)
+    private void ProcessAdCreatives(Channel channel, FbRunLog runlog)
     {
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         foreach (var entry in stagingEntries)
@@ -54,16 +59,16 @@ public class ContentProcessor : IContentProcessor
             Console.WriteLine("Deserializing a staging entry for ad creatives");
             foreach (var record in FacebookAdCreativeTools.Deserialize(entry.Content))
             {
-                var adsetId = PrepareAdHierarchy(record.AdSetId, $"Adset {record.AdSetId}",
+                var adsetId = PrepareAdHierarchy(record.AdSetId, $"Adset {record.AdsetId}",
                                                  record.CampaignId, $"Campaign {record.CampaignId}",
                                                  0, record.CreatedTime, channel);
-                PrepareAd(adsetId, record);
+                PrepareAd(adsetId, channel, record);
             }
         }
         CleanStaging(stagingEntries);
     }
 
-    private void ProcessAdImages(FbRunLog runlog)
+    private void ProcessAdImages(Channel channel, FbRunLog runlog)
     {
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         Console.WriteLine("Deserializing a staging entry for ad images");
@@ -71,24 +76,58 @@ public class ContentProcessor : IContentProcessor
         {
             foreach (var record in FacebookAdImageTools.Deserialize(entry.Content))
             {
-                PrepareImages(record);
+                PrepareImages(channel, record);
             }
         }
         CleanStaging(stagingEntries);
     }
+    
+    private void PrepareImages(Channel channel, FacebookAdImage record)
+    {
+        foreach (var creativeId in record.Creatives)
+        {
+            var asset = contentProcessorProxy.GetAssetByChannelIdAndKey(channel.Id, creativeId);
+            if (asset == null)
+            {
+                Console.WriteLine($"[WARN] Encountered image in channel {channel.Id} without corresponding asset Id in creatives array: {creativeId}");
+            }
+            else
+            {
+                var savedName = asset.AssetName ?? string.Empty;
+                var savedUrl = asset.Url ?? string.Empty;
+                var recordName = record.Name ?? string.Empty;
+                var recordUrl = record.Url ?? string.Empty;
 
-    private void ProcessAdInsights(FbRunLog runlog)
+                if (!savedName.Equals(recordName, StringComparison.OrdinalIgnoreCase) ||
+                    !savedUrl.Equals(recordUrl, StringComparison.OrdinalIgnoreCase))
+                {
+                    asset.AssetName = recordName;
+                    asset.Url = recordUrl;
+                    contentProcessorProxy.WriteAsset(asset);
+                }
+            }
+        }
+    }
+
+
+    private void ProcessAdInsights(Channel channel, FbRunLog runlog)
     {
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         if (stagingEntries == null || !stagingEntries.Any()) return;
 
-        var kpiProcessor = new KpiProcessor(channel, dbConnection);
+        var kpiProcessor = new KpiProcessor(channel, kpiProxy, logger);
         foreach (var entry in stagingEntries)
         {
             Console.WriteLine("Deserializing a staging entry for ad insights");
-            foreach (var record in FacebookAdInsightTools.Deserialize(entry.Content))
+            var facebookAdInsightsResponse = FacebookAdInsightsResponse.FromJson(entry.Content);
+            if (facebookAdInsightsResponse == null)
             {
-                PrepareKpis(kpiProcessor, record);
+                logger.LogWarning($"Empty facebook ad insights response for runlog {runlog.Id}");
+                continue;
+            }
+            foreach (var record in facebookAdInsightsResponse.Content)
+            {
+                PrepareKpis(channel, kpiProcessor, record);
             }
         }
         CleanStaging(stagingEntries);
@@ -177,7 +216,7 @@ public class ContentProcessor : IContentProcessor
             Name = campaignName,
             Objective = objective,
             AttributionSetting = attributionSetting,
-            Created = campaignCreated
+            Created = ParseDate(campaignCreated)
         };
 
         contentProcessorProxy.WriteCampaign(campaign);
@@ -185,11 +224,11 @@ public class ContentProcessor : IContentProcessor
     }
 
     
-    private Ad PrepareAd(int adSetId, FacebookAdCreative record)
+    private Ad PrepareAd(int adSetId, Channel channel, FacebookAdCreative record)
     {
-        var asset = PrepareAsset(record);
+        var asset = PrepareAsset(channel, record);
         Ad? ad = null;
-        var ads = contentProcessorProxy.GetAdsByChannelAdId(record.Id)
+        var ads = contentProcessorProxy.GetAdsByChannelAdId(record.Id);
         if (ads != null && ads.Any())
         {
             ad = ads.FirstOrDefault(a => a.AssetId == asset.Id);
@@ -199,15 +238,15 @@ public class ContentProcessor : IContentProcessor
         {
             ad = new Ad
             {
-                AdSetId = adSetId,
+                AdsetId = adSetId,
                 AssetId = asset.Id,
                 ChannelAdId = record.Id,
                 Name = record.Name,
-                DataAllyName = NormalizeNameFor(record.Name),
-                AdCreated = record.CreatedTime,
-                AdUpdated = record.UpdatedTime,
-                AdDeactivated = record.Status.ToUpper() != "ACTIVE" ? record.UpdatedTime : null,
-                Created = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
+                DataallyName = NormalizeNameFor(record.Name),
+                AdCreated = ParseDate(record.CreatedTime),
+                AdUpdated = ParseDate(record.UpdatedTime),
+                AdDeactivated = record.Status.ToUpper() != "ACTIVE" ? ParseDate(record.UpdatedTime) : null,
+                Created = DateTime.UtcNow
             };
 
             contentProcessorProxy.WriteAd(ad);
@@ -216,9 +255,9 @@ public class ContentProcessor : IContentProcessor
         else if ((ad.AdDeactivated != null && record.Status.ToUpper() == "ACTIVE") ||
                  (ad.AdDeactivated == null && record.Status.ToUpper() != "ACTIVE"))
         {
-            ad.AdDeactivated = record.Status.ToUpper() != "ACTIVE" ? record.UpdatedTime : null;
-            ad.Updated = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
-            adProxy.Save(ad);
+            ad.AdDeactivated = record.Status.ToUpper() != "ACTIVE" ? ParseDate(record.UpdatedTime) : null;
+            ad.Updated = DateTime.UtcNow;
+            contentProcessorProxy.WriteAd(ad);
         }
 
         var adMetadata = contentProcessorProxy.GetAdMetadataByAdId(ad.Id);
@@ -234,12 +273,12 @@ public class ContentProcessor : IContentProcessor
                 Utm = null,
                 Created = ad.Created
             };
-            adMetadataProxy.Save(adMetadata);
+            contentProcessorProxy.WriteAdMetadata(adMetadata);
         }
         else if (adMetadata.Status != record.Status)
         {
             adMetadata.Status = record.Status;
-            adMetadata.Updated = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+            adMetadata.Updated = DateTime.UtcNow;
             contentProcessorProxy.WriteAdMetadata(adMetadata);
         }
 
@@ -259,8 +298,8 @@ public class ContentProcessor : IContentProcessor
                 AssetKey = record.Creative.Id.ToUpper(),
                 ChannelId = channel.Id,
                 Url = record.Creative.ThumbnailUrl,
-                Created = record.CreatedTime,
-                Updated = record.UpdatedTime
+                Created = ParseDate(record.CreatedTime),
+                Updated = ParseDate(record.UpdatedTime)
             };
 
             contentProcessorProxy.WriteAsset(asset);
@@ -352,5 +391,73 @@ public class ContentProcessor : IContentProcessor
             };
             contentProcessorProxy.WriteAdCopy(adCopy);
         }
+    }
+    
+    private void PrepareKpis(Channel channel, KpiProcessor kpiProcessor, FacebookAdInsight record)
+    {
+        var ads = contentProcessorProxy.GetAdsByChannelAdId(record.Id);
+        if (ads == null || !ads.Any())
+        {
+            Console.WriteLine($"[WARN] Cannot find an Ad entry for KPI referencing ad Id {record.Id} in channel {channel.Id}");
+            return;
+        }
+
+        var ad = ads[0];
+
+        foreach (var insight in record.Insights)
+        {
+            var campaign = UpdateCampaign(channel, insight.CampaignId, insight.CampaignName, insight.Objective, record.CreatedTime);
+            UpdateAdSet(insight.AdsetId, insight.AdsetName, record.CreatedTime, campaign);
+            kpiProcessor.ImportKpis(ad, insight);
+        }
+    }
+
+    private Campaign UpdateCampaign(Channel channel, string campaignId, string campaignName, string objective, string createdDate)
+    {
+        var campaign = contentProcessorProxy.GetCampaignByChannelCampaignId(campaignId);
+        if (campaign == null)
+        {
+            return CreateCampaign(channel, campaignId, campaignName, 0, createdDate, objective);
+        }
+
+        var savedName = campaign.Name ?? string.Empty;
+        var savedObjective = campaign.Objective ?? string.Empty;
+        var recordName = campaignName ?? string.Empty;
+        var recordObjective = objective ?? string.Empty;
+
+        if (!savedName.Equals(recordName, StringComparison.OrdinalIgnoreCase) ||
+            !savedObjective.Equals(recordObjective, StringComparison.OrdinalIgnoreCase))
+        {
+            campaign.Name = campaignName;
+            campaign.Objective = objective;
+            contentProcessorProxy.WriteCampaign(campaign);
+        }
+
+        return campaign;
+    }
+    
+    private Adset UpdateAdSet(string adSetId, string adSetName, string createdDate, Campaign campaign)
+    {
+        var adSet = contentProcessorProxy.GetAdsetByChannelAdsetId(adSetId);
+        if (adSet == null)
+        {
+            adSet = new Adset
+            {
+                CampaignId = campaign.Id,
+                ChannelAdsetId = adSetId,
+                Name = adSetName,
+                Created = ParseDate(createdDate)
+            };
+            contentProcessorProxy.WriteAdset(adSet);
+            return adSet;
+        }
+
+        if (!string.Equals(adSet.Name, adSetName, StringComparison.OrdinalIgnoreCase))
+        {
+            adSet.Name = adSetName;
+            contentProcessorProxy.WriteAdset(adSet);
+        }
+
+        return adSet;
     }
 }

@@ -41,7 +41,8 @@ public interface IContentProcessorProxy
 	List<AdCopy> GetAdCopyByAdId(int adId);
 	AdCopy? GetAdCopyByAdIdAndHashCode(int adId, string hashCode);
 	void WriteAdCopy(AdCopy adCopy);
-	
+
+	Asset? GetAssetByChannelIdAndKey(int channelId, string key);
 	Asset? GetAssetByChannelIdTypeNameAndKey(int channelId, string assetTypeName, string key);
 	void WriteAsset(Asset asset);
 
