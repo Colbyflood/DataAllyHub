@@ -45,6 +45,5 @@ public partial class EcommerceMobile
 	public decimal? MobileAppCheckoutInitiatedValue { get; set; }
 
 	[ForeignKey("EcommercekpiId")]
-	[InverseProperty("Ecommercemobile")]
 	public virtual EcommerceKpi EcommerceKpi { get; set; } = null!;
 }

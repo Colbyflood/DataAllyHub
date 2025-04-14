@@ -1,9 +1,7 @@
 using DataAllyEngine.Common;
 using DataAllyEngine.ContentProcessingTask;
-using DataAllyEngine.LoaderTask;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
-using DataAllyEngine.Services.DailySchedule;
 
 namespace DataAllyEngine.Services.ProcessContent;
 
@@ -24,11 +22,11 @@ public class ProcessContentService : IProcessContentService
 	private const int MAXIMUM_DAYS_LOOKBACK = 2;
 	private const int MAXIMUM_HOURS_LOOKBACK = MAXIMUM_DAYS_LOOKBACK * 24;
 
-	private readonly ContentProcessor contentProcessor;
+	private readonly IContentProcessor contentProcessor;
 	private readonly ISchedulerProxy schedulerProxy;
 	private readonly ILogger<IProcessContentService> logger;
 
-	public ProcessContentService(ContentProcessor contentProcessor, ISchedulerProxy schedulerProxy, ILogger<IProcessContentService> logger)
+	public ProcessContentService(IContentProcessor contentProcessor, ISchedulerProxy schedulerProxy, ILogger<IProcessContentService> logger)
 	{
 		this.contentProcessor = contentProcessor;
 		this.schedulerProxy = schedulerProxy;

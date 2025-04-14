@@ -336,7 +336,7 @@ public class ContentProcessor : IContentProcessor
         if (thumbnail != null)
             return thumbnail;
 
-        Image? image = null;
+        System.Drawing.Image? image = null;
         try
         {
             image = ThumbnailTools.FetchThumbnail(asset.Url);

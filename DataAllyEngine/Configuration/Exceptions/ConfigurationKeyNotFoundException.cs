@@ -1,4 +1,4 @@
-﻿namespace MakeMyCapServer.Configuration.Exceptions;
+﻿namespace DataAllyEngine.Configuration.Exceptions;
 
 public class ConfigurationKeyNotFoundException : Exception
 {

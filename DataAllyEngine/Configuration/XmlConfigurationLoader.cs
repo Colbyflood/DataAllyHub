@@ -1,5 +1,5 @@
 ﻿using System.Xml.Linq;
-using MakeMyCapServer.Configuration.Exceptions;
+using DataAllyEngine.Configuration.Exceptions;
 
 namespace DataAllyEngine.Configuration;
 
