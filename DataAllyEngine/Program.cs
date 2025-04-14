@@ -25,7 +25,7 @@ builder.Services.Add(new ServiceDescriptor(typeof(IConfigurationLoader), xmlConf
 
 // create db contexts for each of the domains
 builder.Services.AddDbContext<DataAllyDbContext>(options =>
-    options.UseMySQL(xmlConfigurationLoader.GetKeyValueFor(Names.DB_CONNECTION_STRING_KEY)));
+    options.UseMySQL(xmlConfigurationLoader.GetKeyValueFor(Names.DB_CONNECTION_STRING_KEY)), ServiceLifetime.Scoped);
 
 
 // Add singleton injectables
@@ -54,8 +54,8 @@ builder.Services.AddScoped<IProcessContentService, ProcessContentService>();
 // Add background services
 builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
 builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
-builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
-builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
+// builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
+// builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
 
 
 // Add services to the container.

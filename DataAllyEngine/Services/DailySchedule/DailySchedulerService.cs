@@ -90,6 +90,11 @@ public class DailySchedulerService : IDailySchedulerService
 					adInsightRunLog = runlog;
 				}
 			}
+
+			if (adImageRunLog != null && adCreativeRunLog != null && adInsightRunLog != null)
+			{
+				continue;
+			}
 			
 			var token = schedulerProxy.GetTokenByCompanyAndChannelType(company.Id, channelType);
 			if (token == null)

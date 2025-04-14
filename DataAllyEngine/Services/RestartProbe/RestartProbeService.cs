@@ -10,8 +10,8 @@ namespace DataAllyEngine.Services.RestartProbe;
 public class RestartProbeService : IRestartProbeService
 {
 	// ReSharper disable InconsistentNaming
-	private const int FIVE_MINUTES = 5;
-	private const int FIVE_MINUTES_MSEC = FIVE_MINUTES * 60 * 1000;
+	private const int TWO_MINUTES = 2;
+	private const int TWO_MINUTES_MSEC = TWO_MINUTES * 60 * 1000;
 	private const string FACEBOOK_CHANNEL_NAME = "Facebook";
 	private const int RUNLOGS_PER_CANDIDATE = 3;
 
@@ -41,7 +41,7 @@ public class RestartProbeService : IRestartProbeService
 		while (!stoppingToken.IsCancellationRequested)
 		{
 			CheckAndRestartFailedJobs();
-			await Task.Delay(FIVE_MINUTES_MSEC, stoppingToken);
+			await Task.Delay(TWO_MINUTES_MSEC, stoppingToken);
 		}
 	}
 

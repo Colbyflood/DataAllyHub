@@ -105,8 +105,8 @@ public partial class DataAllyDbContext : DbContext
     public virtual DbSet<VideoKpi> Videokpis { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseMySQL("server=da-test-db.c58gieqiiy1c.us-east-1.rds.amazonaws.com;port=3306;database=dataally;user=scaffold;password='7j8KjsP0.8hGrwnHn721LkF'");
+    {
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
