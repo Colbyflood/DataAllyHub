@@ -7,6 +7,9 @@ namespace FacebookLoader.Loader;
 
 public abstract class FacebookLoaderBase
 {
+    // ReSharper disable once InconsistentNaming
+    private const int SOCKET_TIMEOUT_SECONDS = 120;
+    
     public FacebookParameters FacebookParameters { get; }
     public ILogging Logger { get; }
 
@@ -18,7 +21,10 @@ public abstract class FacebookLoaderBase
 
     protected async Task<JObject> CallGraphApiAsync(string url)
     {
-        using var httpClient = new HttpClient();
+        using var httpClient = new HttpClient()
+        {
+            Timeout = TimeSpan.FromSeconds(SOCKET_TIMEOUT_SECONDS)
+        };
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         try
