@@ -1,3 +1,4 @@
+using Amazon.SimpleEmail;
 using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
 using DataAllyEngine.ContentProcessingTask;
@@ -51,11 +52,17 @@ builder.Services.AddScoped<IRestartProbeService, RestartProbeService>();
 builder.Services.AddScoped<IProcessContentService, ProcessContentService>();
 
 
+//if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+    builder.Services.AddAWSService<IAmazonSimpleEmailService>();
+}
+
 // Add background services
 builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
 builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
-// builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
-// builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
+builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
+builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
 
 
 // Add services to the container.

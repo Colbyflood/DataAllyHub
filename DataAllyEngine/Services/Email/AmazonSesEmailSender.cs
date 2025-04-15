@@ -9,11 +9,13 @@ namespace DataAllyEngine.Services.Email;
 public class AmazonSesEmailSender: IEmailSender
 {
 	private readonly string emailSender;
+	private readonly IAmazonSimpleEmailService client;
 	private readonly ILogger<AmazonSesEmailSender> logger;
 	
-	public AmazonSesEmailSender(IConfigurationLoader configurationLoader, ILogger<AmazonSesEmailSender> logger)
+	public AmazonSesEmailSender(IAmazonSimpleEmailService ses, IConfigurationLoader configurationLoader, ILogger<AmazonSesEmailSender> logger)
 	{
 		emailSender = configurationLoader.GetKeyValueFor(Names.EMAIL_SENDER_KEY);
+		client = ses;
 		this.logger = logger;
 	}
 
@@ -24,7 +26,7 @@ public class AmazonSesEmailSender: IEmailSender
 
 	public async Task SendMailToMultipleRecipients(string? sender, List<string> to, string subject, string content, bool isHtml = false)
 	{
-		using (var client = new AmazonSimpleEmailServiceClient(RegionEndpoint.USEast1))
+		try
 		{
 			var sendRequest = new SendEmailRequest
 			{
@@ -36,15 +38,12 @@ public class AmazonSesEmailSender: IEmailSender
 					Body = new Body { Text = new Content(content) }
 				}
 			};
-
-			try
-			{
-				await client.SendEmailAsync(sendRequest);
-			}
-			catch (Exception ex)
-			{
-				logger.LogError($"Sending mail had an error: {ex}");
-			}
+			
+			await client.SendEmailAsync(sendRequest);
+		}
+		catch (Exception ex)
+		{
+			logger.LogError($"Sending mail had an error: {ex}");
 		}
 	}
 }

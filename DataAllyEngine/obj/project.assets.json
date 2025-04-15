@@ -15,6 +15,25 @@
           }
         }
       },
+      "AWSSDK.Extensions.NETCore.Setup/3.7.400": {
+        "type": "package",
+        "dependencies": {
+          "AWSSDK.Core": "3.7.402",
+          "Microsoft.Extensions.Configuration.Abstractions": "2.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "2.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "2.0.0"
+        },
+        "compile": {
+          "lib/net8.0/AWSSDK.Extensions.NETCore.Setup.dll": {
+            "related": ".pdb"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/AWSSDK.Extensions.NETCore.Setup.dll": {
+            "related": ".pdb"
+          }
+        }
+      },
       "AWSSDK.S3/3.7.416.4": {
         "type": "package",
         "dependencies": {
@@ -1395,6 +1414,24 @@
         "lib/netstandard2.0/AWSSDK.Core.pdb",
         "lib/netstandard2.0/AWSSDK.Core.xml",
         "tools/account-management.ps1"
+      ]
+    },
+    "AWSSDK.Extensions.NETCore.Setup/3.7.400": {
+      "sha512": "i4ta6n+QuGKt1RBCIbRU2wohz5DYJ+wRPR9EI7YkzC8eaWSbmMXTNL+s4HpYUsoxM7uyUrYoW0gC52/9KnK7xw==",
+      "type": "package",
+      "path": "awssdk.extensions.netcore.setup/3.7.400",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "awssdk.extensions.netcore.setup.3.7.400.nupkg.sha512",
+        "awssdk.extensions.netcore.setup.nuspec",
+        "images/AWSLogo.png",
+        "lib/net8.0/AWSSDK.Extensions.NETCore.Setup.dll",
+        "lib/net8.0/AWSSDK.Extensions.NETCore.Setup.pdb",
+        "lib/netcoreapp3.1/AWSSDK.Extensions.NETCore.Setup.dll",
+        "lib/netcoreapp3.1/AWSSDK.Extensions.NETCore.Setup.pdb",
+        "lib/netstandard2.0/AWSSDK.Extensions.NETCore.Setup.dll",
+        "lib/netstandard2.0/AWSSDK.Extensions.NETCore.Setup.pdb"
       ]
     },
     "AWSSDK.S3/3.7.416.4": {
@@ -3922,6 +3959,7 @@
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "AWSSDK.Extensions.NETCore.Setup >= 3.7.400",
       "AWSSDK.S3 >= 3.7.416.4",
       "AWSSDK.SimpleEmail >= 3.7.402.73",
       "AWSSDK.SimpleNotificationService >= 3.7.400.128",
@@ -3989,6 +4027,10 @@
       "net8.0": {
         "targetAlias": "net8.0",
         "dependencies": {
+          "AWSSDK.Extensions.NETCore.Setup": {
+            "target": "Package",
+            "version": "[3.7.400, )"
+          },
           "AWSSDK.S3": {
             "target": "Package",
             "version": "[3.7.416.4, )"
