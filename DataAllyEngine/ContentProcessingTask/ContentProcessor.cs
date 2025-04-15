@@ -1,4 +1,6 @@
 using System.Drawing;
+using System.Net.Mime;
+using Amazon.S3;
 using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
 using DataAllyEngine.Models;
@@ -13,12 +15,15 @@ public class ContentProcessor : IContentProcessor
 
     private readonly IContentProcessorProxy contentProcessorProxy;
     private readonly IKpiProxy kpiProxy;
+    private readonly IAmazonS3 s3Client;
     private readonly ILogger<IContentProcessor> logger;
     
-    public ContentProcessor(IContentProcessorProxy contentProcessorProxy, IKpiProxy kpiProxy, IConfigurationLoader configurationLoader, ILogger<IContentProcessor> logger)
+    public ContentProcessor(IContentProcessorProxy contentProcessorProxy, IKpiProxy kpiProxy, IConfigurationLoader configurationLoader, 
+        IAmazonS3 s3Client, ILogger<IContentProcessor> logger)
     {
         this.contentProcessorProxy = contentProcessorProxy;
         this.kpiProxy = kpiProxy;
+        this.s3Client = s3Client;
         thumbnailBucket = configurationLoader.GetKeyValueFor(Names.THUMBNAIL_BUCKET_KEY);
         this.logger = logger;
     }
@@ -336,7 +341,7 @@ public class ContentProcessor : IContentProcessor
         if (thumbnail != null)
             return thumbnail;
 
-        Image? image = null;
+        MediaTypeNames.Image? image = null;
         try
         {
             image = ThumbnailTools.FetchThumbnail(asset.Url);
@@ -360,7 +365,7 @@ public class ContentProcessor : IContentProcessor
             var extension = DeriveExtensionFromFilename(filename);
             var s3Key = ThumbnailTools.AssembleS3Key(uuid, extension, binId);
             var imageBytes = ThumbnailTools.ConvertImageToBytes(image);
-            ThumbnailTools.SaveThumbnail(imageBytes, thumbnailBucket, s3Key);
+            ThumbnailTools.SaveThumbnail(s3Client, imageBytes, thumbnailBucket, s3Key);
 
             thumbnail = new Thumbnail
             {

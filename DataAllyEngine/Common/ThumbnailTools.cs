@@ -75,14 +75,13 @@ public static class ThumbnailTools
         return $"{binId}/{guid}.{extension}";
     }
 
-    public static void SaveThumbnail(byte[] image, string bucketArn, string s3Key)
+    public static void SaveThumbnail(IAmazonS3 s3Client, byte[] image, string bucketArn, string s3Key)
     {
         using var stream = new MemoryStream(image);
         var bucketName = bucketArn.Contains(":")
             ? bucketArn[(bucketArn.LastIndexOf(":") + 1)..]
             : bucketArn;
 
-        var s3Client = new AmazonS3Client();
         var uploadRequest = new TransferUtilityUploadRequest
         {
             InputStream = stream,

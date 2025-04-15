@@ -1,3 +1,4 @@
+using Amazon.S3;
 using Amazon.SimpleEmail;
 using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
@@ -39,6 +40,13 @@ builder.Services.AddScoped<ISchedulerProxy, SchedulerProxy>();
 builder.Services.AddScoped<IContentProcessorProxy, ContentProcessorProxy>();
 builder.Services.AddScoped<IKpiProxy, KpiProxy>();
 
+//if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+    builder.Services.AddAWSService<IAmazonSimpleEmailService>();
+    builder.Services.AddAWSService<IAmazonS3>();
+}
+
 
 // Add services
 builder.Services.AddScoped<ILoaderRunner, LoaderRunner>();
@@ -51,12 +59,6 @@ builder.Services.AddScoped<IDailySchedulerService, DailySchedulerService>();
 builder.Services.AddScoped<IRestartProbeService, RestartProbeService>();
 builder.Services.AddScoped<IProcessContentService, ProcessContentService>();
 
-
-//if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
-    builder.Services.AddAWSService<IAmazonSimpleEmailService>();
-}
 
 // Add background services
 builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
