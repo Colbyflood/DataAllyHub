@@ -6,6 +6,7 @@ using DataAllyEngine.ContentProcessingTask;
 using DataAllyEngine.Context;
 using DataAllyEngine.LoaderTask;
 using DataAllyEngine.Proxy;
+using DataAllyEngine.Services.BackfillLauncher;
 using DataAllyEngine.Services.DailySchedule;
 using DataAllyEngine.Services.Email;
 using DataAllyEngine.Services.Notification;
@@ -58,6 +59,7 @@ builder.Services.AddScoped<IStatusNotificationService, StatusNotificationService
 builder.Services.AddScoped<IDailySchedulerService, DailySchedulerService>();
 builder.Services.AddScoped<IRestartProbeService, RestartProbeService>();
 builder.Services.AddScoped<IProcessContentService, ProcessContentService>();
+builder.Services.AddScoped<IBackfillLauncherService, BackfillLauncherService>();
 
 
 // Add background services
@@ -65,6 +67,7 @@ builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
 builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
 builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
 builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
+builder.Services.AddHostedService<BackfillLauncherScopedBackgroundService>();
 
 
 // Add services to the container.

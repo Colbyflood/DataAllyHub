@@ -4,22 +4,20 @@ using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using FacebookLoader.Common;
 
-namespace DataAllyEngine.Services.DailySchedule;
+namespace DataAllyEngine.Services.BackfillLauncher;
 
-public class DailySchedulerService : IDailySchedulerService
+public class BackfillLauncherService : IBackfillLauncherService
 {
 	// ReSharper disable InconsistentNaming
 	private const int ONE_MINUTE = 1;
 	private const int ONE_MINUTE_MSEC = ONE_MINUTE * 60 * 1000;
-	private const int MAXIMUM_STARTS_PER_MINUTE = 10;		// approx 600 per hour
 	private const string FACEBOOK_CHANNEL_NAME = "Facebook";
-	private const int RUNLOGS_PER_CANDIDATE = 3;
 	
 	private readonly ISchedulerProxy schedulerProxy;
 	private readonly ILoaderRunner loaderRunner;
-	private readonly ILogger<IDailySchedulerService> logger;
+	private readonly ILogger<IBackfillLauncherService> logger;
 
-	public DailySchedulerService(ISchedulerProxy schedulerProxy, ILoaderRunner loaderRunner, ILogger<IDailySchedulerService> logger)
+	public BackfillLauncherService(ISchedulerProxy schedulerProxy, ILoaderRunner loaderRunner, ILogger<IBackfillLauncherService> logger)
 	{
 		this.schedulerProxy = schedulerProxy;
 		this.loaderRunner = loaderRunner;
@@ -29,7 +27,7 @@ public class DailySchedulerService : IDailySchedulerService
 	public async Task DoWorkAsync(CancellationToken stoppingToken)
 	{
 		await Task.Yield();
-		logger.LogInformation("{ServiceName} working", nameof(DailySchedulerService));
+		logger.LogInformation("{ServiceName} working", nameof(BackfillLauncherService));
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
@@ -50,12 +48,8 @@ public class DailySchedulerService : IDailySchedulerService
 		var now = DateTime.UtcNow;
 		var windowStartTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, DateTimeKind.Utc);
 			
-		var candidates = GetPendingSchedulesFor(now);
-		var candidateCount = 0;
-		if (candidates.Count > MAXIMUM_STARTS_PER_MINUTE)
-		{
-			candidates = candidates.Take(MAXIMUM_STARTS_PER_MINUTE).ToList();
-		}
+		var candidates = schedulerProxy.GetBackfillRequests();
+
 		foreach (var candidate in candidates)
 		{
 			var channel = schedulerProxy.GetChannelById(candidate.ChannelId);
@@ -74,7 +68,7 @@ public class DailySchedulerService : IDailySchedulerService
 			FbRunLog? adImageRunLog = null;
 			FbRunLog? adCreativeRunLog = null;
 			FbRunLog? adInsightRunLog = null;
-			var runlogs = schedulerProxy.GetFbRunLogsByChannelIdAfterDate(candidate.ChannelId, Names.SCOPE_TYPE_DAILY, windowStartTime);
+			var runlogs = schedulerProxy.GetFbRunLogsByChannelIdAfterDate(candidate.ChannelId, Names.SCOPE_TYPE_BACKFILL, candidate.RequestedUtc);
 			foreach (var runlog in runlogs)
 			{
 				if (runlog.FeedType == Names.FEED_TYPE_AD_IMAGE)
@@ -93,6 +87,7 @@ public class DailySchedulerService : IDailySchedulerService
 
 			if (adImageRunLog != null && adCreativeRunLog != null && adInsightRunLog != null)
 			{
+				schedulerProxy.DeleteFbBackfillRequest(candidate);
 				continue;
 			}
 			
@@ -112,50 +107,25 @@ public class DailySchedulerService : IDailySchedulerService
 			}
 			
 			
-			logger.LogInformation($"Launching previously unstarted daily loads for channel Id {candidate.ChannelId} ({channel.ChannelAccountName})");
+			logger.LogInformation($"Launching previously unstarted backfill loads for channel Id {candidate.ChannelId} ({channel.ChannelAccountName})");
 
 			var facebookParameters = new FacebookParameters(channel.ChannelAccountId, token.Token1);
 			if (adImageRunLog == null)
 			{
-				loaderRunner.StartAdImagesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY);
+				loaderRunner.StartAdImagesLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL);
 			}
 
 			if (adCreativeRunLog == null)
 			{
-				loaderRunner.StartAdCreativesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY);
+				loaderRunner.StartAdCreativesLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL);
 			}
 
 			if (adInsightRunLog == null)
 			{
-				var yesterday = windowStartTime.AddDays(-1);
-				loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY, yesterday, now);
-			}
-
-			++candidateCount;
-			if (candidateCount >= MAXIMUM_STARTS_PER_MINUTE)
-			{
-				break;
+				var startDate = now.AddDays(-1 * candidate.Days);
+				loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL, startDate, now);
 			}
 		}
-	}
-
-	private List<FbDailySchedule> GetPendingSchedulesFor(DateTime utcNow)
-	{
-		var possibles = schedulerProxy.GetDailySchedulesByTriggerHour(utcNow.Hour);
-		if (possibles.Count == 0)
-		{
-			return possibles;
-		}
-		
-		var candidates = new List<FbDailySchedule>();
-		possibles.ForEach(possible =>
-		{
-			if (schedulerProxy.GetFbRunLogsByChannelIdAfterDate(possible.ChannelId, Names.SCOPE_TYPE_DAILY, utcNow).Count < RUNLOGS_PER_CANDIDATE)
-			{
-				candidates.Add(possible);
-			}
-		});
-		return candidates;
 	}
 
 	private void MarkTokenFailure(Channel channel, bool isTokenDisabled, FbRunLog? adImageRunLog, FbRunLog? adCreativeRunLog, FbRunLog? adInsightRunLog)

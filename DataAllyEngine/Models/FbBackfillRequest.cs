@@ -6,7 +6,7 @@ namespace DataAllyEngine.Models;
 
 [Table("fbbackfillrequest")]
 [Index("ChannelId", Name = "fbbackfillrequest_channel_fk_idx")]
-public partial class FbbackfillRequest
+public partial class FbBackfillRequest
 {
     [Key]
     [Column("id")]

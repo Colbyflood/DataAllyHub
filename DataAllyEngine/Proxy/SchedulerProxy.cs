@@ -78,9 +78,11 @@ public class SchedulerProxy : ISchedulerProxy
 		return context.Fbrunlogs.SingleOrDefault(record => record.Id == id);
 	}
 	
-	public List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, DateTime date)
+	public List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, string scopeType, DateTime date)
 	{
-		return context.Fbrunlogs.Where(record => record.ChannelId == channelId && record.StartedUtc >= date).ToList();
+		return context.Fbrunlogs
+			.Where(record => record.ChannelId == channelId && record.ScopeType.ToLower() == scopeType.ToLower() && record.StartedUtc >= date)
+			.ToList();
 	}
 
 	public List<FbRunLog> GetFinishedFbRunLogsAfterDate(DateTime date)
@@ -139,6 +141,17 @@ public class SchedulerProxy : ISchedulerProxy
 		{
 			context.Fbsavecontents.Add(saveContent);
 		}
+		context.SaveChanges();
+	}
+
+	public List<FbBackfillRequest> GetBackfillRequests()
+	{
+		return context.Fbbackfillrequests.ToList();
+	}
+
+	public void DeleteFbBackfillRequest(FbBackfillRequest request)
+	{
+		context.Fbbackfillrequests.Remove(request);
 		context.SaveChanges();
 	}
 }

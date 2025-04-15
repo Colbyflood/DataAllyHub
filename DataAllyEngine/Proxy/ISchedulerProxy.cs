@@ -22,7 +22,7 @@ public interface ISchedulerProxy
 	
 	FbRunLog? GetFbRunLogById(int id);
 	
-	List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, DateTime date);
+	List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, string scopeType, DateTime date);
 	
 	List<FbRunLog> GetFinishedFbRunLogsAfterDate(DateTime date);
 	
@@ -39,4 +39,8 @@ public interface ISchedulerProxy
 	FbSaveContent? LoadFbSaveContentContainingRunlog(int runlogId);
 	
 	void WriteFbSaveContent(FbSaveContent saveContent);
+	
+	List<FbBackfillRequest> GetBackfillRequests();
+	
+	void DeleteFbBackfillRequest(FbBackfillRequest request);
 }
