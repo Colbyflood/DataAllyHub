@@ -341,7 +341,7 @@ public class ContentProcessor : IContentProcessor
         if (thumbnail != null)
             return thumbnail;
 
-        MediaTypeNames.Image? image = null;
+        Image? image = null;
         try
         {
             image = ThumbnailTools.FetchThumbnail(asset.Url);

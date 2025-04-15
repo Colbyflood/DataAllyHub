@@ -83,6 +83,9 @@ public partial class Channel
     public virtual Client Client { get; set; } = null!;
 
     [InverseProperty("Channel")]
+    public virtual ICollection<FbbackfillRequest> Fbbackfillrequests { get; set; } = new List<FbbackfillRequest>();
+    
+    [InverseProperty("Channel")]
     public virtual FbDailySchedule? Fbdailyschedule { get; set; }
 
     [InverseProperty("Channel")]

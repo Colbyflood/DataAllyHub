@@ -63,6 +63,8 @@ public partial class DataAllyDbContext : DbContext
     public virtual DbSet<EcommerceTotal> Ecommercetotals { get; set; }
 
     public virtual DbSet<EcommerceWebsite> Ecommercewebsites { get; set; }
+    
+    public virtual DbSet<FbbackfillRequest> Fbbackfillrequests { get; set; }
 
     public virtual DbSet<FbDailySchedule> Fbdailyschedules { get; set; }
 
@@ -324,6 +326,15 @@ public partial class DataAllyDbContext : DbContext
             entity.HasOne(d => d.EcommerceKpi).WithOne(p => p.Ecommercewebsite).HasConstraintName("EcommerceWebsite_ECommerce_FK");
         });
 
+        modelBuilder.Entity<FbbackfillRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.HasOne(d => d.Channel).WithMany(p => p.Fbbackfillrequests)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fbbackfillrequest_channel_fk");
+        });
+        
         modelBuilder.Entity<FbDailySchedule>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
