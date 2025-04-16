@@ -77,6 +77,14 @@ public class ContentProcessor : IContentProcessor
                 PrepareAd(adsetId, channel, record);
             }
         }
+        
+        var saveContent = contentProcessorProxy.LoadFbSaveContentContainingRunlog(runlog.Id);
+        if (saveContent != null)
+        {
+            saveContent.AdCreativeFinishedUtc = DateTime.UtcNow;
+            contentProcessorProxy.WriteFbSaveContent(saveContent);
+        }
+
         CleanStaging(stagingEntries);
     }
 
@@ -97,6 +105,14 @@ public class ContentProcessor : IContentProcessor
                 PrepareImages(channel, record);
             }
         }
+
+        var saveContent = contentProcessorProxy.LoadFbSaveContentContainingRunlog(runlog.Id);
+        if (saveContent != null)
+        {
+            saveContent.AdImageFinishedUtc = DateTime.UtcNow;
+            contentProcessorProxy.WriteFbSaveContent(saveContent);
+        }
+        
         CleanStaging(stagingEntries);
     }
     
@@ -148,6 +164,14 @@ public class ContentProcessor : IContentProcessor
                 PrepareKpis(channel, kpiProcessor, record);
             }
         }
+
+        var saveContent = contentProcessorProxy.LoadFbSaveContentContainingRunlog(runlog.Id);
+        if (saveContent != null)
+        {
+            saveContent.AdInsightFinishedUtc = DateTime.UtcNow;
+            contentProcessorProxy.WriteFbSaveContent(saveContent);
+        }
+
         CleanStaging(stagingEntries);
     }
 
@@ -341,17 +365,17 @@ public class ContentProcessor : IContentProcessor
         if (thumbnail != null)
             return thumbnail;
 
-        Image? image = null;
+        MemoryStream? imageStream = null;
         try
         {
-            image = ThumbnailTools.FetchThumbnail(asset.Url);
+            imageStream = ThumbnailTools.FetchThumbnail(asset.Url);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[ERROR] Error downloading {asset.Url} for asset {asset.AssetType} {asset.AssetKey}: {ex}");
         }
 
-        if (image == null)
+        if (imageStream == null)
         {
             Console.WriteLine($"[WARN] No image for asset {asset.AssetType} {asset.AssetKey}");
             return null;
@@ -364,8 +388,8 @@ public class ContentProcessor : IContentProcessor
         {
             var extension = DeriveExtensionFromFilename(filename);
             var s3Key = ThumbnailTools.AssembleS3Key(uuid, extension, binId);
-            var imageBytes = ThumbnailTools.ConvertImageToBytes(image);
-            ThumbnailTools.SaveThumbnail(s3Client, imageBytes, thumbnailBucket, s3Key);
+            //var imageBytes = ThumbnailTools.ConvertImageToBytes(image);
+            ThumbnailTools.SaveThumbnail(s3Client, imageStream, thumbnailBucket, s3Key);
 
             thumbnail = new Thumbnail
             {

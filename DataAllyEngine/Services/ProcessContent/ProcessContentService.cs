@@ -57,9 +57,17 @@ public class ProcessContentService : IProcessContentService
 			{
 				InitiateProcessing(completeRunLog);
 			}
+			else if (completeRunLog.SaveContent.LastStartedUtc < preemptTimeWindow)
+			{
+				completeRunLog.SaveContent.LastStartedUtc = DateTime.UtcNow;
+				completeRunLog.SaveContent.Attempts += 1;
+				schedulerProxy.WriteFbSaveContent(completeRunLog.SaveContent);
+				
+				CheckAndContinueProcessing(completeRunLog);
+			}
 			else
 			{
-				CheckAndContinueProcessing(completeRunLog, preemptTimeWindow);
+				logger.LogInformation($"Skipping processing of FbSaveContent {completeRunLog.SaveContent.Id} because it has not reached a preempt time.");
 			}
 		}
 	}
@@ -158,63 +166,46 @@ if (adImageRunLog.Id != 2780) continue;
 		contentProcessor.ProcessContentFor(channel, runLog);
 	}
 
-	private void CheckAndContinueProcessing(RunLogsContainer container, DateTime preemptTimeWindow)
+	private void CheckAndContinueProcessing(RunLogsContainer container)
 	{
-		switch (container.SaveContent!.Sequence)
+		while (true)
 		{
-			case 0:
-				if (container.SaveContent.AdImageFinishedUtc != null)
-				{
+			switch (container.SaveContent!.Sequence)
+			{
+				case 0:
+					if (container.SaveContent.AdImageFinishedUtc == null)
+					{
+						LaunchContentProcessing(container.AdCreativesRunLog, container.SaveContent);
+					}
+
 					container.SaveContent.Sequence = 1;
-					container.SaveContent.LastStartedUtc = DateTime.UtcNow;
 					schedulerProxy.WriteFbSaveContent(container.SaveContent);
-					LaunchContentProcessing(container.AdCreativesRunLog, container.SaveContent);
-				}
-				else if (container.SaveContent.LastStartedUtc == null || container.SaveContent.LastStartedUtc < preemptTimeWindow)
-				{
-					logger.LogWarning($"Time preempt: Forcing restart on AdCreatives processing for FbSaveContent {container.SaveContent.Id}");
-					container.SaveContent.LastStartedUtc = DateTime.UtcNow;
-					schedulerProxy.WriteFbSaveContent(container.SaveContent);
-					LaunchContentProcessing(container.AdCreativesRunLog, container.SaveContent);
-				}
-				break;
-			
-			case 1:
-				if (container.SaveContent.AdImageFinishedUtc != null)
-				{
-					container.SaveContent.Sequence = 1;
-					container.SaveContent.LastStartedUtc = DateTime.UtcNow;
-					schedulerProxy.WriteFbSaveContent(container.SaveContent);
-					LaunchContentProcessing(container.AdImagesRunLog, container.SaveContent);
-				}
-				else if (container.SaveContent.LastStartedUtc == null || container.SaveContent.LastStartedUtc < preemptTimeWindow)
-				{
-					logger.LogWarning($"Time preempt: Forcing restart on AdImages processing for FbSaveContent {container.SaveContent.Id}");
-					container.SaveContent.LastStartedUtc = DateTime.UtcNow;
-					schedulerProxy.WriteFbSaveContent(container.SaveContent);
-					LaunchContentProcessing(container.AdImagesRunLog, container.SaveContent);
-				}
-				break;
-			
-			
-			case 2:
-				if (container.SaveContent.AdCreativeFinishedUtc != null)
-				{
+
+					break;
+
+				case 1:
+					if (container.SaveContent.AdImageFinishedUtc == null)
+					{
+						LaunchContentProcessing(container.AdImagesRunLog, container.SaveContent);
+					}
 					container.SaveContent.Sequence = 2;
-					container.SaveContent.LastStartedUtc = DateTime.UtcNow;
 					schedulerProxy.WriteFbSaveContent(container.SaveContent);
-					LaunchContentProcessing(container.AdInsightsRunLog, container.SaveContent);
-				}
-				else if (container.SaveContent.LastStartedUtc == null || container.SaveContent.LastStartedUtc < preemptTimeWindow)
-				{
-					logger.LogWarning($"Time preempt: Forcing restart on AdInsights processing for FbSaveContent {container.SaveContent.Id}");
-					container.SaveContent.LastStartedUtc = DateTime.UtcNow;
-					schedulerProxy.WriteFbSaveContent(container.SaveContent);
-					LaunchContentProcessing(container.AdInsightsRunLog, container.SaveContent);
-				}
-				break;
+
+					break;
+
+
+				case 2:
+					if (container.SaveContent.AdCreativeFinishedUtc != null)
+					{
+						LaunchContentProcessing(container.AdInsightsRunLog, container.SaveContent);
+					}
+					return;
+
+				default:
+					logger.LogError($"Invalid sequence number {container.SaveContent.Sequence} for FbSaveContent {container.SaveContent.Id}");
+					return;
+			}
 		}
-		
 	}
 	
 	

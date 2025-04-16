@@ -96,7 +96,7 @@
             },
             "System.Drawing.Common": {
               "target": "Package",
-              "version": "[9.0.4, )"
+              "version": "[8.0.15, )"
             },
             "System.Text.Json": {
               "target": "Package",
