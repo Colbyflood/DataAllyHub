@@ -142,7 +142,6 @@ public class RestartProbeService : IRestartProbeService
         var stalled = new List<FbRunLog>();
         foreach (var runlog in runlogs)
         { 
-if (runlog.Id < 2778) continue;	        
             var lastStartedTime = DateTime.SpecifyKind(runlog.LastStartedUtc, DateTimeKind.Utc);
             if (lastStartedTime >= ignoreTimeWindow)
                 continue;
