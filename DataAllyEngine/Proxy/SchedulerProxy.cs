@@ -86,9 +86,12 @@ public class SchedulerProxy : ISchedulerProxy
 			.ToList();
 	}
 
-	public List<FbRunLog> GetFinishedFbRunLogsAfterDate(DateTime date)
+	public List<FbRunLog> GetUncachedFinishedFbRunLogsAfterDate(DateTime date)
 	{
-		return context.Fbrunlogs.Where(record => record.StartedUtc >= date && record.FinishedUtc != null).ToList();
+		return context.Fbrunlogs
+			.AsNoTracking()
+			.Where(record => record.StartedUtc >= date && record.FinishedUtc != null)
+			.ToList();
 	}
 
 	public List<FbRunLog> GetFbRunLogsByChannelIdAndScopeTypeInDateRange(int channelId, string scopeType, DateTime startDate, DateTime endDate)

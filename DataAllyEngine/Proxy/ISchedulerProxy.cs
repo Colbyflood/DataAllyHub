@@ -24,7 +24,7 @@ public interface ISchedulerProxy
 	
 	List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, string scopeType, DateTime date);
 	
-	List<FbRunLog> GetFinishedFbRunLogsAfterDate(DateTime date);
+	List<FbRunLog> GetUncachedFinishedFbRunLogsAfterDate(DateTime date);
 	
 	List<FbRunLog> GetFbRunLogsByChannelIdAndScopeTypeInDateRange(int channelId, string scopeType, DateTime startDate, DateTime endDate);
 

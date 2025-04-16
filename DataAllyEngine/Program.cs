@@ -66,8 +66,8 @@ builder.Services.AddScoped<IBackfillLauncherService, BackfillLauncherService>();
 //builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
 //builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
 // builder.Services.AddHostedService<BackfillLauncherScopedBackgroundService>();
-builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
-//builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
+//builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
+builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
 
 
 // Add services to the container.

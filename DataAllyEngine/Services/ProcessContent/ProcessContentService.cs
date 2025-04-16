@@ -68,23 +68,24 @@ public class ProcessContentService : IProcessContentService
 	{
 		var response = new List<RunLogsContainer>();
 		
-		var runlogs = schedulerProxy.GetFinishedFbRunLogsAfterDate(lookbackDateTime);
+		var runlogs = schedulerProxy.GetUncachedFinishedFbRunLogsAfterDate(lookbackDateTime);
 		var adImageRunLogs = runlogs.Where(r => r.FeedType == Names.FEED_TYPE_AD_IMAGE).ToList();
 		var adInsightRunLogs = runlogs.Where(r => r.FeedType == Names.FEED_TYPE_AD_INSIGHT).ToList();
 		var adCreativeRunLogs = runlogs.Where(r => r.FeedType == Names.FEED_TYPE_AD_CREATIVE).ToList();
 
 		foreach (var adImageRunLog in adImageRunLogs)
 		{
+if (adImageRunLog.Id != 2780) continue;			
 			if (adImageRunLog.FinishedUtc == null)
 			{
 				continue;
 			}
-			var adInsightRunLog = FindMatchingRunLogIn(adImageRunLog, adInsightRunLogs);
+			var adInsightRunLog = FindMatchingRunLogIn(adImageRunLog, adInsightRunLogs, Names.FEED_TYPE_AD_INSIGHT);
 			if (adInsightRunLog == null || adInsightRunLog.FinishedUtc == null)
 			{
 				continue;
 			}
-			var adCreativeRunLog = FindMatchingRunLogIn(adImageRunLog, adCreativeRunLogs);
+			var adCreativeRunLog = FindMatchingRunLogIn(adImageRunLog, adCreativeRunLogs, Names.FEED_TYPE_AD_CREATIVE);
 			if (adCreativeRunLog == null || adCreativeRunLog.FinishedUtc == null)
 			{
 				continue;
@@ -99,22 +100,22 @@ public class ProcessContentService : IProcessContentService
 		return response;
 	}
 
-	private FbRunLog? FindMatchingRunLogIn(FbRunLog toMatch, List<FbRunLog> runLogs)
+	private FbRunLog? FindMatchingRunLogIn(FbRunLog toMatch, List<FbRunLog> runLogs, string feedType)
 	{
-		var match = FindMatchingRunLogInWithinTimeframe(toMatch, runLogs, MINIMUM_WINDOW_MSEC);
+		var match = FindMatchingRunLogInWithinTimeframe(toMatch, runLogs, MINIMUM_WINDOW_MSEC, feedType);
 		if (match != null)
 		{
 			return match;
 		}
-		return FindMatchingRunLogInWithinTimeframe(toMatch, runLogs, MAXIMUM_WINDOW_MSEC);
+		return FindMatchingRunLogInWithinTimeframe(toMatch, runLogs, MAXIMUM_WINDOW_MSEC, feedType);
 	}
 	
-	private FbRunLog? FindMatchingRunLogInWithinTimeframe(FbRunLog toMatch, List<FbRunLog> runLogs, int msec)
+	private FbRunLog? FindMatchingRunLogInWithinTimeframe(FbRunLog toMatch, List<FbRunLog> runLogs, int msec, string feedType)
 	{
-		var after = toMatch.StartedUtc.AddMilliseconds(-1 * msec);
-		var before = toMatch.StartedUtc.AddSeconds(-1 * msec);
+		var after = toMatch.StartedUtc.AddMilliseconds(msec);
+		var before = toMatch.StartedUtc.AddMilliseconds(-1 * msec);
 		
-		return runLogs.SingleOrDefault(r => r.ChannelId == toMatch.ChannelId && r.FeedType == toMatch.FeedType && r.StartedUtc >= after && r.StartedUtc <= before);
+		return runLogs.SingleOrDefault(r => r.ChannelId == toMatch.ChannelId && r.FeedType == feedType && r.StartedUtc >= before && r.StartedUtc <= after);
 	}
 
 	private bool IsProcessingCompleteFor(FbSaveContent? saveContent)
@@ -159,7 +160,7 @@ public class ProcessContentService : IProcessContentService
 
 	private void CheckAndContinueProcessing(RunLogsContainer container, DateTime preemptTimeWindow)
 	{
-		switch (container.SaveContent.Sequence)
+		switch (container.SaveContent!.Sequence)
 		{
 			case 0:
 				if (container.SaveContent.AdImageFinishedUtc != null)
