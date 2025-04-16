@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using FacebookLoader.Common;
+﻿using FacebookLoader.Common;
 using FacebookLoader.Content;
 using Newtonsoft.Json.Linq;
 
