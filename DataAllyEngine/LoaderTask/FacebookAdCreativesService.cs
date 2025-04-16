@@ -22,6 +22,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
         runlog.FeedType = Names.FEED_TYPE_AD_CREATIVE;
         runlog.ScopeType = scopeType;
         runlog.StartedUtc = DateTime.UtcNow;
+        runlog.LastStartedUtc = runlog.StartedUtc;
         runlog.BackfillDays = backfillDays;
         loaderProxy.WriteFbRunLog(runlog);
 
@@ -38,6 +39,9 @@ public class FacebookAdCreativesService : FacebookServiceBase
     public async Task<bool> StartAdCreativesLoad(FbRunLog runlog)
     {
         logging.LogInformation($"Requesting and processing ad creatives for scope {runlog.ScopeType} in runlog {runlog.Id}");
+
+        runlog.LastStartedUtc = DateTime.UtcNow;
+        loaderProxy.WriteFbRunLog(runlog);
 
         var loader = new AdCreativesLoader(facebookParameters, logging);
         var response = await loader.StartLoadAsync();
@@ -84,7 +88,10 @@ public class FacebookAdCreativesService : FacebookServiceBase
     public async Task<bool> ResumeAdCreativesLoad(FbRunLog runlog, string url)
     {
         logging.LogInformation($"Resuming and processing ad creatives for scope {runlog.ScopeType} in runlog {runlog.Id}");
-
+        
+        runlog.LastStartedUtc = DateTime.UtcNow;
+        loaderProxy.WriteFbRunLog(runlog);
+        
         var loader = new AdCreativesLoader(facebookParameters, logging);
         var response = await loader.LoadAsync(url);
 

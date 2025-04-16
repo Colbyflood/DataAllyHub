@@ -31,6 +31,9 @@ public partial class FbRunLog
     [Column("started_utc", TypeName = "datetime")]
     public DateTime StartedUtc { get; set; }
 
+    [Column("last_started_utc", TypeName = "datetime")]
+    public DateTime LastStartedUtc { get; set; }
+    
     [Column("finished_utc", TypeName = "datetime")]
     public DateTime? FinishedUtc { get; set; }
 

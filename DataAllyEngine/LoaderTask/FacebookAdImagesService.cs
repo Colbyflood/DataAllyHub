@@ -22,6 +22,7 @@ public class FacebookAdImagesService : FacebookServiceBase
         runlog.FeedType = Names.FEED_TYPE_AD_IMAGE;
         runlog.ScopeType = scopeType;
         runlog.StartedUtc = DateTime.UtcNow;
+        runlog.LastStartedUtc = runlog.StartedUtc;
         runlog.BackfillDays = backfillDays;
         loaderProxy.WriteFbRunLog(runlog);
 
@@ -38,6 +39,9 @@ public class FacebookAdImagesService : FacebookServiceBase
     public async Task<bool> StartAdImagesLoad(FbRunLog runlog)
     {
         logging.LogInformation($"Requesting and processing ad images for scope {runlog.ScopeType} in runlog {runlog.Id}");
+
+        runlog.LastStartedUtc = DateTime.UtcNow;
+        loaderProxy.WriteFbRunLog(runlog);
 
         var loader = new AdImagesLoader(facebookParameters, logging);
         var response = await loader.StartLoadAsync();
@@ -84,6 +88,9 @@ public class FacebookAdImagesService : FacebookServiceBase
     public async Task<bool> ResumeAdImagesLoad(FbRunLog runlog, string url)
     {
         logging.LogInformation($"Resuming and processing ad images for scope {runlog.ScopeType} in runlog {runlog.Id}");
+
+        runlog.LastStartedUtc = DateTime.UtcNow;
+        loaderProxy.WriteFbRunLog(runlog);
 
         var loader = new AdImagesLoader(facebookParameters, logging);
         var response = await loader.LoadAsync(url);

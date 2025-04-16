@@ -138,22 +138,25 @@ public class RestartProbeService : IRestartProbeService
 	    var preemptTimeWindow = now.AddMinutes(-1 * PREEMPT_STUCK_MINUTES_BEFORE);
 	    var absoluteTimeWindow = now.AddHours(-1 * MAXIMUM_HOURS_LOOKBACK);
 
-        var runlogs = schedulerProxy.GetIncompleteFbRunLogsSince(absoluteTimeWindow);
+        var runlogs = schedulerProxy.GetUncachedIncompleteFbRunLogsSince(absoluteTimeWindow);
         var stalled = new List<FbRunLog>();
         foreach (var runlog in runlogs)
         { 
-if (runlog.Id < 2694) continue;	        
-            var startedTime = DateTime.SpecifyKind(runlog.StartedUtc, DateTimeKind.Utc);
-            if (startedTime >= ignoreTimeWindow)
+if (runlog.Id < 2778) continue;	        
+            var lastStartedTime = DateTime.SpecifyKind(runlog.LastStartedUtc, DateTimeKind.Utc);
+            if (lastStartedTime >= ignoreTimeWindow)
                 continue;
 
             var problem = GetCurrentProblem(runlog);
             if (problem == null)
             {
-                if (startedTime < preemptTimeWindow)
+                if (lastStartedTime < preemptTimeWindow)
                 {
 	                logger.LogInformation($"Preempting possible stuck process and marking run runlog item {runlog.Id} as stalled ");
-                    LogProblem(runlog, DateTime.UtcNow, Names.FB_PROBLEM_STALLED);
+
+	                var uncachedRunlog = schedulerProxy.GetFbRunLogById(runlog.Id);
+	                LogProblem(uncachedRunlog!, DateTime.UtcNow, Names.FB_PROBLEM_STALLED);
+                    
                     stalled.Add(runlog);
                 }
 
@@ -199,13 +202,13 @@ if (runlog.Id < 2694) continue;
 	
 	private FbRunProblem? GetCurrentProblem(FbRunLog runlog)
 	{
-		var problems = schedulerProxy.GetFbRunProblemsByRunlogIdOrderByDescendingCreated(runlog.Id);
+		var problems = schedulerProxy.GetUncachedFbRunProblemsByRunlogIdOrderByDescendingCreated(runlog.Id);
 		return problems.Count == 0 ? null : problems[0];
 	}
 	
 	private FbRunProblem? GetMostRecentThrottleProblem(FbRunLog runlog)
 	{
-		var problems = schedulerProxy.GetFbRunProblemsByRunlogIdOrderByDescendingCreated(runlog.Id);
+		var problems = schedulerProxy.GetUncachedFbRunProblemsByRunlogIdOrderByDescendingCreated(runlog.Id);
 		return problems.FirstOrDefault(problem => problem.Reason == Names.FB_PROBLEM_THROTTLED);
 	}
 	
@@ -216,7 +219,8 @@ if (runlog.Id < 2694) continue;
 		var now = DateTime.UtcNow;
 		var problem = isTokenDisabled ? Names.FB_PROBLEM_DISABLED_TOKEN : Names.FB_PROBLEM_BAD_TOKEN;
 
-		LogProblem(runlog, now, problem);
+		var uncachedRunlog = schedulerProxy.GetFbRunLogById(runlog.Id);
+		LogProblem(uncachedRunlog!, now, problem);
 	}
 	
 	private void LogProblem(FbRunLog runLog, DateTime utcNow, string reason)

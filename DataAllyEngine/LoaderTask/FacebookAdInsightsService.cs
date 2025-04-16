@@ -22,6 +22,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
         runlog.FeedType = Names.FEED_TYPE_AD_INSIGHT;
         runlog.ScopeType = scopeType;
         runlog.StartedUtc = DateTime.UtcNow;
+        runlog.LastStartedUtc = runlog.StartedUtc;
         runlog.BackfillDays = backfillDays;
         loaderProxy.WriteFbRunLog(runlog);
 
@@ -38,6 +39,9 @@ public class FacebookAdInsightsService : FacebookServiceBase
     public async Task<bool> StartAdInsightsLoad(FbRunLog runlog, DateTime startDate, DateTime endDate)
     {
         logging.LogInformation($"Requesting and processing ad insights for scope {runlog.ScopeType} in runlog {runlog.Id}");
+        
+        runlog.LastStartedUtc = DateTime.UtcNow;
+        loaderProxy.WriteFbRunLog(runlog);
 
         var loader = new AdInsightsLoader(facebookParameters, logging);
         var response = await loader.StartLoadAsync(startDate.ToString("yyyy-MM-dd"), endDate.ToString("yyyy-MM-dd"));
@@ -84,6 +88,9 @@ public class FacebookAdInsightsService : FacebookServiceBase
     public async Task<bool> ResumeAdInsightsLoad(FbRunLog runlog, string url)
     {
         logging.LogInformation($"Resuming and processing ad insights for scope {runlog.ScopeType} in runlog {runlog.Id}");
+
+        runlog.LastStartedUtc = DateTime.UtcNow;
+        loaderProxy.WriteFbRunLog(runlog);
 
         var loader = new AdInsightsLoader(facebookParameters, logging);
         var response = await loader.LoadAsync(url);

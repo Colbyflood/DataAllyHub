@@ -8,10 +8,10 @@ public interface ILoaderProxy
 	
 	ChannelType? GetChannelTypeByName(string channelName);
 	
-	
 	FbDailySchedule? GetFbDailyScheduleByChannelId(int channelId);
 	void WriteFbDailySchedule(FbDailySchedule dailySchedule);
 	
+	FbRunLog? GetFbRunLogById(int runlogId);
 	List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, DateTime date);
 	void WriteFbRunLog(FbRunLog runLog);
 	

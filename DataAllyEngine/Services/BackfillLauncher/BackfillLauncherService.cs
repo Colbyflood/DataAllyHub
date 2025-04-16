@@ -162,6 +162,7 @@ public class BackfillLauncherService : IBackfillLauncherService
 		runlog.FeedType = feedType;
 		runlog.StartedUtc = utcNow;
 		runlog.ScopeType = scope;
+		runlog.LastStartedUtc = runlog.StartedUtc;
 		runlog.BackfillDays = backfillDays;
 		schedulerProxy.WriteFbRunLog(runlog);
 		return runlog;

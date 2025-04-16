@@ -38,6 +38,11 @@ public class LoaderProxy : ILoaderProxy
 		context.SaveChanges();
 	}
 
+	public FbRunLog? GetFbRunLogById(int runlogId)
+	{
+		return context.Fbrunlogs.SingleOrDefault(record => record.Id == runlogId);
+	}
+
 	public List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, DateTime date)
 	{
 		return context.Fbrunlogs.Where(record => record.ChannelId == channelId && record.StartedUtc >= date).ToList();

@@ -1,5 +1,6 @@
 using DataAllyEngine.Context;
 using DataAllyEngine.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAllyEngine.Proxy;
 
@@ -97,13 +98,14 @@ public class SchedulerProxy : ISchedulerProxy
 			.ToList();
 	}
 
-	public List<FbRunLog> GetIncompleteFbRunLogsSince(DateTime startDateUtc)
+	public List<FbRunLog> GetUncachedIncompleteFbRunLogsSince(DateTime startDateUtc)
 	{
-		return context.Fbrunlogs.Where(record => record.StartedUtc >= startDateUtc && record.FinishedUtc == null)
+		return context.Fbrunlogs
+			.AsNoTracking()
+			.Where(record => record.StartedUtc >= startDateUtc && record.FinishedUtc == null)
 			.OrderBy(record => record.StartedUtc)
 			.ToList();
 	}
-
 	
 	public void WriteFbRunLog(FbRunLog runLog)
 	{
@@ -114,9 +116,16 @@ public class SchedulerProxy : ISchedulerProxy
 		context.SaveChanges();
 	}
 
-	public List<FbRunProblem> GetFbRunProblemsByRunlogIdOrderByDescendingCreated(int runlogId)
+	public FbRunProblem? GetFbRunProblemById(int runProblemId)
 	{
-		return context.Fbrunproblems.Where(record => record.FbRunlogId == runlogId)
+		return context.Fbrunproblems.SingleOrDefault(record => record.Id == runProblemId);
+	}
+	
+	public List<FbRunProblem> GetUncachedFbRunProblemsByRunlogIdOrderByDescendingCreated(int runlogId)
+	{
+		return context.Fbrunproblems
+			.AsNoTracking()
+			.Where(record => record.FbRunlogId == runlogId)
 			.OrderByDescending(record => record.CreatedUtc)
 			.ToList();
 	}

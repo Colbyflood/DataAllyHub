@@ -192,6 +192,7 @@ public class DailySchedulerService : IDailySchedulerService
 		runlog.FeedType = feedType;
 		runlog.StartedUtc = utcNow;
 		runlog.ScopeType = scope;
+		runlog.LastStartedUtc = runlog.StartedUtc;
 		schedulerProxy.WriteFbRunLog(runlog);
 		return runlog;
 	}
