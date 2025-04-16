@@ -22,9 +22,8 @@ public partial class FbRunStaging
     public int Sequence { get; set; }
 
     [Column("content")]
-    public string Content { get; set; } = null!;
+    public string Content { get; set; }
 
     [ForeignKey("FbRunlogId")]
-    [InverseProperty("Fbrunstagings")]
     public virtual FbRunLog FbRunlog { get; set; } = null!;
 }

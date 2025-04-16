@@ -87,34 +87,37 @@ public class RestartProbeService : IRestartProbeService
 				continue;
 			}
 
-			var mostRecentThrottle = GetMostRecentThrottleProblem(runlog);
+			var mostRecentStopProblem = GetMostRecentThrottleOrStallProblem(runlog);
 			
+			var restarted = false;
 			var facebookParameters = new FacebookParameters(channel.ChannelAccountId, token.Token1);
 			if (runlog.FeedType == Names.FEED_TYPE_AD_IMAGE)
 			{
-				if (mostRecentThrottle == null || mostRecentThrottle.RestartUrl == null)
+				if (mostRecentStopProblem == null || mostRecentStopProblem.RestartUrl == null)
 				{
 					loaderRunner.StartAdImagesLoad(facebookParameters, runlog);
 				}
 				else
 				{
-					loaderRunner.ResumeAdImagesLoad(facebookParameters, runlog, mostRecentThrottle.RestartUrl);
+					loaderRunner.ResumeAdImagesLoad(facebookParameters, runlog, mostRecentStopProblem.RestartUrl);
 				}
+				restarted = true;
 			}
 			else if (runlog.FeedType == Names.FEED_TYPE_AD_CREATIVE)
 			{
-				if (mostRecentThrottle == null || mostRecentThrottle.RestartUrl == null)
+				if (mostRecentStopProblem == null || mostRecentStopProblem.RestartUrl == null)
 				{
 					loaderRunner.StartAdCreativesLoad(facebookParameters, runlog);
 				}
 				else
 				{
-					loaderRunner.ResumeAdCreativesLoad(facebookParameters, runlog, mostRecentThrottle.RestartUrl);
+					loaderRunner.ResumeAdCreativesLoad(facebookParameters, runlog, mostRecentStopProblem.RestartUrl);
 				}
+				restarted = true;
 			}
 			else if (runlog.FeedType == Names.FEED_TYPE_AD_INSIGHT)
 			{
-				if (mostRecentThrottle == null || mostRecentThrottle.RestartUrl == null)
+				if (mostRecentStopProblem == null || mostRecentStopProblem.RestartUrl == null)
 				{
 					var endTime = new DateTime(runlog.StartedUtc.Year, runlog.StartedUtc.Month, runlog.StartedUtc.Day, runlog.StartedUtc.Hour, 0, 0, DateTimeKind.Utc);
 					var startTime = endTime.AddDays(-1);
@@ -123,7 +126,18 @@ public class RestartProbeService : IRestartProbeService
 				}
 				else
 				{
-					loaderRunner.ResumeAdInsightsLoad(facebookParameters, runlog, mostRecentThrottle.RestartUrl);
+					loaderRunner.ResumeAdInsightsLoad(facebookParameters, runlog, mostRecentStopProblem.RestartUrl);
+				}
+				restarted = true;
+			}
+
+			if (restarted && mostRecentStopProblem != null)
+			{
+				var uncachedRunProblem = schedulerProxy.GetFbRunProblemById(mostRecentStopProblem.Id);
+				if (uncachedRunProblem != null)
+				{
+					uncachedRunProblem.RestartedUtc = DateTime.UtcNow;
+					schedulerProxy.WriteFbRunProblem(uncachedRunProblem);
 				}
 			}
 			
@@ -170,25 +184,22 @@ public class RestartProbeService : IRestartProbeService
                 continue;
             }
 
-            if (problem.RestartAfterUtc == null)
+            if (problem.RestartAfterUtc != null)
             {
-	            logger.LogInformation($"PROBLEM: {runlog.Id} is of reason {problem.Reason} and is not restart after utc");
-                continue;
+	            var restartUtc = DateTime.SpecifyKind(problem.RestartAfterUtc.Value, DateTimeKind.Utc);
+	            if (restartUtc > now)
+	            {
+		            logger.LogInformation($"Notice: {runlog.Id} is of reason {problem.Reason} and restart time not reached");
+		            continue;
+	            }
             }
 
-            var restartUtc = DateTime.SpecifyKind(problem.RestartAfterUtc.Value, DateTimeKind.Utc);
-            if (restartUtc > now)
-            {
-	            logger.LogInformation($"PROBLEM: {runlog.Id} is of reason {problem.Reason} and restart time not reached");
-                continue;
-            }
-
-            if (problem.RestartedUtc.HasValue)
+            if (problem.RestartedUtc != null)
             {
                 var restartedUtc = DateTime.SpecifyKind(problem.RestartedUtc.Value, DateTimeKind.Utc);
                 if (restartedUtc > preemptTimeWindow)
                 {
-	                logger.LogInformation($"PROBLEM: {runlog.Id} is of reason {problem.Reason} and restarted after preempt");
+	                logger.LogInformation($"Notice: {runlog.Id} is of reason {problem.Reason} and restarted happened after preempt");
                     continue;
                 }
             }
@@ -205,10 +216,10 @@ public class RestartProbeService : IRestartProbeService
 		return problems.Count == 0 ? null : problems[0];
 	}
 	
-	private FbRunProblem? GetMostRecentThrottleProblem(FbRunLog runlog)
+	private FbRunProblem? GetMostRecentThrottleOrStallProblem(FbRunLog runlog)
 	{
 		var problems = schedulerProxy.GetUncachedFbRunProblemsByRunlogIdOrderByDescendingCreated(runlog.Id);
-		return problems.FirstOrDefault(problem => problem.Reason == Names.FB_PROBLEM_THROTTLED);
+		return problems.FirstOrDefault(problem => problem.Reason == Names.FB_PROBLEM_THROTTLED || problem.Reason == Names.FB_PROBLEM_STALLED);
 	}
 	
 	private void MarkTokenFailure(Channel channel, bool isTokenDisabled, FbRunLog runlog)

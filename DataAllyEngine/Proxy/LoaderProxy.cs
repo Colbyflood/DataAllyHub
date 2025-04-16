@@ -79,9 +79,7 @@ public class LoaderProxy : ILoaderProxy
 	{
 		var maxSequence = context.Fbrunstagings
 			.Where(record => record.FbRunlogId == runlogId)
-			.Select(record => record.Sequence)
-			.DefaultIfEmpty(0)
-			.Max();
+			.Max(record => (int?)record.Sequence) ?? 0;
 		return maxSequence + 1;
 	}
 

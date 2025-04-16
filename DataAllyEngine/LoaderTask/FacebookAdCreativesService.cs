@@ -57,13 +57,13 @@ public class FacebookAdCreativesService : FacebookServiceBase
         {
             var content = response.ToJson();
 
-            var runStaging = new FbRunStaging
-            {
-                FbRunlogId = runlog.Id,
-                Sequence = GetNextSequence(runlog),
-                Content = content
-            };
+            var runStaging = new FbRunStaging();
+            runStaging.FbRunlogId = runlog.Id;
+            runStaging.Sequence = GetNextSequence(runlog);
+            runStaging.Content = content;
+            
             loaderProxy.WriteFbRunStaging(runStaging);
+
         }
 
         if (response.IsSuccessful)
@@ -99,12 +99,11 @@ public class FacebookAdCreativesService : FacebookServiceBase
         {
             var content = response.ToJson();
 
-            var runStaging = new FbRunStaging
-            {
-                FbRunlogId = runlog.Id,
-                Sequence = GetNextSequence(runlog),
-                Content = content
-            };
+            var runStaging = new FbRunStaging();
+            runStaging.FbRunlogId = runlog.Id;
+            runStaging.Sequence = GetNextSequence(runlog);
+            runStaging.Content = content;
+            
             loaderProxy.WriteFbRunStaging(runStaging);
         }
 
