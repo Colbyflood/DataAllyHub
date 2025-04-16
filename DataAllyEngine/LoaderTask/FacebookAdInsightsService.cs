@@ -13,7 +13,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
 	{
 	}
 
-    public async Task<FbRunLog> InitiateAdInsightsLoad(string scopeType, DateTime startDate, DateTime endDate)
+    public async Task<FbRunLog> InitiateAdInsightsLoad(string scopeType, DateTime startDate, DateTime endDate, int? backfillDays)
     {
         logging.LogInformation($"Requesting loading of ad insights for channel {channel.Id} in scope {scopeType} between {startDate} and {endDate}");
 
@@ -22,6 +22,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
         runlog.FeedType = Names.FEED_TYPE_AD_INSIGHT;
         runlog.ScopeType = scopeType;
         runlog.StartedUtc = DateTime.UtcNow;
+        runlog.BackfillDays = backfillDays;
         loaderProxy.WriteFbRunLog(runlog);
 
         var success = await StartAdInsightsLoad(runlog, startDate, endDate);

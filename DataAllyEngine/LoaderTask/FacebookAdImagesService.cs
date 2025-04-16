@@ -13,7 +13,7 @@ public class FacebookAdImagesService : FacebookServiceBase
 	{
 	}
 
-    public async Task<FbRunLog> InitiateAdImagesLoad(string scopeType)
+    public async Task<FbRunLog> InitiateAdImagesLoad(string scopeType, int? backfillDays)
     {
         logging.LogInformation($"Requesting loading of ad images for channel {channel.Id} in scope {scopeType}");
 
@@ -22,6 +22,7 @@ public class FacebookAdImagesService : FacebookServiceBase
         runlog.FeedType = Names.FEED_TYPE_AD_IMAGE;
         runlog.ScopeType = scopeType;
         runlog.StartedUtc = DateTime.UtcNow;
+        runlog.BackfillDays = backfillDays;
         loaderProxy.WriteFbRunLog(runlog);
 
         var success = await StartAdImagesLoad(runlog);

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DataAllyEngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0315b97a1d297b1d4694527921054b7a876bb4c1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cf49ced3fbc8520039063c99cd73ad2d873dc400")]
 [assembly: System.Reflection.AssemblyProductAttribute("DataAllyEngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DataAllyEngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

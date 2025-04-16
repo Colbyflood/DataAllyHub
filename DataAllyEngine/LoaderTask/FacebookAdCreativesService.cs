@@ -13,7 +13,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
 	{
 	}
 
-    public async Task<FbRunLog> InitiateAdCreativesLoad(string scopeType)
+    public async Task<FbRunLog> InitiateAdCreativesLoad(string scopeType, int? backfillDays)
     {
         logging.LogInformation($"Requesting loading of ad creatives for channel {channel.Id} in scope {scopeType}");
 
@@ -22,6 +22,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
         runlog.FeedType = Names.FEED_TYPE_AD_CREATIVE;
         runlog.ScopeType = scopeType;
         runlog.StartedUtc = DateTime.UtcNow;
+        runlog.BackfillDays = backfillDays;
         loaderProxy.WriteFbRunLog(runlog);
 
         var success = await StartAdCreativesLoad(runlog);

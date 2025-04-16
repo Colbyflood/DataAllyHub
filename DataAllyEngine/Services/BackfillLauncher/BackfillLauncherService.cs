@@ -31,12 +31,12 @@ public class BackfillLauncherService : IBackfillLauncherService
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
-			RunPendingDailyServices();
+			RunPendingBackfillServices();
 			await Task.Delay(ONE_MINUTE_MSEC, stoppingToken);
 		}
 	}
 
-	private void RunPendingDailyServices()
+	private void RunPendingBackfillServices()
 	{
 		var channelType = schedulerProxy.GetChannelTypeByName(FACEBOOK_CHANNEL_NAME);
 		if (channelType == null)
@@ -95,14 +95,14 @@ public class BackfillLauncherService : IBackfillLauncherService
 			if (token == null)
 			{
 				logger.LogError($"Could not find token for candidate with channel Id {candidate.ChannelId} ({channel.ChannelAccountName})");
-				MarkTokenFailure(channel, false, adImageRunLog, adCreativeRunLog, adInsightRunLog);
+				MarkTokenFailure(channel, false, candidate.Days, adImageRunLog, adCreativeRunLog, adInsightRunLog);
 				continue;
 			}
 
 			if (token.Enabled == 0)
 			{
 				logger.LogError($"Token not enabled for candidate with channel Id {candidate.ChannelId} ({channel.ChannelAccountName})");
-				MarkTokenFailure(channel, true, adImageRunLog, adCreativeRunLog, adInsightRunLog);
+				MarkTokenFailure(channel, true, candidate.Days, adImageRunLog, adCreativeRunLog, adInsightRunLog);
 				continue;
 			}
 			
@@ -112,23 +112,23 @@ public class BackfillLauncherService : IBackfillLauncherService
 			var facebookParameters = new FacebookParameters(channel.ChannelAccountId, token.Token1);
 			if (adImageRunLog == null)
 			{
-				loaderRunner.StartAdImagesLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL);
+				loaderRunner.StartAdImagesLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL, candidate.Days);
 			}
 
 			if (adCreativeRunLog == null)
 			{
-				loaderRunner.StartAdCreativesLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL);
+				loaderRunner.StartAdCreativesLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL, candidate.Days);
 			}
 
 			if (adInsightRunLog == null)
 			{
 				var startDate = now.AddDays(-1 * candidate.Days);
-				loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL, startDate, now);
+				loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL, startDate, now, candidate.Days);
 			}
 		}
 	}
 
-	private void MarkTokenFailure(Channel channel, bool isTokenDisabled, FbRunLog? adImageRunLog, FbRunLog? adCreativeRunLog, FbRunLog? adInsightRunLog)
+	private void MarkTokenFailure(Channel channel, bool isTokenDisabled, int backfillDays, FbRunLog? adImageRunLog, FbRunLog? adCreativeRunLog, FbRunLog? adInsightRunLog)
 	{
 		logger.LogWarning($"Token failure for channel Id {channel.Id} ({channel.ChannelAccountName})");
 		
@@ -138,30 +138,31 @@ public class BackfillLauncherService : IBackfillLauncherService
 
 		if (adImageRunLog == null)
 		{
-			adImageRunLog = CreateRunLog(channel.Id, now, Names.FEED_TYPE_AD_IMAGE, Names.SCOPE_TYPE_DAILY);
+			adImageRunLog = CreateRunLog(channel.Id, now, Names.FEED_TYPE_AD_IMAGE, Names.SCOPE_TYPE_BACKFILL, backfillDays);
 		}
 		LogProblem(adImageRunLog, now, problem);
 
 		if (adCreativeRunLog == null)
 		{
-			adCreativeRunLog = CreateRunLog(channel.Id, now, Names.FEED_TYPE_AD_CREATIVE, Names.SCOPE_TYPE_DAILY);
+			adCreativeRunLog = CreateRunLog(channel.Id, now, Names.FEED_TYPE_AD_CREATIVE, Names.SCOPE_TYPE_BACKFILL, backfillDays);
 		}
 		LogProblem(adCreativeRunLog, now, problem);
 
 		if (adInsightRunLog == null)
 		{
-			adInsightRunLog = CreateRunLog(channel.Id, now, Names.FEED_TYPE_AD_INSIGHT, Names.SCOPE_TYPE_DAILY);
+			adInsightRunLog = CreateRunLog(channel.Id, now, Names.FEED_TYPE_AD_INSIGHT, Names.SCOPE_TYPE_BACKFILL, backfillDays);
 		}
 		LogProblem(adInsightRunLog, now, problem);
 	}
 
-	private FbRunLog CreateRunLog(int channelId, DateTime utcNow, string feedType, string scope)
+	private FbRunLog CreateRunLog(int channelId, DateTime utcNow, string feedType, string scope, int backfillDays)
 	{
 		var runlog = new FbRunLog();
 		runlog.ChannelId = channelId;
 		runlog.FeedType = feedType;
 		runlog.StartedUtc = utcNow;
 		runlog.ScopeType = scope;
+		runlog.BackfillDays = backfillDays;
 		schedulerProxy.WriteFbRunLog(runlog);
 		return runlog;
 	}
