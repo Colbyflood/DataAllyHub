@@ -9,10 +9,13 @@ public class FacebookHttpException : Exception
     public string TypeCode { get; private set; } = string.Empty;
     public string ErrorCode { get; private set; } = string.Empty;
     public string ErrorSubcode { get; private set; } = string.Empty;
+    
+    public override string Message { get; }
 
     public bool TokenExpired { get; private set; } = false;
     public bool Throttled { get; private set; } = false;
     public bool NotPermitted { get; private set; } = false;
+    public bool RequestSizeTooLarge { get; private set; } = false;
 
     public FacebookHttpException(int httpCode, string errorData)
     {
@@ -26,7 +29,8 @@ public class FacebookHttpException : Exception
             if (error == null)
                 throw new JsonException("Missing 'error' node in JSON");
 
-            Message = error?["message"]?.ToString() ?? "Unknown Facebook error";
+            var messageContent = error?["message"]?.ToString() ?? "Unknown Facebook error";
+            Message = messageContent;
             TypeCode = error?["type"]?.ToString() ?? string.Empty;
             ErrorCode = error?["code"]?.ToString() ?? string.Empty;
             ErrorSubcode = error?["error_subcode"]?.ToString() ?? string.Empty;
@@ -37,6 +41,10 @@ public class FacebookHttpException : Exception
                     Throttled = true;
                 else
                     TokenExpired = true;
+            }
+            else if (ErrorCode == "1" && messageContent.ToLower().Contains("reduce the amount of data"))
+            {
+                RequestSizeTooLarge = true;
             }
             else
             {
@@ -56,6 +64,4 @@ public class FacebookHttpException : Exception
             NotPermitted = true;
         }
     }
-
-    public override string Message { get; }
 }

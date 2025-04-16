@@ -16,7 +16,7 @@ public class AdCreativesLoader : FacebookLoaderBase
         "thumbnail_id,product_set_id,url_tags,title,body,link_destination_display_url,product_data,template_url_spec," +
         "template_url,object_story_spec{page_id,link_data,video_data,template_data}}";
 
-    private const int Limit = 30;
+    private const int Limit = 100;
     private const int MaxTestLoops = 4;
 
     public AdCreativesLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) { }
@@ -79,6 +79,8 @@ public class AdCreativesLoader : FacebookLoaderBase
         string currentUrl = startUrl;
         var records = new List<FacebookAdCreative>();
 
+        var currentLimitSize = GetLimitFromUrl(startUrl) ?? Limit;
+
         while (true)
         {
             try
@@ -99,8 +101,26 @@ public class AdCreativesLoader : FacebookLoaderBase
             }
             catch (FacebookHttpException fe)
             {
-                Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message}");
-                return new FacebookAdCreativesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
+                if (fe.RequestSizeTooLarge)
+                {
+                    if (currentLimitSize == 1)
+                    {
+                        Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message} and the Limit cannot be less than 1 - marking as NotPermitted for {GetSanitizedUrl(currentUrl)}");
+                        return new FacebookAdCreativesResponse(records, false, currentUrl, true, fe.TokenExpired, fe.Throttled);
+                    }
+                    currentLimitSize /= 2;
+                    if (currentLimitSize < 0)
+                    {
+                        currentLimitSize = 1;
+                    }
+                    Logger.LogWarning($"Cutting limit size down to {currentLimitSize} for {GetSanitizedUrl(currentUrl)}");
+                    currentUrl = UpdateUrlWithLimit(currentUrl, currentLimitSize);
+                }
+                else
+                {
+                    Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message}");
+                    return new FacebookAdCreativesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
+                }
             }
             catch (Exception ex)
             {

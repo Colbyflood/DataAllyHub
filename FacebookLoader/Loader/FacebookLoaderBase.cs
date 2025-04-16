@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Text;
 using FacebookLoader.Common;
 using Newtonsoft.Json.Linq;
 
@@ -19,6 +20,136 @@ public abstract class FacebookLoaderBase
         this.Logger = logger;
     }
 
+    protected static string GetSanitizedUrl(string url)
+    {
+        var questionIndex = url.IndexOf("?");
+        if (questionIndex < 0)
+        {
+            return url;     // no parameters means no access_token is in url
+        }
+        
+        var urlBase = url.Substring(0, questionIndex);
+        
+        var parameters = url.Substring(questionIndex + 1).Split('&');
+        var sanitizedUrl = new StringBuilder();
+        sanitizedUrl.Append(urlBase);
+        sanitizedUrl.Append("?");
+        var paramCount = 0;
+        foreach (var parameter in parameters)
+        {
+            var equalsIndex = parameter.IndexOf('=');
+            if (equalsIndex < 0)
+            {
+                if (paramCount > 0)
+                {
+                    sanitizedUrl.Append("&");
+                }
+                sanitizedUrl.Append(parameter);
+                ++paramCount;
+            }
+            else
+            {
+                var key = parameter.Substring(0, equalsIndex).ToLower();
+                if (key != "access_token")
+                {
+                    if (paramCount > 0)
+                    {
+                        sanitizedUrl.Append("&");
+                    }
+                    sanitizedUrl.Append(parameter);
+                    ++paramCount;
+                }
+            }
+            
+        }
+        
+        return sanitizedUrl.ToString();
+    }
+
+    protected static int? GetLimitFromUrl(string url)
+    {
+        var questionIndex = url.IndexOf("?");
+        if (questionIndex < 0)
+        {
+            return null;     // no parameters means no access_token is in url
+        }
+        
+        var urlBase = url.Substring(0, questionIndex);
+        
+        var parameters = url.Substring(questionIndex + 1).Split('&');
+        var updatedUrl = new StringBuilder();
+        updatedUrl.Append(urlBase);
+        updatedUrl.Append("?");
+        foreach (var parameter in parameters)
+        {
+            var equalsIndex = parameter.IndexOf('=');
+            if (equalsIndex > 0)
+            {
+                var key = parameter.Substring(0, equalsIndex).ToLower();
+                if (key == "limit")
+                {
+                    var value = parameter.Substring(equalsIndex + 1).Trim();
+                    if (int.TryParse(value, out var result))
+                    {
+                        return result;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+    
+    protected static string UpdateUrlWithLimit(string url, int limit)
+    {
+        var questionIndex = url.IndexOf("?");
+        if (questionIndex < 0)
+        {
+            return url;     // no parameters means no access_token is in url
+        }
+        
+        var urlBase = url.Substring(0, questionIndex);
+        
+        var parameters = url.Substring(questionIndex + 1).Split('&');
+        var updatedUrl = new StringBuilder();
+        updatedUrl.Append(urlBase);
+        updatedUrl.Append("?");
+        var foundLimit = false;
+        var paramCount = 0;
+        foreach (var parameter in parameters)
+        {
+            var equalsIndex = parameter.IndexOf('=');
+            var value = parameter;
+            if (equalsIndex > 0)
+            {
+                var key = parameter.Substring(0, equalsIndex).ToLower();
+                if (key == "limit")
+                {
+                    value = $"limit={limit}";
+                    foundLimit = true;
+                }
+            }
+
+            if (paramCount > 0)
+            {
+                updatedUrl.Append("&");
+            }
+            updatedUrl.Append(value);
+            ++paramCount;
+        }
+
+        if (!foundLimit)
+        {
+            if (paramCount > 0)
+            {
+                updatedUrl.Append("&");
+            }
+            updatedUrl.Append($"limit={limit}");
+        }
+        
+        return updatedUrl.ToString();
+    }
+
     protected async Task<JObject> CallGraphApiAsync(string url)
     {
         using var httpClient = new HttpClient()
@@ -27,9 +158,10 @@ public abstract class FacebookLoaderBase
         };
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+        HttpResponseMessage? response = null;
         try
         {
-            var response = await httpClient.GetAsync(url);
+            response = await httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync();
@@ -37,7 +169,14 @@ public abstract class FacebookLoaderBase
         }
         catch (HttpRequestException httpEx) when (httpEx.StatusCode.HasValue)
         {
-            var responseText = httpEx.Message;
+            //var responseText = httpEx.Message;
+            var responseText = string.Empty;
+
+            if (response != null)
+            {
+                responseText = await response.Content.ReadAsStringAsync();
+            }
+
             Console.Error.WriteLine($"HTTP error occurred: {httpEx} while calling graph api");
             throw new FacebookHttpException((int)httpEx.StatusCode.Value, responseText);
         }

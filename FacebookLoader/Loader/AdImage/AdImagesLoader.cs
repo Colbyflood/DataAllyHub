@@ -11,7 +11,7 @@ public class AdImagesLoader : FacebookLoaderBase
     private const string FieldsList = "account_id,created_time,creatives,hash,id,is_associated_creatives_in_adgroups," +
                                        "name,permalink_url,status,updated_time,url,url_128";
 
-    private const int Limit = 500;
+    private const int Limit = 200;
     private const int MaxTestLoops = 4;
     
     public AdImagesLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) {}
@@ -27,6 +27,8 @@ public class AdImagesLoader : FacebookLoaderBase
         int loopCount = 0;
         string currentUrl = startUrl;
         var records = new List<FacebookAdImage>();
+
+        var currentLimitSize = GetLimitFromUrl(startUrl) ?? Limit;
 
         while (true)
         {
@@ -63,8 +65,26 @@ public class AdImagesLoader : FacebookLoaderBase
             }
             catch (FacebookHttpException fe)
             {
-                Logger.LogException(fe, $"Caught FacebookHttpException at FacebookAdImagesLoader.Load(): {fe.Message}");
-                return new FacebookAdImagesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
+                if (fe.RequestSizeTooLarge)
+                {
+                    if (currentLimitSize == 1)
+                    {
+                        Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message} and the Limit cannot be less than 1 - marking as NotPermitted for {GetSanitizedUrl(currentUrl)}");
+                        return new FacebookAdImagesResponse(records, false, currentUrl, true, fe.TokenExpired, fe.Throttled);
+                    }
+                    currentLimitSize /= 2;
+                    if (currentLimitSize < 0)
+                    {
+                        currentLimitSize = 1;
+                    }
+                    Logger.LogWarning($"Cutting limit size down to {currentLimitSize} for {GetSanitizedUrl(currentUrl)}");
+                    currentUrl = UpdateUrlWithLimit(currentUrl, currentLimitSize);
+                }
+                else
+                {
+                    Logger.LogException(fe, $"Caught FacebookHttpException at FacebookAdImagesLoader.Load(): {fe.Message}");
+                    return new FacebookAdImagesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
+                }
             }
             catch (Exception ex)
             {

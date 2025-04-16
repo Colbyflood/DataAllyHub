@@ -137,10 +137,12 @@ public class RestartProbeService : IRestartProbeService
 	    var ignoreTimeWindow = now.AddMinutes(-1 * IGNORE_START_MINUTES_BEFORE);
 	    var preemptTimeWindow = now.AddMinutes(-1 * PREEMPT_STUCK_MINUTES_BEFORE);
 	    var absoluteTimeWindow = now.AddHours(-1 * MAXIMUM_HOURS_LOOKBACK);
-        var stalled = new List<FbRunLog>();
 
-        foreach (var runlog in schedulerProxy.GetIncompleteFbRunLogsSince(absoluteTimeWindow))
-        {
+        var runlogs = schedulerProxy.GetIncompleteFbRunLogsSince(absoluteTimeWindow);
+        var stalled = new List<FbRunLog>();
+        foreach (var runlog in runlogs)
+        { 
+if (runlog.Id < 2694) continue;	        
             var startedTime = DateTime.SpecifyKind(runlog.StartedUtc, DateTimeKind.Utc);
             if (startedTime >= ignoreTimeWindow)
                 continue;
@@ -160,6 +162,7 @@ public class RestartProbeService : IRestartProbeService
 
             if (problem.Reason == Names.FB_PROBLEM_NO_TOKEN ||
                 problem.Reason == Names.FB_PROBLEM_BAD_TOKEN ||
+                
                 problem.Reason == Names.FB_PROBLEM_NOT_PERMITTED)
             {
                 continue;

@@ -17,7 +17,8 @@ public class AdInsightsLoader : FacebookLoaderBase
         "video_30_sec_watched_actions,video_avg_time_watched_actions,video_p100_watched_actions,video_p25_watched_actions,video_p50_watched_actions," +
         "video_p75_watched_actions,video_p95_watched_actions,video_thruplay_watched_actions,video_play_actions,cost_per_thruplay}";
 
-    private const int Limit = 50;
+    private const int Limit = 100;
+    private const int SubLimit = 500;
     private const int MaxTestLoops = 4;
 
     public AdInsightsLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) {}
@@ -35,6 +36,8 @@ public class AdInsightsLoader : FacebookLoaderBase
 	    var loopCount = 0;
 	    var currentUrl = startUrl;
 	    var records = new List<FacebookAdInsight>();
+	    
+	    var currentLimitSize = GetLimitFromUrl(startUrl) ?? Limit;
 
 	    while (true)
 	    {
@@ -68,8 +71,26 @@ public class AdInsightsLoader : FacebookLoaderBase
 		    }
 		    catch (FacebookHttpException fe)
 		    {
-			    Logger.LogInformation($"Caught FacebookHttpException at FacebookInsightsLoader.Load(): {fe}");
-			    return new FacebookAdInsightsResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
+			    if (fe.RequestSizeTooLarge)
+			    {
+				    if (currentLimitSize == 1)
+				    {
+					    Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message} and the Limit cannot be less than 1 - marking as NotPermitted for {GetSanitizedUrl(currentUrl)}");
+					    return new FacebookAdInsightsResponse(records, false, currentUrl, true, fe.TokenExpired, fe.Throttled);
+				    }
+				    currentLimitSize /= 2;
+				    if (currentLimitSize < 0)
+				    {
+					    currentLimitSize = 1;
+				    }
+				    Logger.LogWarning($"Cutting limit size down to {currentLimitSize} for {GetSanitizedUrl(currentUrl)}");
+				    currentUrl = UpdateUrlWithLimit(currentUrl, currentLimitSize);
+			    }
+			    else
+			    {
+				    Logger.LogInformation($"Caught FacebookHttpException at FacebookInsightsLoader.Load(): {fe}");
+				    return new FacebookAdInsightsResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
+			    }
 		    }
 		    catch (Exception ex)
 		    {
@@ -84,7 +105,7 @@ public class AdInsightsLoader : FacebookLoaderBase
 
     private string PrepareInsights(string startDate, string endDate)
     {
-        return $"insights.time_range({{\"since\":\"{startDate}\",\"until\":\"{endDate}\"}}).time_increment(1).limit(1000){InsightFields}";
+        return $"insights.time_range({{\"since\":\"{startDate}\",\"until\":\"{endDate}\"}}).time_increment(1).limit({SubLimit}){InsightFields}";
     }
     
     private List<string> DigestPreviews(Previews previews)
