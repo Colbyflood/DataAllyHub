@@ -83,7 +83,6 @@ public class ProcessContentService : IProcessContentService
 
 		foreach (var adImageRunLog in adImageRunLogs)
 		{
-if (adImageRunLog.Id != 2780) continue;			
 			if (adImageRunLog.FinishedUtc == null)
 			{
 				continue;
