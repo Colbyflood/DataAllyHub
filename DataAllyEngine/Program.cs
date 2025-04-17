@@ -63,10 +63,10 @@ builder.Services.AddScoped<IBackfillLauncherService, BackfillLauncherService>();
 
 
 // Add background services
-//builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
-//builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
-// builder.Services.AddHostedService<BackfillLauncherScopedBackgroundService>();
-//builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
+builder.Services.AddHostedService<EmailSendingScopedBackgroundService>();
+builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
+builder.Services.AddHostedService<BackfillLauncherScopedBackgroundService>();
+builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
 builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
 
 
