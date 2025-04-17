@@ -122,7 +122,7 @@ public class ProcessContentService : IProcessContentService
 		var after = toMatch.StartedUtc.AddMilliseconds(msec);
 		var before = toMatch.StartedUtc.AddMilliseconds(-1 * msec);
 		
-		return runLogs.SingleOrDefault(r => r.ChannelId == toMatch.ChannelId && r.FeedType == feedType && r.StartedUtc >= before && r.StartedUtc <= after);
+		return runLogs.FirstOrDefault(r => r.ChannelId == toMatch.ChannelId && r.FeedType == feedType && r.StartedUtc >= before && r.StartedUtc <= after);
 	}
 
 	private bool IsProcessingCompleteFor(FbSaveContent? saveContent)
