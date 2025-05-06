@@ -130,8 +130,7 @@ public class ContentProcessor : IContentProcessor
                 var savedName = asset.AssetName ?? string.Empty;
                 var savedUrl = asset.Url ?? string.Empty;
                 var recordName = record.Name ?? string.Empty;
-                var recordUrl = record.Url ?? string.Empty;
-
+                var recordUrl = !string.IsNullOrWhiteSpace(record.Url128) ? record.Url128 : (record.Url ?? string.Empty);
                 if (!savedName.Equals(recordName, StringComparison.OrdinalIgnoreCase) ||
                     !savedUrl.Equals(recordUrl, StringComparison.OrdinalIgnoreCase))
                 {
