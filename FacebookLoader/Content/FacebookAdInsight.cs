@@ -123,6 +123,13 @@ public class FacebookInsight
     public ActionData VideoView { get; }
     public ActionData OnsitePurchases { get; }
 
+    // Oleksii - look here
+    public ActionData TotalAddPaymentInfo { get; }
+    public ActionData TotalAddToCart { get; }
+    public ActionData TotalAddToWishlist { get; }
+    public ActionData TotalCheckoutInitiated { get; }
+    public ActionData TotalPurchases { get; }
+    
     public FacebookInsight(string DateStart, string DateStop, string AccountId, string AccountName,
         string AccountCurrency, string AttributionSetting, string OptimizationGoal, string CampaignId,
         string CampaignName, string Objective, string BuyingType, string AdsetId, string AdsetName,
@@ -152,7 +159,11 @@ public class FacebookInsight
         ActionData StartTrialWebsite, ActionData SubmitApplicationMobileApp,
         ActionData SubmitApplicationOffline, ActionData SubmitApplicationTotal,
         ActionData SubmitApplicationWebsite, ActionData SubscribeMobileApp, ActionData SubscribeTotal,
-        ActionData SubscribeWebsite, ActionData VideoView, ActionData OnsitePurchases)
+        ActionData SubscribeWebsite, ActionData VideoView, ActionData OnsitePurchases, 
+        // Oleksii - look here
+        ActionData TotalAddPaymentInfo, ActionData TotalAddToCart, 
+        ActionData TotalAddToWishlist, ActionData TotalCheckoutInitiated, ActionData TotalPurchases 
+        )
     {
         this.DateStart = DateStart;
         this.DateStop = DateStop;
@@ -254,6 +265,13 @@ public class FacebookInsight
         this.SubscribeWebsite = SubscribeWebsite;
         this.VideoView = VideoView;
         this.OnsitePurchases = OnsitePurchases;
+        
+        // Oleksii - look here
+        this.TotalAddPaymentInfo = TotalAddPaymentInfo;
+        this.TotalAddToCart = TotalAddToCart;
+        this.TotalAddToWishlist = TotalAddToWishlist;
+        this.TotalCheckoutInitiated = TotalCheckoutInitiated;
+        this.TotalPurchases = TotalPurchases;
     }
 }
 

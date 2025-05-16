@@ -259,7 +259,13 @@ public class AdInsightsLoader : FacebookLoaderBase
 			var subscribeWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "subscribe_website");
 			var videoView = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "video_view");
 			var onsitePurchases = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_conversion.purchase");
-
+			
+			// Oleksii - look here
+			var totalAddPaymentInfo = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_payment_info");
+			var totalAddToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_to_cart");
+			var totalAddToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_to_wishlist");
+			var totalCheckoutInitiated = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "initiate_checkout");
+			var totalPurchases = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "purchase");
 
 			var insightModel = new FacebookInsight(
 				insight.DateStart, 
@@ -362,7 +368,14 @@ public class AdInsightsLoader : FacebookLoaderBase
 				subscribeTotal,
 				subscribeWebsite,
 				videoView,
-				onsitePurchases);
+				onsitePurchases,
+
+				// Oleksii - look here
+				totalAddPaymentInfo,
+				totalAddToCart,
+				totalAddToWishlist,
+				totalCheckoutInitiated,
+				totalPurchases);
 
 
             digest.Add(insightModel);

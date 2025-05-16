@@ -358,16 +358,16 @@ public class KpiProcessor
         ecommerceTotal.CostPerTotalAddToCart = null;
         ecommerceTotal.CostPerTotalAddToWishlist = null;
         ecommerceTotal.CostPerTotalCheckoutInitiated = null;
-        ecommerceTotal.TotalAddPaymentInfo = null;
-        ecommerceTotal.TotalAddPaymentInfoValue = null;
-        ecommerceTotal.TotalAddToCart = null;
-        ecommerceTotal.TotalAddToCartValue = null;
-        ecommerceTotal.TotalAddToWishlist = null;
-        ecommerceTotal.TotalAddToWishlistValue = null;
-        ecommerceTotal.TotalCheckoutInitiated = null;
-        ecommerceTotal.TotalCheckoutInitiatedValue = null;
-        ecommerceTotal.TotalPurchases = null;
-        ecommerceTotal.TotalPurchasesValue = null;
+        ecommerceTotal.TotalAddPaymentInfo = entry.TotalAddPaymentInfo.Count;
+        ecommerceTotal.TotalAddPaymentInfoValue = ConvertFloatToDecimal(entry.TotalAddPaymentInfo.CostPerAction);
+        ecommerceTotal.TotalAddToCart = entry.TotalAddToCart.Count;
+        ecommerceTotal.TotalAddToCartValue = ConvertFloatToDecimal(entry.TotalAddToCart.Value);
+        ecommerceTotal.TotalAddToWishlist = entry.TotalAddToWishlist.Count;
+        ecommerceTotal.TotalAddToWishlistValue = ConvertFloatToDecimal(entry.TotalAddToWishlist.Value);
+        ecommerceTotal.TotalCheckoutInitiated = entry.TotalCheckoutInitiated.Count;
+        ecommerceTotal.TotalCheckoutInitiatedValue = ConvertFloatToDecimal(entry.TotalCheckoutInitiated.Value);
+        ecommerceTotal.TotalPurchases = entry.TotalPurchases.Count;
+        ecommerceTotal.TotalPurchasesValue = ConvertFloatToDecimal(entry.TotalPurchases.Value);
         ecommerceTotal.TotalRoa = null;
 
         ecommerceWebsite.CostPerWebsiteAddPaymentInfo = ConvertFloatToDecimal(entry.OffsiteConversionAddPayment.CostPerAction);
