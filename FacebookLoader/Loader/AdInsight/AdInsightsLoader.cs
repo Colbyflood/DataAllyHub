@@ -14,7 +14,7 @@ public class AdInsightsLoader : FacebookLoaderBase
         "engagement_rate_ranking,quality_ranking,actions,action_values,cost_per_action_type,conversions,conversion_values,cost_per_conversion," +
         "cost_per_unique_click,cost_per_unique_conversion,outbound_clicks,outbound_clicks_ctr,inline_link_click_ctr,cost_per_outbound_click," +
         "video_30_sec_watched_actions,video_avg_time_watched_actions,video_p100_watched_actions,video_p25_watched_actions,video_p50_watched_actions," +
-        "video_p75_watched_actions,video_p95_watched_actions,video_thruplay_watched_actions,video_play_actions,cost_per_thruplay}";
+        "video_p75_watched_actions,video_p95_watched_actions,video_thruplay_watched_actions,video_play_actions,cost_per_thruplay, video_continuous_2_sec_watched_actions}";
 
     private const int Limit = 100;
     private const int SubLimit = 500;
@@ -191,6 +191,7 @@ public class AdInsightsLoader : FacebookLoaderBase
             var videoP50Watched = ExtractValueFrom(insight.VideoP50WatchedActions, "video_view");
             var videoP75Watched = ExtractValueFrom(insight.VideoP75WatchedActions, "video_view");
             var videoP95Watched = ExtractValueFrom(insight.VideoP95WatchedActions, "video_view");
+            var videoContinuous2SecWatched = ExtractValueFrom(insight.VideoContinuous2SecWatchedActions, "video_view");
             var videoThruplayWatched = ExtractValueFrom(insight.VideoThruplayWatchedActions, "video_view");
             var videoPlay = ExtractValueFrom(insight.VideoPlayActions, "video_view");
             var costPerThruplay = ExtractValueFrom(insight.CostPerThruplay, "video_view");
@@ -200,8 +201,8 @@ public class AdInsightsLoader : FacebookLoaderBase
             var costPerOutboundClick = ExtractValueFrom(insight.CostPerOutboundClick, "outbound_click");
 
             var addPayment = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_payment_info");
-            var addToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_cart");
-            var addToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_wishlist");
+            var addToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_add_to_cart");
+            var addToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_add_to_wishlist");
             var mobileAddPayment = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_payment_info");
             var mobileAddToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_to_cart");
             var mobileAddToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_to_wishlist");
@@ -221,13 +222,13 @@ public class AdInsightsLoader : FacebookLoaderBase
 			var findLocationOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_offline");
 			var findLocationTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_total");
 			var findLocationWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_website");
-			var initiateCheckout = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_initiate_checkout");
+			var initiateCheckout = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_initiated_checkout");
 			var landingPageView = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "landing_page_view");
 			var lead = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "lead");
 			var like = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "like");
 			var linkClick = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "link_click");
 			var offsiteConversionAddPayment = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_payment_info");
-			var offsiteConversionAddToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_payment_info");
+			var offsiteConversionAddToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_cart");
 			var offsiteConversionAddToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_wishlist");
 			var offsiteConversionCompleteRegistration = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_complete_registration");
 			var offsiteConversionInitiateCheckout = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_initiate_checkout");
@@ -247,7 +248,7 @@ public class AdInsightsLoader : FacebookLoaderBase
 			var scheduleTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_total");
 			var scheduleWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_website");
 			var startTrialMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_mobile_app");
-			var startTrialOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_offline");
+			var startTrialOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offline_conversion.fb_offline_trial_started");
 			var startTrialTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_total");
 			var startTrialWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_website");
 			var submitApplicationMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "submit_application_mobile_app");
@@ -260,12 +261,13 @@ public class AdInsightsLoader : FacebookLoaderBase
 			var videoView = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "video_view");
 			var onsitePurchases = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_conversion.purchase");
 			
-			// Oleksii - look here
 			var totalAddPaymentInfo = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_payment_info");
 			var totalAddToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_to_cart");
 			var totalAddToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_to_wishlist");
 			var totalCheckoutInitiated = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "initiate_checkout");
 			var totalPurchases = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "purchase");
+			var leadgen = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "leadgen");
+			var estimatedAdRecallers = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "estimated_ad_recallers");
 
 			var insightModel = new FacebookInsight(
 				insight.DateStart, 
@@ -302,6 +304,7 @@ public class AdInsightsLoader : FacebookLoaderBase
 				ConvertToInteger(videoP75Watched),
 				ConvertToInteger(videoP95Watched),
 				ConvertToInteger(videoThruplayWatched),
+				ConvertToInteger(videoContinuous2SecWatched),
 				ConvertToInteger(videoPlay),
 				ConvertToDecimal(costPerThruplay),
 				ConvertToInteger(insight.CostPerUniqueClick),
@@ -369,13 +372,14 @@ public class AdInsightsLoader : FacebookLoaderBase
 				subscribeWebsite,
 				videoView,
 				onsitePurchases,
-
-				// Oleksii - look here
 				totalAddPaymentInfo,
 				totalAddToCart,
 				totalAddToWishlist,
 				totalCheckoutInitiated,
-				totalPurchases);
+				totalPurchases,
+				leadgen,
+				estimatedAdRecallers
+				);
 
 
             digest.Add(insightModel);
@@ -478,6 +482,7 @@ class InsightDatum
     public List<Action> VideoP95WatchedActions { get; set; }
     public List<Action> VideoThruplayWatchedActions { get; set; }
     public List<Action> VideoPlayActions { get; set; }
+    public List<Action> VideoContinuous2SecWatchedActions { get; set; }
     public List<Action> CostPerThruplay { get; set; }
     public List<Action> Conversions { get; set; }
     public List<Action> ConversionValues { get; set; }
@@ -538,6 +543,7 @@ class InsightDatum
             VideoP95WatchedActions = ExtractActionListFrom(obj, "video_p95_watched_actions"),
             VideoThruplayWatchedActions = ExtractActionListFrom(obj, "video_thruplay_watched_actions"),
             VideoPlayActions = ExtractActionListFrom(obj, "video_play_actions"),
+            VideoContinuous2SecWatchedActions = ExtractActionListFrom(obj, "video_continuous_2_sec_watched_actions"),
             CostPerThruplay = ExtractActionListFrom(obj, "cost_per_thruplay"),
             Conversions = ExtractActionListFrom(obj, "conversions"),
             ConversionValues = ExtractActionListFrom(obj, "conversion_values"),

@@ -242,7 +242,7 @@ public class KpiProcessor
     
     private static void LoadGeneralKpi(FacebookInsight entry, GeneralKpi generalKpi)
     {
-        generalKpi.AdRecallLift = null;
+        generalKpi.AdRecallLift = entry.EstimatedAdRecallers.Count;
         generalKpi.AdRecallRate = null;
         generalKpi.AllClicks = entry.Clicks;
         generalKpi.AllCpc = ConvertFloatToDecimal(entry.Cpc);
@@ -275,21 +275,7 @@ public class KpiProcessor
     private static void LoadAppKpi(FacebookInsight entry, AppKpi appKpi)
     {
         appKpi.AppOpen = entry.AppUse.Count;
-        appKpi.ConversionRate = null;
-
-        if (entry.LinkClick?.Count > 0 && entry.AppInstall?.Count > 0)
-        {
-            try
-            {
-                appKpi.InstallsRate = ConvertDoubleToDecimal((entry.LinkClick.Count / (double)entry.AppInstall.Count) * 100.0);
-            }
-            catch (DivideByZeroException)
-            {
-                appKpi.InstallsRate = null;
-            }
-        }
-
-        appKpi.CostPerAppInstall = ConvertFloatToDecimal(entry.AppInstall?.CostPerAction);
+        appKpi.Installs = entry.AppInstall.Count;
     }
 
     private static void LoadVideoKpi(FacebookInsight entry, VideoKpi videoKpi)
@@ -311,53 +297,22 @@ public class KpiProcessor
         EcommerceWebsite ecommerceWebsite)
     {
         ecommerceChannel.ChannelAddToCart = entry.AddToCart.Count;
-        ecommerceChannel.ChannelAddToCartValue = ConvertFloatToDecimal(entry.AddToCart.Value);
         ecommerceChannel.ChannelAddToWishlist = entry.AddToWishlist.Count;
         ecommerceChannel.ChannelAddToWishlistValue = ConvertFloatToDecimal(entry.AddToWishlist.Value);
         ecommerceChannel.ChannelCheckoutInitiated = entry.InitiateCheckout.Count;
         ecommerceChannel.ChannelCheckoutInitiatedValue = ConvertFloatToDecimal(entry.InitiateCheckout.Value);
-        ecommerceChannel.ChannelCostPerAddToCart = ConvertFloatToDecimal(entry.AddToCart.CostPerAction);
         ecommerceChannel.ChannelPurchases = entry.OnsitePurchases.Count;
         ecommerceChannel.ChannelPurchasesValue = ConvertFloatToDecimal(entry.OnsitePurchases.Value);
 
-        if (entry.OnsitePurchases?.Value > 0 && entry.Spend > 0)
-        {
-            try
-            {
-                ecommerceChannel.ChannelRoa = ConvertFloatToDecimal(entry.OnsitePurchases.Value / entry.Spend);
-            }
-            catch (DivideByZeroException)
-            {
-                ecommerceChannel.ChannelRoa = null;
-            }
-        }
-
-        if (entry.OnsitePurchases?.Count > 0 && entry.Spend > 0)
-        {
-            try
-            {
-                ecommerceChannel.CostPerChannelPurchases = ConvertFloatToDecimal(entry.Spend / entry.OnsitePurchases.Count);
-            }
-            catch (DivideByZeroException)
-            {
-                ecommerceChannel.CostPerChannelPurchases = null;
-            }
-        }
-
         ecommerceMobile.MobileAppAddPaymentInfo = entry.MobileAddPayment.Count;
-        ecommerceMobile.MobileAppAddPaymentInfoValue = ConvertFloatToInt(entry.MobileAddPayment.CostPerAction);
+        ecommerceMobile.MobileAppAddPaymentInfoValue = ConvertFloatToInt(entry.MobileAddPayment.Value);
         ecommerceMobile.MobileAppAddToCart = entry.MobileAddToCart.Count;
-        ecommerceMobile.MobileAppAddToCartValue = ConvertFloatToDecimal(entry.MobileAddToCart.CostPerAction);
+        ecommerceMobile.MobileAppAddToCartValue = ConvertFloatToDecimal(entry.MobileAddToCart.Value);
         ecommerceMobile.MobileAppAddToWishlist = entry.MobileAddToWishlist.Count;
-        ecommerceMobile.MobileAppAddToWishlistValue = ConvertFloatToDecimal(entry.MobileAddToWishlist.CostPerAction);
+        ecommerceMobile.MobileAppAddToWishlistValue = ConvertFloatToDecimal(entry.MobileAddToWishlist.Value);
         ecommerceMobile.MobileAppCheckoutInitiated = entry.MobileInitiatedCheckout.Count;
-        ecommerceMobile.MobileAppCheckoutInitiatedValue = ConvertFloatToDecimal(entry.MobileInitiatedCheckout.CostPerAction);
+        ecommerceMobile.MobileAppCheckoutInitiatedValue = ConvertFloatToDecimal(entry.MobileInitiatedCheckout.Value);
 
-        // Unknown mappings – placeholders
-        ecommerceTotal.CostPerTotalAddPaymentInfo = null;
-        ecommerceTotal.CostPerTotalAddToCart = null;
-        ecommerceTotal.CostPerTotalAddToWishlist = null;
-        ecommerceTotal.CostPerTotalCheckoutInitiated = null;
         ecommerceTotal.TotalAddPaymentInfo = entry.TotalAddPaymentInfo.Count;
         ecommerceTotal.TotalAddPaymentInfoValue = ConvertFloatToDecimal(entry.TotalAddPaymentInfo.CostPerAction);
         ecommerceTotal.TotalAddToCart = entry.TotalAddToCart.Count;
@@ -368,7 +323,6 @@ public class KpiProcessor
         ecommerceTotal.TotalCheckoutInitiatedValue = ConvertFloatToDecimal(entry.TotalCheckoutInitiated.Value);
         ecommerceTotal.TotalPurchases = entry.TotalPurchases.Count;
         ecommerceTotal.TotalPurchasesValue = ConvertFloatToDecimal(entry.TotalPurchases.Value);
-        ecommerceTotal.TotalRoa = null;
 
         ecommerceWebsite.CostPerWebsiteAddPaymentInfo = ConvertFloatToDecimal(entry.OffsiteConversionAddPayment.CostPerAction);
         ecommerceWebsite.CostPerWebsiteAddToCart = ConvertFloatToDecimal(entry.OffsiteConversionAddToCart.CostPerAction);
@@ -385,7 +339,6 @@ public class KpiProcessor
         ecommerceWebsite.WebsiteCheckoutInitiatedValue = ConvertFloatToDecimal(entry.OffsiteConversionInitiateCheckout.Value);
         ecommerceWebsite.WebsitePurchases = entry.OffsiteConversionPurchase.Count;
         ecommerceWebsite.WebsitePurchasesValue = ConvertFloatToDecimal(entry.OffsiteConversionPurchase.Value);
-        ecommerceWebsite.WebsiteRoa = null;
     }
 
     private static void LoadLeadgenKpi(FacebookInsight entry,
@@ -437,12 +390,11 @@ public class KpiProcessor
         leadgenContact.WebsiteContacts = entry.ContactWebsite.Count;
         leadgenContact.WebsiteContactsValue = ConvertFloatToDecimal(entry.ContactWebsite.Value);
 
-        leadgenLead.ChannelLeadGenFormsSubmitted = null;
+        leadgenLead.ChannelLeadGenFormsSubmitted = entry.Leadgen.Count;
         leadgenLead.CostPerLead = ConvertFloatToDecimal(entry.Lead.CostPerAction);
-        leadgenLead.CostPerWebsiteLead = null;
         leadgenLead.Leads = entry.Lead.Count;
-        leadgenLead.WebsiteLeads = null;
-        leadgenLead.WebsiteLeadsValue = null;
+        leadgenLead.WebsiteLeads = entry.Lead.Count;
+        leadgenLead.WebsiteLeadsValue = ConvertFloatToDecimal(entry.Lead.Value);
 
         leadgenLocation.CostPerFindLocations = ConvertFloatToDecimal(entry.FindLocationTotal.CostPerAction);
         leadgenLocation.CostPerMobileAppFindLocations = ConvertFloatToDecimal(entry.FindLocationMobile.CostPerAction);
@@ -476,6 +428,8 @@ public class KpiProcessor
         leadgenSubscription.WebsiteSubscriptions = entry.SubscribeWebsite.Count;
         leadgenSubscription.WebsiteSubscriptionsValue = ConvertFloatToDecimal(entry.SubscribeWebsite.Value);
 
+        leadgenTrial.OfflineTrialsStarted = entry.StartTrialOffline.Count;
+        leadgenTrial.OfflineTrialsStartedValue = ConvertFloatToDecimal(entry.StartTrialOffline.Value);
         leadgenTrial.MobileTrialsStarted = entry.StartTrialMobileApp.Count;
         leadgenTrial.MobileTrialsStartedValue = ConvertFloatToDecimal(entry.StartTrialMobileApp.Value);
         leadgenTrial.TotalTrialsStarted = ConvertFloatToInt(entry.StartTrialTotal.Value);
