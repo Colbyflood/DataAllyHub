@@ -52,7 +52,6 @@ public class FacebookInsight
     public int? VideoP50Watched { get; }
     public int? VideoP75Watched { get; }
     public int? VideoP95Watched { get; }
-    public int? VideoContinuous2SecWatchedActions { get; }
     public int? VideoThruplayWatched { get; }
     public int? VideoPlay { get; }
     public float? CostPerThruplay { get; }
@@ -131,6 +130,7 @@ public class FacebookInsight
     public ActionData TotalPurchases { get; }
     public ActionData Leadgen { get; }
     public ActionData EstimatedAdRecallers { get; }
+    public ActionData VideoPlay3Seconds { get;  }
     
     public FacebookInsight(string DateStart, string DateStop, string AccountId, string AccountName,
         string AccountCurrency, string AttributionSetting, string OptimizationGoal, string CampaignId,
@@ -139,7 +139,7 @@ public class FacebookInsight
         float? Ctr, float? Cpm, int? Impressions, string ConversionRateRanking, string EngagementRateRanking,
         string QualityRanking, int? Video30SecWatched, float? VideoAvgTimeWatched, int? VideoP100Watched,
         int? VideoP25Watched, int? VideoP50Watched, int? VideoP75Watched, int? VideoP95Watched,
-        int? VideoContinuous2SecWatchedActions, int? VideoThruplayWatched, int? VideoPlay, float? CostPerThruplay, float? CostPerUniqueClick,
+        int? VideoThruplayWatched, int? VideoPlay, float? CostPerThruplay, float? CostPerUniqueClick,
         int? OutboundClicks, float? OutboundClicksCtr, float? CostPerOutboundClick, float? InlineLinkClickCtr,
         ActionData AddPayment, ActionData AddToCart, ActionData AddToWishlist, ActionData MobileAddPayment,
         ActionData MobileAddToCart, ActionData MobileAddToWishlist, ActionData MobileAppInstall,
@@ -164,7 +164,7 @@ public class FacebookInsight
         ActionData SubscribeWebsite, ActionData VideoView, ActionData OnsitePurchases, 
         ActionData TotalAddPaymentInfo, ActionData TotalAddToCart, 
         ActionData TotalAddToWishlist, ActionData TotalCheckoutInitiated, ActionData TotalPurchases,
-        ActionData Leadgen, ActionData EstimatedAdRecallers
+        ActionData Leadgen, ActionData EstimatedAdRecallers, ActionData VideoPlay3Seconds
         )
     {
         this.DateStart = DateStart;
@@ -199,7 +199,6 @@ public class FacebookInsight
         this.VideoP50Watched = VideoP50Watched;
         this.VideoP75Watched = VideoP75Watched;
         this.VideoP95Watched = VideoP95Watched;
-        this.VideoContinuous2SecWatchedActions = VideoContinuous2SecWatchedActions;
         this.VideoThruplayWatched = VideoThruplayWatched;
         this.VideoPlay = VideoPlay;
         this.CostPerThruplay = CostPerThruplay;
@@ -275,6 +274,7 @@ public class FacebookInsight
         this.TotalPurchases = TotalPurchases;
         this.Leadgen = Leadgen;
         this.EstimatedAdRecallers = EstimatedAdRecallers;
+        this.VideoPlay3Seconds = VideoPlay3Seconds;
     }
 }
 
