@@ -283,7 +283,7 @@ public class KpiProcessor
         videoKpi.AverageWatchSeconds = ConvertFloatToInt(entry.VideoAvgTimeWatched);
         videoKpi.Play100percent = entry.VideoP100Watched;
         videoKpi.Play25percent = entry.VideoP25Watched;
-        videoKpi.Play3seconds = entry.VideoView.Count;
+        videoKpi.Play3seconds = entry.VideoPlay3Seconds.Count;
         videoKpi.Play50percent = entry.VideoP50Watched;
         videoKpi.Play75percent = entry.VideoP75Watched;
         videoKpi.Play95percent = entry.VideoP95Watched;
