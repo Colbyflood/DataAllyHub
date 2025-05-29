@@ -1,3 +1,5 @@
+using FacebookLoader.Loader.AdCreative;
+
 namespace FacebookLoader.Content;
 
 
@@ -15,7 +17,6 @@ public class FacebookCallToAction
 
 public class FacebookVideoData
 {
-	public static FacebookVideoData Instance { get; }
 	public string PageId { get; }
 	public string VideoId { get; }
 	public string Title { get; }
@@ -26,19 +27,66 @@ public class FacebookVideoData
 	public string ImageHash { get; }
 	
 	public FacebookVideoData(string pageId, string videoId, string title, 
-		string message, string linkDescription, FacebookCallToAction callToAction, 
-		string imageUrl, string imageHash)
+		string message, string linkDescription, 
+		string imageUrl, string imageHash, FacebookCallToAction callToAction)
 	{
 		PageId = pageId;
 		VideoId = videoId;
 		Title = title;
 		Message = message;
 		LinkDescription = linkDescription;
-		CallToAction = callToAction;
 		ImageUrl = imageUrl;
+		ImageHash = imageHash;
+		CallToAction = callToAction;
+	}
+}
+
+public class FacebookChildAttachment
+{
+	public string Link { get; }
+	public string ImageHash { get; }
+	public string Name { get; }
+	public FacebookCallToAction CallToAction { get; }
+
+	public FacebookChildAttachment(string link, string imageHash, string name, FacebookCallToAction callToAction)
+	{
+		Link = link;
+		ImageHash = imageHash;
+		Name = name;
+		CallToAction = callToAction;
+	}
+}
+
+public class FacebookLinkData
+{
+	public string PageId { get; }
+	public string Message { get; }
+	public string ImageHash { get; }
+	public FacebookCallToAction CallToAction { get; }
+	public List<FacebookChildAttachment> ChildAttachments { get; }
+
+	public FacebookLinkData(string pageId, string message, string imageHash, FacebookCallToAction callToAction, List<FacebookChildAttachment> childAttachments)
+	{
+		PageId = pageId;
+		Message = message;
+		ImageHash = imageHash;
+		CallToAction = callToAction;
+		ChildAttachments = childAttachments;
+	}
+}
+
+public class FacebookPhotoData
+{
+	public string PageId { get; }
+	public string ImageHash { get; }
+
+	public FacebookPhotoData(string pageId, string imageHash)
+	{
+		PageId = pageId;
 		ImageHash = imageHash;
 	}
 }
+
 
 public class FacebookCreative
 {
@@ -53,12 +101,17 @@ public class FacebookCreative
 	public string UrlTags { get; }
 	public string Title { get; }
 	public string Body { get; }
+	public string ImageHash { get; }
+	public string VideoId { get; }
 	public FacebookVideoData VideoData { get; }
+	public FacebookLinkData LinkData { get; }
+	public FacebookPhotoData PhotoData { get; }
 	
 	public FacebookCreative(string id, string status, string actorId, 
 		string instagramActorId, string instagramPermalinkUrl, string objectType, 
 		string thumbnailUrl, string thumbnailId, string urlTags, string title, 
-		string body, FacebookVideoData videoData)
+		string body, string imageHash, string videoId, FacebookVideoData videoData, 
+		FacebookLinkData linkData, FacebookPhotoData photoData)
 	{
 		Id = id;
 		Status = status;
@@ -72,6 +125,8 @@ public class FacebookCreative
 		Title = title;
 		Body = body;
 		VideoData = videoData;
+		LinkData = linkData;
+		PhotoData = photoData;
 	}
 }
 

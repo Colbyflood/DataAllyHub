@@ -24,13 +24,39 @@ public class AdCreativesLoader : FacebookLoaderBase
 
     private static FacebookVideoData DigestVideoData(ObjectStorySpec spec)
     {
-        var callToAction = DigestCallToAction(spec.VideoData.CallToAction);
-        return FacebookVideoData.Instance;
+        var data = spec.VideoData;
+        var callToAction = DigestCallToAction(data.CallToAction);
+        return new FacebookVideoData(spec.PageId, data.VideoId, data.Title, data.Message,
+            data.LinkDescription, data.ImageUrl, data.ImageHash, callToAction);
+    }
+    
+    private static FacebookLinkData DigestLinkData(ObjectStorySpec spec)
+    {
+        var data = spec.LinkData;
+        var childAttachments = new List<FacebookChildAttachment>();
+        data.ChildAttachments.ForEach(attachment =>
+        {
+            var attachmentCallToAction = DigestCallToAction(attachment.CallToAction);
+            childAttachments.Add(new FacebookChildAttachment(attachment.Link, attachment.ImageHash, attachment.Name, attachmentCallToAction));
+        });        
+        
+        var callToAction = DigestCallToAction(data.CallToAction);
+        return new FacebookLinkData(spec.PageId, data.Message, data.ImageHash, callToAction, childAttachments);
+    }
+    
+    private static FacebookPhotoData DigestPhotoData(ObjectStorySpec spec)
+    {
+        var data = spec.PhotoData;
+        return new FacebookPhotoData(spec.PageId, data.ImageHash);
     }
 
     private static FacebookCreative DigestCreative(Creative creative)
     {
         var videoData = DigestVideoData(creative.ObjectStorySpec);
+        var linkData = DigestLinkData(creative.ObjectStorySpec);
+        var photoData = DigestPhotoData(creative.ObjectStorySpec);
+        var imageHash = creative.ObjectStorySpec.ImageHash;
+        var videoId = creative.ObjectStorySpec.VideoId;
         return new FacebookCreative(
             creative.Id,
             creative.Status,
@@ -43,7 +69,11 @@ public class AdCreativesLoader : FacebookLoaderBase
             creative.UrlTags,
             creative.Title,
             creative.Body,
-            videoData
+            imageHash,
+            videoId,
+            videoData,
+            linkData,
+            photoData
         );
     }
 
@@ -256,7 +286,6 @@ class LinkData
     }
 }
 
-
 class PhotoData
 {
     public string ImageHash { get; set; } = "";
@@ -276,10 +305,14 @@ class ObjectStorySpec
     public VideoData VideoData { get; set; } = new VideoData();
     public LinkData LinkData { get; set; } = new LinkData();
     public PhotoData PhotoData { get; set; } = new PhotoData();
+    public string ImageHash { get; set; } = "";
+    public string VideoId { get; set; } = "";
 
     public static ObjectStorySpec FromJson(JToken? obj)
     {
         var pageId = FacebookLoaderBase.ExtractString(obj, "page_id");
+        var imageHash = FacebookLoaderBase.ExtractString(obj, "image_hash");
+        var videoId = FacebookLoaderBase.ExtractString(obj, "video_id");
         var videoDataNode = obj["video_data"];
         VideoData videoData = new VideoData();
         if (videoDataNode != null)
@@ -301,6 +334,8 @@ class ObjectStorySpec
         return new ObjectStorySpec
         {
             PageId = pageId,
+            ImageHash = imageHash,
+            VideoId = videoId,
             VideoData = videoData,
             LinkData = linkData,
             PhotoData = photoData
