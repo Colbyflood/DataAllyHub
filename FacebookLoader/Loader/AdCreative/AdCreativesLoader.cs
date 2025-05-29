@@ -202,6 +202,24 @@ class ChildAttachment
     public string ImageHash { get; set; } = "";
     public string Name { get; set; } = "";
     public CallToAction CallToAction { get; set; } = new CallToAction();
+
+    public static ChildAttachment FromJson(JToken obj)
+    {
+        var callToActionNode = obj["call_to_action"];
+        CallToAction callToAction = new CallToAction();
+        if (callToActionNode != null)
+        {
+            callToAction = CallToAction.FromJson(callToActionNode);
+        }
+
+        return new ChildAttachment()
+        {
+            CallToAction = callToAction,
+            Link = FacebookLoaderBase.ExtractString(obj, "link"),
+            Name = FacebookLoaderBase.ExtractString(obj, "name"),
+            ImageHash = FacebookLoaderBase.ExtractString(obj, "image_hash")
+        };
+    }
 }
 
 class LinkData
@@ -219,11 +237,18 @@ class LinkData
         {
             callToAction = CallToAction.FromJson(callToActionNode);
         }
+        
         List<ChildAttachment> childAttachments = new List<ChildAttachment>();
+        var data = FacebookLoaderBase.ExtractObjectArray(obj, "child_attachments");
+        foreach (var item in data)
+        {
+            if (item is JObject dataObject)
+                childAttachments.Add(ChildAttachment.FromJson(dataObject));
+        }
         
         return new LinkData
         {
-            ChildAttachments = childAttachments;
+            ChildAttachments = childAttachments,
             Message = FacebookLoaderBase.ExtractString(obj, "message"),
             CallToAction = callToAction,
             ImageHash = FacebookLoaderBase.ExtractString(obj, "image_hash")
@@ -250,6 +275,7 @@ class ObjectStorySpec
     public string PageId { get; set; } = "";
     public VideoData VideoData { get; set; } = new VideoData();
     public LinkData LinkData { get; set; } = new LinkData();
+    public PhotoData PhotoData { get; set; } = new PhotoData();
 
     public static ObjectStorySpec FromJson(JToken? obj)
     {
@@ -266,11 +292,18 @@ class ObjectStorySpec
         {
             linkData = LinkData.FromJson(linkDataNode);
         }
+        var photoDataNode = obj["photo_data"];
+        PhotoData photoData = new PhotoData();
+        if (photoDataNode != null)
+        {
+            photoData = PhotoData.FromJson(photoDataNode);
+        }
         return new ObjectStorySpec
         {
             PageId = pageId,
             VideoData = videoData,
-            LinkData = linkData
+            LinkData = linkData,
+            PhotoData = photoData
         };
     }
 }
