@@ -13,7 +13,7 @@ public static class ImageStorageTools
 {
     // ReSharper disable InconsistentNaming
     private const int THUMBNAIL_BIN_COUNT = 31;
-    private const int CREATIVE_BIN_COUNT = 5417;
+    private const int CREATIVE_BIN_COUNT = 10007;
 
     private static readonly HttpClient HttpClient = new HttpClient();
 
