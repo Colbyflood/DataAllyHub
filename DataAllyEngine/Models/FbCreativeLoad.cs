@@ -49,4 +49,11 @@ public class FbCreativeLoad
 
 	[Column("last_attempt_datetime_utc", TypeName = "datetime")]
 	public DateTime? LastStartedUtc { get; set; }
+	
+	[Column("url")]
+	[StringLength(4096)]
+	public string? Url { get; set; }
+	
+	[Column("total_attempts")]
+	public int TotalAttempts { get; set; }
 }
