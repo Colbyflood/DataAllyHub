@@ -124,6 +124,8 @@ public class FacebookCreative
 		UrlTags = urlTags;
 		Title = title;
 		Body = body;
+		ImageHash = imageHash;
+		VideoId = videoId;
 		VideoData = videoData;
 		LinkData = linkData;
 		PhotoData = photoData;

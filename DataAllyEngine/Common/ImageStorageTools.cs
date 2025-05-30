@@ -9,9 +9,11 @@ using Amazon.S3.Transfer;
 
 namespace DataAllyEngine.Common;
 
-public static class ThumbnailTools
+public static class ImageStorageTools
 {
-    private const int BIN_COUNT = 31;
+    // ReSharper disable InconsistentNaming
+    private const int THUMBNAIL_BIN_COUNT = 31;
+    private const int CREATIVE_BIN_COUNT = 5417;
 
     private static readonly HttpClient HttpClient = new HttpClient();
 
@@ -57,13 +59,22 @@ public static class ThumbnailTools
     //     return Hex.ToHexString(result);
     // }
 
-    public static int HashToBinId(string guid)
+    public static int HashThumbnailToBinId(string guid)
     {
         using var md5 = MD5.Create();
         var bytes = Encoding.UTF8.GetBytes(guid);
         var hash = md5.ComputeHash(bytes);
         var hashValue = BitConverter.ToUInt64(hash, 0);
-        return (int)(hashValue % BIN_COUNT);
+        return (int)(hashValue % THUMBNAIL_BIN_COUNT);
+    }
+    
+    public static int HashCreativeToBinId(string guid)
+    {
+        using var md5 = MD5.Create();
+        var bytes = Encoding.UTF8.GetBytes(guid);
+        var hash = md5.ComputeHash(bytes);
+        var hashValue = BitConverter.ToUInt64(hash, 0);
+        return (int)(hashValue % CREATIVE_BIN_COUNT);
     }
 
     public static string ExtractFilenameFromUrl(string url)

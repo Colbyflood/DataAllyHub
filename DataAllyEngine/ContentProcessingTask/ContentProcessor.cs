@@ -206,7 +206,7 @@ public class ContentProcessor : IContentProcessor
     {
         if (!string.IsNullOrWhiteSpace(filename))
         {
-            var ext = ThumbnailTools.ExtractExtensionFromFilename(filename).ToUpper();
+            var ext = ImageStorageTools.ExtractExtensionFromFilename(filename).ToUpper();
             if (ext.StartsWith("PNG")) return "png";
             if (ext.StartsWith("JPEG") || ext.StartsWith("JPG")) return "jpg";
             if (ext.StartsWith("GIF")) return "gif";
@@ -367,7 +367,7 @@ public class ContentProcessor : IContentProcessor
         MemoryStream? imageStream = null;
         try
         {
-            imageStream = ThumbnailTools.FetchThumbnail(asset.Url);
+            imageStream = ImageStorageTools.FetchThumbnail(asset.Url);
         }
         catch (Exception ex)
         {
@@ -380,15 +380,15 @@ public class ContentProcessor : IContentProcessor
             return null;
         }
 
-        var uuid = ThumbnailTools.GenerateGuid();
-        var binId = ThumbnailTools.HashToBinId(uuid);
+        var uuid = ImageStorageTools.GenerateGuid();
+        var binId = ImageStorageTools.HashThumbnailToBinId(uuid);
 
         try
         {
             var extension = DeriveExtensionFromFilename(filename);
-            var s3Key = ThumbnailTools.AssembleS3Key(uuid, extension, binId);
+            var s3Key = ImageStorageTools.AssembleS3Key(uuid, extension, binId);
             //var imageBytes = ThumbnailTools.ConvertImageToBytes(image);
-            ThumbnailTools.SaveThumbnail(s3Client, imageStream, thumbnailBucket, s3Key);
+            ImageStorageTools.SaveThumbnail(s3Client, imageStream, thumbnailBucket, s3Key);
 
             thumbnail = new Thumbnail
             {
