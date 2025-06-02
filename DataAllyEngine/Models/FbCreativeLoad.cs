@@ -7,6 +7,7 @@ namespace DataAllyEngine.Models;
 
 [Table("fbcreativeload")]
 [Index("CompanyId", Name = "creativeload_company_fk_idx")]
+[Index("ChannelId", Name = "creativeload_channel_fk_idx")]
 [Index("ChannelAdId", Name = "creativeload_channel_ad_id_idx")]
 [Index("Guid", Name = "creativeload_guid_uk", IsUnique = true)]
 public class FbCreativeLoad
@@ -17,6 +18,9 @@ public class FbCreativeLoad
 
 	[Column("company_id")]
 	public int CompanyId { get; set; }
+	
+	[Column("channel_id")]
+	public int ChannelId { get; set; }
 
 	[Column("channel_ad_id")]
 	[StringLength(255)]
