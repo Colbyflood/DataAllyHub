@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using FacebookLoader.Common;
 using FacebookLoader.Content;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace FacebookLoader.Token;
@@ -10,7 +11,7 @@ public class TokenFetcher
 	// ReSharper disable once InconsistentNaming
 	private const int SOCKET_TIMEOUT_SECONDS = 30;
 	
-	public static async Task<FacebookAccount> GetFacebookAccountForToken(FacebookParameters facebookParameters, string token)
+	public static async Task<FacebookAccount?> GetFacebookAccountForToken(FacebookParameters facebookParameters, string token)
 	{
 		const string FieldsList = "id,name";
 			
@@ -29,7 +30,7 @@ public class TokenFetcher
 			response.EnsureSuccessStatusCode();
 
 			var responseContent = await response.Content.ReadAsStringAsync();
-			return JObject.Parse(responseContent);
+			return JsonConvert.DeserializeObject<FacebookAccount>(responseContent);
 		}
 		catch (HttpRequestException httpEx) when (httpEx.StatusCode.HasValue)
 		{
@@ -70,7 +71,8 @@ public class TokenFetcher
 			response.EnsureSuccessStatusCode();
 
 			var responseContent = await response.Content.ReadAsStringAsync();
-			return JObject.Parse(responseContent);
+			var tokenResponse = JsonConvert.DeserializeObject<FacebookPageTokenResponse>(responseContent);
+			return tokenResponse != null ? tokenResponse.Data : new List<FacebookPageToken>();
 		}
 		catch (HttpRequestException httpEx) when (httpEx.StatusCode.HasValue)
 		{
@@ -90,7 +92,7 @@ public class TokenFetcher
 			Console.Error.WriteLine($"An error occurred: {ex} while calling graph api");
 			throw new Exception($"Other error occurred: {ex.Message}");
 		}
-	
-		return new List<FacebookPageToken>();
 	}
+	
+	public record FacebookPageTokenResponse(List<FacebookPageToken> Data);
 }
