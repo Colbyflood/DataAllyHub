@@ -17,8 +17,9 @@ public class TokenHolder : ITokenHolder
 		this.logger = logger;
 	}
 
-	public FacebookPageToken? GetFacebookPageToken(int companyId, int channelId)
+	public FacebookPageToken? GetFacebookPageToken(TokenKey key)
 	{
 		var facebookParameters = new FacebookParameters(channel.ChannelAccountId, token.Token1);
 	}
 }
+
