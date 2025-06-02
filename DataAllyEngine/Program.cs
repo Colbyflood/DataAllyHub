@@ -8,6 +8,7 @@ using DataAllyEngine.LoaderTask;
 using DataAllyEngine.Proxy;
 using DataAllyEngine.Services.BackfillLauncher;
 using DataAllyEngine.Services.CreativeImagesLoader;
+using DataAllyEngine.Services.CreativeLoader;
 using DataAllyEngine.Services.CreativeVideosLoader;
 using DataAllyEngine.Services.DailySchedule;
 using DataAllyEngine.Services.Email;
@@ -35,6 +36,7 @@ builder.Services.AddDbContext<DataAllyDbContext>(options =>
 
 // Add singleton injectables
 builder.Services.AddSingleton<IEmailQueueContainer, EmailQueueContainer>();
+builder.Services.AddSingleton<ITokenHolder, TokenHolder>();
 
 
 // Add injectable proxies

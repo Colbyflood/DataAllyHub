@@ -8,16 +8,12 @@ namespace DataAllyEngine.Services.CreativeImagesLoader;
 
 public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeImagesLoadingService
 {
-
-	private readonly IContentProcessor contentProcessor;
-	private readonly ISchedulerProxy schedulerProxy;
 	private readonly ILogger<ICreativeImagesLoadingService> logger;
 
-	public CreativeImagesLoadingService(IContentProcessor contentProcessor, ISchedulerProxy schedulerProxy, ILogger<ICreativeImagesLoadingService> logger)
-		: base(nameof(CreativeImagesLoadingService), logger)
+	public CreativeImagesLoadingService(ILoaderProxy loaderProxy, ISchedulerProxy schedulerProxy, 
+		ITokenHolder tokenHolder, ILogger<ICreativeImagesLoadingService> logger)
+		: base(nameof(CreativeImagesLoadingService), loaderProxy, schedulerProxy, tokenHolder, logger)
 	{
-		this.contentProcessor = contentProcessor;
-		this.schedulerProxy = schedulerProxy;
 		this.logger = logger;
 	}
 }

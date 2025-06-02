@@ -8,15 +8,12 @@ namespace DataAllyEngine.Services.CreativeVideosLoader;
 
 public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVideosLoadingService
 {
-	private readonly IContentProcessor contentProcessor;
-	private readonly ISchedulerProxy schedulerProxy;
 	private readonly ILogger<ICreativeVideosLoadingService> logger;
 
-	public CreativeVideosLoadingService(IContentProcessor contentProcessor, ISchedulerProxy schedulerProxy, ILogger<ICreativeVideosLoadingService> logger)
-		: base(nameof(CreativeVideosLoadingService), logger)
+	public CreativeVideosLoadingService(ILoaderProxy loaderProxy, ISchedulerProxy schedulerProxy,
+		ITokenHolder tokenHolder, ILogger<ICreativeVideosLoadingService> logger)
+		: base(nameof(CreativeVideosLoadingService), loaderProxy, schedulerProxy, tokenHolder, logger)
 	{
-		this.contentProcessor = contentProcessor;
-		this.schedulerProxy = schedulerProxy;
 		this.logger = logger;
 	}
 	
