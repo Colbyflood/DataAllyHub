@@ -8,6 +8,8 @@ public class TokenHolder : ITokenHolder
 {
 	private readonly ILoaderProxy loaderProxy;
 	private readonly ILogger<ITokenHolder> logger;
+	
+	private readonly Dictionary<string, TokenEntry> entries = new Dictionary<string, TokenEntry>();
 
 	public TokenHolder(ILoaderProxy loaderProxy, ILogger<ITokenHolder> logger)
 	{
