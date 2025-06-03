@@ -11,7 +11,7 @@ public class TokenFetcher
 	// ReSharper disable once InconsistentNaming
 	private const int SOCKET_TIMEOUT_SECONDS = 30;
 	
-	public static async Task<FacebookAccount?> GetFacebookAccountForToken(FacebookParameters facebookParameters, string token)
+	public static async Task<FacebookAccount?> GetFacebookAccountForToken(FacebookParameters facebookParameters)
 	{
 		const string FieldsList = "id,name";
 			
@@ -24,7 +24,7 @@ public class TokenFetcher
 		HttpResponseMessage? response = null;
 		try
 		{
-			string url = $"{facebookParameters.CreateUrlFor("ads")}?fields={FieldsList}&access_token={token}";
+			string url = $"{facebookParameters.CreateUrlFor("ads")}?fields={FieldsList}&access_token={facebookParameters.Token}";
 
 			response = await httpClient.GetAsync(url);
 			response.EnsureSuccessStatusCode();
@@ -52,7 +52,7 @@ public class TokenFetcher
 		}
 	}
 	
-	public static async Task<List<FacebookPageToken>> GetFacebookPageTokensForAccount(FacebookParameters facebookParameters, string accountNumber, string token)
+	public static async Task<List<FacebookPageToken>> GetFacebookPageTokensForAccount(FacebookParameters facebookParameters, string accountNumber)
 	{
 		const string FieldsList = "id,name,access_token";
 
@@ -65,7 +65,8 @@ public class TokenFetcher
 		HttpResponseMessage? response = null;
 		try
 		{
-			string url = $"{facebookParameters.CreateUrlFor("ads")}?fields={FieldsList}&access_token={token}";
+			string rawAccountNumber = accountNumber.StartsWith("act_") ? accountNumber.Substring(4) : accountNumber;
+			string url = $"{facebookParameters.GetBaseUrl()}/{rawAccountNumber}/accounts?fields={FieldsList}&access_token={facebookParameters.Token}";
 
 			response = await httpClient.GetAsync(url);
 			response.EnsureSuccessStatusCode();

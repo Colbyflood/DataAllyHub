@@ -24,6 +24,16 @@ public class LoaderProxy : ILoaderProxy
 		return context.Channeltypes.SingleOrDefault(record => record.Name.ToLower() == channelName.ToLower());
 	}
 
+	public Channel? GetChannelByChannelAccountId(string channelAccountId)
+	{
+		var channelAccount = channelAccountId;
+		if (!channelAccount.StartsWith("act_"))
+		{
+			channelAccount = $"act_{channelAccount}";
+		}
+		return context.Channels.SingleOrDefault(record => record.ChannelAccountId == channelAccount);
+	}
+
 	public FbDailySchedule? GetFbDailyScheduleByChannelId(int channelId)
 	{
 		return context.Fbdailyschedules.SingleOrDefault(record => record.ChannelId == channelId);
@@ -90,5 +100,10 @@ public class LoaderProxy : ILoaderProxy
 			context.Fbrunstagings.Add(runStaging);
 		}
 		context.SaveChanges();	
+	}
+
+	public Token? GetTokenByCompanyIdAndChannelTypeId(int companyId, int channelTypeId)
+	{
+		return context.Tokens.SingleOrDefault(record => record.CompanyId == companyId && record.ChannelTypeId == channelTypeId);
 	}
 }
