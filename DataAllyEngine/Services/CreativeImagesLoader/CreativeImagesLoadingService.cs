@@ -1,5 +1,3 @@
-using DataAllyEngine.Common;
-using DataAllyEngine.ContentProcessingTask;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using DataAllyEngine.Services.CreativeLoader;
@@ -32,8 +30,16 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		if (string.IsNullOrEmpty(creative.Url))
 		{
 			// attempt to decode the image from the hash
-			if ()
+			var url = GetImageUrl();
+			if (!string.IsNullOrEmpty(url))
+			{
+				logger.LogWarning($"Cannot get creative image with key {creative.CreativeKey}.");
+				creative.LastAttemptDateTimedUtc = DateTime.UtcNow;
+				loaderProxy.WriteFbCreativeLoad(creative);
+				return;
+			}
 		}
 		
+		DownloadAndSave(creative);
 	}
 }

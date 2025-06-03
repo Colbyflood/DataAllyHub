@@ -28,4 +28,6 @@ public interface ILoaderProxy
 
 	List<FbCreativeLoad> GetPendingCreativeImages(int startId = 0, int batchSize = 1000);
 	List<FbCreativeLoad> GetPendingCreativeVideos(int startId = 0, int batchSize = 1000);
+	
+	void WriteFbCreativeLoad(FbCreativeLoad creativeLoad);
 }

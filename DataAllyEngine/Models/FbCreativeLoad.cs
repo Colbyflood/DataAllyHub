@@ -49,10 +49,10 @@ public class FbCreativeLoad
 	public string Extension { get; set; } = null!;
 
 	[Column("created_datetime_utc", TypeName = "datetime")]
-	public DateTime CreatedUtc { get; set; }
+	public DateTime CreatedDateTimeUtc { get; set; }
 
 	[Column("last_attempt_datetime_utc", TypeName = "datetime")]
-	public DateTime? LastStartedUtc { get; set; }
+	public DateTime? LastAttemptDateTimedUtc { get; set; }
 	
 	[Column("url")]
 	[StringLength(4096)]

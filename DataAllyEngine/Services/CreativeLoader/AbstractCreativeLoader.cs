@@ -64,17 +64,26 @@ public abstract class AbstractCreativeLoader
 		var now = DateTime.UtcNow;
 		nextId = startId;
 
-		var batch = GetNextPendingCreativesBatch(startId, BATCH_SIZE);
+		var creativesBatch = GetNextPendingCreativesBatch(startId, BATCH_SIZE);
 		
-		if (batch.Count == 0)
+		if (creativesBatch.Count == 0)
 		{
 			return true;
 		}
 
-		foreach (var element in batch)
+		foreach (var creative in creativesBatch)
 		{
-			ProcessCreative(element);
-			nextId = element.Id + 1;
+			if (creative.LastAttemptDateTimedUtc != null)
+			{
+				var retryExpirationUtc = DateTime.UtcNow.AddMilliseconds(RETRY_TIMEOUT_MSEC);
+				if (creative.LastAttemptDateTimedUtc < retryExpirationUtc)
+				{
+					continue;
+				}
+			}
+			
+			ProcessCreative(creative);
+			nextId = creative.Id + 1;
 		}
 
 		return false;

@@ -125,4 +125,13 @@ public class LoaderProxy : ILoaderProxy
 			.Take(batchSize)
 			.ToList();
 	}
+
+	public void WriteFbCreativeLoad(FbCreativeLoad creativeLoad)
+	{
+		if (creativeLoad.Id <= 0)
+		{
+			context.Fbcreativeloads.Add(creativeLoad);
+		}
+		context.SaveChanges();
+	}
 }
