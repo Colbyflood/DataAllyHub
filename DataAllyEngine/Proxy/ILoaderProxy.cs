@@ -25,4 +25,7 @@ public interface ILoaderProxy
 	void WriteFbRunStaging(FbRunStaging runStaging);
 	
 	Token? GetTokenByCompanyIdAndChannelTypeId(int companyId, int channelTypeId);
+
+	List<FbCreativeLoad> GetPendingCreativeImages(int startId = 0, int batchSize = 1000);
+	List<FbCreativeLoad> GetPendingCreativeVideos(int startId = 0, int batchSize = 1000);
 }

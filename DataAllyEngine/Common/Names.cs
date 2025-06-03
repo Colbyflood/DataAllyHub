@@ -22,4 +22,7 @@ public class Names
     public const string FB_PROBLEM_THROTTLED = "Throttled";
     public const string FB_PROBLEM_DISABLED_TOKEN = "DisabledToken";
     public const string FB_PROBLEM_INTERNAL_PROBLEM = "InternalProblem";
+
+    public const string CREATIVE_TYPE_IMAGE = "IMAGE";
+    public const string CREATIVE_TYPE_VIDEO = "VIDEO";
 }

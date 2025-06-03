@@ -16,4 +16,14 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 	{
 		this.logger = logger;
 	}
+
+	protected override List<FbCreativeLoad> GetNextPendingCreativesBatch(int minimumId, int batchSize)
+	{
+		return loaderProxy.GetPendingCreativeImages(minimumId, batchSize);
+	}
+
+	protected override void ProcessCreative(FbCreativeLoad creative)
+	{
+		throw new NotImplementedException();
+	}
 }

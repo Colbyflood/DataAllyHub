@@ -12,9 +12,14 @@ public abstract class AbstractCreativeLoader
 	protected const int FIVE_MINUTES = 5;
 	protected const int FIVE_MINUTES_MSEC = FIVE_MINUTES * 60 * 1000;
 	
+	protected const int FIFTEEN_SEC = 15;
+	protected const int FIFTEEN_SEC_MSEC = FIFTEEN_SEC * 1000;
+	
 	protected const int ONE_HOUR_MINUTES = 60;
 	protected const int RETRY_TIMEOUT_MINUTES = ONE_HOUR_MINUTES;
 	protected const int RETRY_TIMEOUT_MSEC = RETRY_TIMEOUT_MINUTES * 60 * 1000;
+	
+	protected const int BATCH_SIZE = 1000;
 	
 	protected readonly ILoaderProxy loaderProxy;
 	protected readonly ISchedulerProxy schedulerProxy;
@@ -38,23 +43,29 @@ public abstract class AbstractCreativeLoader
 		await Task.Yield();
 		logger.LogInformation("{ServiceName} working", serviceName);
 
+		int startId = 0;
 		while (!stoppingToken.IsCancellationRequested)
 		{
-			if (CheckAndProcessPendingContent())
+			
+			if (CheckAndProcessPendingContent(startId, out startId))
 			{
 				await Task.Delay(FIVE_MINUTES_MSEC, stoppingToken);
+				startId = 0;
+			}
+			else
+			{
+				await Task.Delay(FIFTEEN_SEC_MSEC, stoppingToken);
 			}
 		}
 	}
 	
-	protected bool CheckAndProcessPendingContent()
+	protected bool CheckAndProcessPendingContent(int startId, out int nextId)
 	{
 		var now = DateTime.UtcNow;
+		nextId = startId;
 
-		// get list of next 1000 pending creatives to load
-		var batch = GetNextPendingCreativesBatch();
+		var batch = GetNextPendingCreativesBatch(startId, BATCH_SIZE);
 		
-		// if list is empty, return true to indicate no pending content to process
 		if (batch.Count == 0)
 		{
 			return true;
@@ -63,14 +74,13 @@ public abstract class AbstractCreativeLoader
 		foreach (var element in batch)
 		{
 			ProcessCreative(element);
+			nextId = element.Id + 1;
 		}
 
 		return false;
 	}
 	
-	// Need a common way to share tokens acquired to load images/videos by companyId by all implementations
-	
-	protected abstract List<FbCreativeLoad> GetNextPendingCreativesBatch();
+	protected abstract List<FbCreativeLoad> GetNextPendingCreativesBatch(int minimumId, int batchSize);
 	
 	protected abstract void ProcessCreative(FbCreativeLoad creative);
 }

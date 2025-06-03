@@ -31,7 +31,6 @@ public class TokenHolder : ITokenHolder
 			entries.TryRemove(key, out _);
 		}
 		
-		// attempt to load
 		var facebookParameters = CreateFacebookParameters(key);
 		if (facebookParameters == null)
 		{
@@ -116,5 +115,3 @@ public class TokenHolder : ITokenHolder
 		}
 	}
 }
-
-	

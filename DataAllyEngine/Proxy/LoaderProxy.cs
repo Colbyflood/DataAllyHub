@@ -1,3 +1,4 @@
+using DataAllyEngine.Common;
 using DataAllyEngine.Context;
 using DataAllyEngine.Models;
 
@@ -105,5 +106,23 @@ public class LoaderProxy : ILoaderProxy
 	public Token? GetTokenByCompanyIdAndChannelTypeId(int companyId, int channelTypeId)
 	{
 		return context.Tokens.SingleOrDefault(record => record.CompanyId == companyId && record.ChannelTypeId == channelTypeId);
+	}
+
+	public List<FbCreativeLoad> GetPendingCreativeImages(int startId, int batchSize)
+	{
+		return context.Fbcreativeloads
+			.Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_IMAGE)
+			.OrderBy(rec => rec.Id)
+			.Take(batchSize)
+			.ToList();
+	}
+
+	public List<FbCreativeLoad> GetPendingCreativeVideos(int startId, int batchSize)
+	{
+		return context.Fbcreativeloads
+			.Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_VIDEO)
+			.OrderBy(rec => rec.Id)
+			.Take(batchSize)
+			.ToList();
 	}
 }
