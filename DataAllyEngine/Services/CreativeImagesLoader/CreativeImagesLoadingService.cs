@@ -24,6 +24,16 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 
 	protected override void ProcessCreative(FbCreativeLoad creative)
 	{
-		throw new NotImplementedException();
+		if (creative.BinId != null && !string.IsNullOrEmpty(creative.Guid))
+		{
+			return;
+		}
+		
+		if (string.IsNullOrEmpty(creative.Url))
+		{
+			// attempt to decode the image from the hash
+			if ()
+		}
+		
 	}
 }

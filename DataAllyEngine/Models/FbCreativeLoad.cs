@@ -39,7 +39,7 @@ public class FbCreativeLoad
 	public string Filename { get; set; } = null!;
 
 	[Column("bin_id")]
-	public int BinId { get; set; }
+	public int? BinId { get; set; }
 
 	[Column("guid")]
 	public string Guid { get; set; } = null!;
