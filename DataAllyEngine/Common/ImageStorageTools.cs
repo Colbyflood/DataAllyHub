@@ -31,7 +31,6 @@ public static class ImageStorageTools
         var memoryStream = new MemoryStream();
         bitmap.Save(memoryStream, ImageFormat.Png);
         
-
         return memoryStream;
     }
 
