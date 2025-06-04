@@ -350,23 +350,94 @@ public class ContentProcessor : IContentProcessor
 
     private void QueueVideosAndImages(Company company, Channel channel, FacebookAdCreative record)
     {
-        record.Creative.VideoData
-        record.Creative.PhotoData
+        QueueImageLoader(ExtractImageHashes(record), company, channel);
+        QueueVideoLoader(ExtractVideoIds(record), company, channel);
+    }
+
+    private void QueueImageLoader(List<string> hashes, Company company, Channel channel, string channelAdId)
+    {
+        foreach (var hash in hashes)
+        {
+            if (contentProcessorProxy.GetFbCreativeLoadByImageHash(hash) != null)
+            {
+                continue;
+            }
             
+         var record = new FbCreativeLoad()
+         {
+             CreativeKey = hash,
+             CreativeType = Names.CREATIVE_TYPE_IMAGE,
+             CompanyId = company.Id,
+             ChannelId = channel.Id,
+             ChannelAdId = channelAdId,
+             TotalAttempts = 0
+         };
+
+         contentProcessorProxy.WriteFbCreativeLoad(record);
+        }
+    }
+
+    private void QueueVideoLoader(List<string> videoIds, Company company, Channel channel, string channelAdId)
+    {
+        foreach (var videoId in videoIds)
+        {
+            if (contentProcessorProxy.GetFbCreativeLoadByVideoId(videoId) != null)
+            {
+                continue;
+            }
+            
+            var record = new FbCreativeLoad()
+            {
+                CreativeKey = videoId,
+                CreativeType = Names.CREATIVE_TYPE_VIDEO,
+                CompanyId = company.Id,
+                ChannelId = channel.Id,
+                ChannelAdId = channelAdId,
+                TotalAttempts = 0
+            };
+
+            contentProcessorProxy.WriteFbCreativeLoad(record);
+        }
     }
     
-    private List[string] ExtractImagesHashes()
+    private List<string> ExtractImageHashes(FacebookCreative record)
     {
+        var imageHashes = new List<string>();
+        if (!string.IsNullOrWhiteSpace(record.PhotoData.ImageHash))
+        {
+            imageHashes.Add(record.PhotoData.ImageHash);
+        }
+
+        if (!string.IsNullOrWhiteSpace(record.ImageHash))
+        {
+            imageHashes.Add(record.ImageHash);
+        }
+        
+        record.LinkData.ChildAttachments.ForEach(attachment =>
+        {
+            if (!string.IsNullOrWhiteSpace(attachment.ImageHash))
+            {
+                imageHashes.Add(attachment.ImageHash);
+            }
+        });
+        
+        if (!string.IsNullOrWhiteSpace(record.LinkData.ImageHash))
+        {
+            imageHashes.Add(record.LinkData.ImageHash);
+        }
+        
+        return imageHashes;
+        
         // $images = [];
-        // // 1. child_attachments[].image_hash
-        // foreach (data_get($this->creative, 'object_story_spec.link_data.child_attachments', []) as $item) {
-        //     $images[] = $this->getImageByHash(data_get($item, 'image_hash'));
-        // }
-        //
-        // // 2. link_data.image_hash
-        // if ($image = $this->getImageByHash(data_get($this->creative, 'object_story_spec.link_data.image_hash'))) {
-        //     $images[] = $image;
-        // }
+            // // 1. child_attachments[].image_hash
+            // foreach (data_get($this->creative, 'object_story_spec.link_data.child_attachments', []) as $item) {
+            //     $images[] = $this->getImageByHash(data_get($item, 'image_hash'));
+            // }
+            //
+            // // 2. link_data.image_hash
+            // if ($image = $this->getImageByHash(data_get($this->creative, 'object_story_spec.link_data.image_hash'))) {
+            //     $images[] = $image;
+            // }
         //
         // // 3. asset_feed_spec.images[].hash
         // $dynamicImages = collect(data_get($this->creative, 'asset_feed_spec.images'));
@@ -376,26 +447,37 @@ public class ContentProcessor : IContentProcessor
         //     })->toArray());
         // }
         //
-        // // 4. photo_data.image_hash
-        // if ($hash = data_get($this->creative, 'object_story_spec.photo_data.image_hash')) {
-        //     $images[] = $this->getImageByHash($hash);
-        // }
-        //
-        // // 5. root-level image_hash
-        // if ($rootImageHash = data_get($this->creative, 'image_hash')) {
-        //     $images[] = $this->getImageByHash($rootImageHash);
-        // }
+            // // 4. photo_data.image_hash
+            // if ($hash = data_get($this->creative, 'object_story_spec.photo_data.image_hash')) {
+            //     $images[] = $this->getImageByHash($hash);
+            // }
+            //
+            // // 5. root-level image_hash
+            // if ($rootImageHash = data_get($this->creative, 'image_hash')) {
+            //     $images[] = $this->getImageByHash($rootImageHash);
+            // }
         //
         // return array_filter($images); // Remove nulls
     }
 
-    private List<string> ExtractVideoIds()
+    private List<string> ExtractVideoIds(FacebookCreative record)
     {
+        var videoIds = new List<string>();
+        if (!string.IsNullOrWhiteSpace(record.VideoData.VideoId))
+        {
+            videoIds.Add(record.VideoData.VideoId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(record.VideoId))
+        {
+            videoIds.Add(record.VideoId);
+        }
+        return videoIds;
         // $videoIds = [];
-        // // 1. object_story_spec.video_data.video_id
-        // if ($videoId = data_get($this->creative, 'object_story_spec.video_data.video_id')) {
-        //     $videoIds = Arr::wrap($videoId);
-        // }
+            // // 1. object_story_spec.video_data.video_id
+            // if ($videoId = data_get($this->creative, 'object_story_spec.video_data.video_id')) {
+            //     $videoIds = Arr::wrap($videoId);
+            // }
         // // 2. asset_feed_spec.videos[].video_id
         // if ($videos = data_get($this->creative, 'asset_feed_spec.videos', [])) {
         //     $videoIds = array_merge($videoIds, collect($videos)->map(function ($video) {
@@ -403,9 +485,9 @@ public class ContentProcessor : IContentProcessor
         //     })->toArray());
         // }
         // // 3. root-level video_id
-        // if ($rootVideoId = data_get($this->creative, 'video_id')) {
-        //     $videoIds = array_merge($videoIds, Arr::wrap($rootVideoId));
-        // }
+            // if ($rootVideoId = data_get($this->creative, 'video_id')) {
+            //     $videoIds = array_merge($videoIds, Arr::wrap($rootVideoId));
+            // }
         //
         // $videoIds = array_filter($videoIds); // Remove nulls/empties
     }

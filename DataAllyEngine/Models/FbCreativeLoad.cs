@@ -36,18 +36,18 @@ public class FbCreativeLoad
 	
 	[Column("filename")]
 	[StringLength(255)]
-	public string Filename { get; set; } = null!;
+	public string? Filename { get; set; }
 
 	[Column("bin_id")]
 	public int? BinId { get; set; }
 
 	[Column("guid")]
-	public string Guid { get; set; } = null!;
+	public string? Guid { get; set; }
 
 	[Column("extension")]
 	[StringLength(10)]
-	public string Extension { get; set; } = null!;
-
+	public string? Extension { get; set; }
+	
 	[Column("created_datetime_utc", TypeName = "datetime")]
 	public DateTime CreatedDateTimeUtc { get; set; }
 

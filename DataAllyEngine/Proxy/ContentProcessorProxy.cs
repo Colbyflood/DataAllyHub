@@ -1,3 +1,4 @@
+using DataAllyEngine.Common;
 using DataAllyEngine.Context;
 using DataAllyEngine.Models;
 
@@ -208,5 +209,17 @@ public class ContentProcessorProxy : IContentProcessorProxy
 			context.Thumbnails.Add(thumbnail);
 		}
 		context.SaveChanges();
+	}
+
+	public FbCreativeLoad? GetFbCreativeLoadByImageHash(string imageHash)
+	{
+		return context.Fbcreativeloads
+			.SingleOrDefault(rec => rec.CreativeKey.ToUpper() == imageHash.ToUpper() && rec.CreativeType == Names.CREATIVE_TYPE_IMAGE);
+	}
+
+	public FbCreativeLoad? GetFbCreativeLoadByVideoId(string videoId)
+	{
+		return context.Fbcreativeloads
+			.SingleOrDefault(rec => rec.CreativeKey.ToUpper() == videoId.ToUpper() && rec.CreativeType == Names.CREATIVE_TYPE_VIDEO);
 	}
 }
