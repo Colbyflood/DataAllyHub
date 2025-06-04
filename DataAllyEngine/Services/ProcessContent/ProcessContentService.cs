@@ -7,6 +7,7 @@ namespace DataAllyEngine.Services.ProcessContent;
 
 public class ProcessContentService : IProcessContentService
 {
+	// ReSharper disable InconsistentNaming
 	private const int ONE_MINUTE = 1;
 	private const int ONE_MINUTE_MSEC = ONE_MINUTE * 60 * 1000;
 
@@ -172,7 +173,7 @@ public class ProcessContentService : IProcessContentService
 			switch (container.SaveContent!.Sequence)
 			{
 				case 0:
-					if (container.SaveContent.AdImageFinishedUtc == null)
+					if (container.SaveContent.AdCreativeFinishedUtc == null)
 					{
 						LaunchContentProcessing(container.AdCreativesRunLog, container.SaveContent);
 					}
@@ -194,7 +195,7 @@ public class ProcessContentService : IProcessContentService
 
 
 				case 2:
-					if (container.SaveContent.AdCreativeFinishedUtc != null)
+					if (container.SaveContent.AdInsightFinishedUtc == null)
 					{
 						LaunchContentProcessing(container.AdInsightsRunLog, container.SaveContent);
 					}
