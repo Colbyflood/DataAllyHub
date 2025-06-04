@@ -222,4 +222,14 @@ public class ContentProcessorProxy : IContentProcessorProxy
 		return context.Fbcreativeloads
 			.SingleOrDefault(rec => rec.CreativeKey.ToUpper() == videoId.ToUpper() && rec.CreativeType == Names.CREATIVE_TYPE_VIDEO);
 	}
+
+	public void WriteFbCreativeLoad(FbCreativeLoad record)
+	{
+		if (record.Id <= 0)
+		{
+			context.Fbcreativeloads.Add(record);
+		}
+		context.SaveChanges();
+	}
+
 }

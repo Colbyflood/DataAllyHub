@@ -51,4 +51,5 @@ public interface IContentProcessorProxy
 	
 	FbCreativeLoad? GetFbCreativeLoadByImageHash(string imageHash);
 	FbCreativeLoad? GetFbCreativeLoadByVideoId(string videoId);
+	void WriteFbCreativeLoad(FbCreativeLoad record);
 }
