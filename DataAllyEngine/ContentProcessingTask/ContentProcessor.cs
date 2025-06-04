@@ -58,6 +58,7 @@ public class ContentProcessor : IContentProcessor
 
     private void ProcessAdCreatives(Channel channel, FbRunLog runlog)
     {
+        var company = ExtractCompanyFromChannel(channel);
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         foreach (var entry in stagingEntries)
         {
@@ -74,7 +75,7 @@ public class ContentProcessor : IContentProcessor
                 var adsetId = PrepareAdHierarchy(record.AdsetId, $"Adset {record.AdsetId}",
                                                  record.CampaignId, $"Campaign {record.CampaignId}",
                                                  0, record.CreatedTime, channel);
-                PrepareAd(adsetId, channel, record);
+                PrepareAd(adsetId, company, channel, record);
             }
         }
         
@@ -86,6 +87,13 @@ public class ContentProcessor : IContentProcessor
         }
 
         CleanStaging(stagingEntries);
+    }
+
+    private Company ExtractCompanyFromChannel(Channel channel)
+    {
+        var client = contentProcessorProxy.GetClientById(channel.ClientId);
+        var account = contentProcessorProxy.GetAccountById(client!.AccountId);
+        return contentProcessorProxy.GetCompanyById(account!.CompanyId)!;
     }
 
     private void ProcessAdImages(Channel channel, FbRunLog runlog)
@@ -252,7 +260,7 @@ public class ContentProcessor : IContentProcessor
     }
 
     
-    private Ad PrepareAd(int adSetId, Channel channel, FacebookAdCreative record)
+    private Ad PrepareAd(int adSetId, Company company, Channel channel, FacebookAdCreative record)
     {
         var asset = PrepareAsset(channel, record);
         Ad? ad = null;
@@ -310,6 +318,8 @@ public class ContentProcessor : IContentProcessor
             contentProcessorProxy.WriteAdMetadata(adMetadata);
         }
 
+        QueueVideosAndImages(company, channel, record);
+
         return ad;
     }
     
@@ -336,6 +346,68 @@ public class ContentProcessor : IContentProcessor
         ProcessThumbnail(asset, record.Id);
 
         return asset;
+    }
+
+    private void QueueVideosAndImages(Company company, Channel channel, FacebookAdCreative record)
+    {
+        record.Creative.VideoData
+        record.Creative.PhotoData
+            
+    }
+    
+    private List[string] ExtractImagesHashes()
+    {
+        // $images = [];
+        // // 1. child_attachments[].image_hash
+        // foreach (data_get($this->creative, 'object_story_spec.link_data.child_attachments', []) as $item) {
+        //     $images[] = $this->getImageByHash(data_get($item, 'image_hash'));
+        // }
+        //
+        // // 2. link_data.image_hash
+        // if ($image = $this->getImageByHash(data_get($this->creative, 'object_story_spec.link_data.image_hash'))) {
+        //     $images[] = $image;
+        // }
+        //
+        // // 3. asset_feed_spec.images[].hash
+        // $dynamicImages = collect(data_get($this->creative, 'asset_feed_spec.images'));
+        // if ($dynamicImages->isNotEmpty()) {
+        //     $images = array_merge($images, $dynamicImages->map(function ($image) {
+        //         return $this->getImageByHash(data_get($image, 'hash'));
+        //     })->toArray());
+        // }
+        //
+        // // 4. photo_data.image_hash
+        // if ($hash = data_get($this->creative, 'object_story_spec.photo_data.image_hash')) {
+        //     $images[] = $this->getImageByHash($hash);
+        // }
+        //
+        // // 5. root-level image_hash
+        // if ($rootImageHash = data_get($this->creative, 'image_hash')) {
+        //     $images[] = $this->getImageByHash($rootImageHash);
+        // }
+        //
+        // return array_filter($images); // Remove nulls
+    }
+
+    private List<string> ExtractVideoIds()
+    {
+        // $videoIds = [];
+        // // 1. object_story_spec.video_data.video_id
+        // if ($videoId = data_get($this->creative, 'object_story_spec.video_data.video_id')) {
+        //     $videoIds = Arr::wrap($videoId);
+        // }
+        // // 2. asset_feed_spec.videos[].video_id
+        // if ($videos = data_get($this->creative, 'asset_feed_spec.videos', [])) {
+        //     $videoIds = array_merge($videoIds, collect($videos)->map(function ($video) {
+        //         return data_get($video, 'video_id');
+        //     })->toArray());
+        // }
+        // // 3. root-level video_id
+        // if ($rootVideoId = data_get($this->creative, 'video_id')) {
+        //     $videoIds = array_merge($videoIds, Arr::wrap($rootVideoId));
+        // }
+        //
+        // $videoIds = array_filter($videoIds); // Remove nulls/empties
     }
     
     private Thumbnail? ProcessThumbnail(Asset asset, string channelAdId)
@@ -399,7 +471,6 @@ public class ContentProcessor : IContentProcessor
             return null;
         }
     }
-
 
     private void CreateAdCopy(int adId, string? title, string? copy)
     {

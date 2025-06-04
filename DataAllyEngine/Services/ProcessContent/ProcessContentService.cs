@@ -16,7 +16,6 @@ public class ProcessContentService : IProcessContentService
 
 	private const int MAXIMUM_WINDOW_HOURS = 10;
 	private const int MAXIMUM_WINDOW_MSEC = MAXIMUM_WINDOW_HOURS * 60 * 60 * 1000;
-
 	
 	private const int PREEMPT_STUCK_MINUTES_BEFORE = 60;
 
