@@ -3,6 +3,7 @@ using DataAllyEngine.Common;
 using DataAllyEngine.Configuration;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
+using FacebookLoader.Common;
 
 namespace DataAllyEngine.Services.CreativeLoader;
 
@@ -105,5 +106,23 @@ public abstract class AbstractCreativeLoader
 	{
 		var path = url.Split("?")[0];
 		return path.Split("/").Last();
+	}
+	
+	protected FacebookParameters? CreateFacebookParameters(TokenKey key)
+	{
+		var channel = loaderProxy.GetChannelById(key.ChannelId);
+		if (channel == null)
+		{
+			logger.LogWarning($"Channel with ID {key.ChannelId} not found");
+			return null;
+		}
+		var token = loaderProxy.GetTokenByCompanyIdAndChannelTypeId(key.CompanyId, channel.ChannelTypeId);
+		if (token == null)
+		{
+			logger.LogWarning($"Facebook token for company with ID {key.CompanyId} not found");
+			return null;
+		}
+		
+		return new FacebookParameters(channel.ChannelAccountId, token.Token1);
 	}
 }

@@ -3,16 +3,16 @@ using FacebookLoader.Common;
 using FacebookLoader.Content;
 using Newtonsoft.Json;
 
-namespace FacebookLoader.Token;
+namespace FacebookLoader.UrlIdDecode;
 
-public class TokenFetcher
+public class UrlIdDecoder
 {
 	// ReSharper disable once InconsistentNaming
 	private const int SOCKET_TIMEOUT_SECONDS = 30;
 	
-	public static async Task<FacebookAccount?> GetFacebookAccountForToken(FacebookParameters facebookParameters)
+	public static async Task<List<FacebookImageUrl>> DecodeImageHash(FacebookParameters facebookParameters, string imageHash)
 	{
-		const string fieldsList = "id,name";
+		const string fieldsList = "url";
 			
 		using var httpClient = new HttpClient()
 		{
@@ -23,13 +23,14 @@ public class TokenFetcher
 		HttpResponseMessage? response = null;
 		try
 		{
-			string url = $"{facebookParameters.GetBaseUrl()}/me?fields={fieldsList}&access_token={facebookParameters.Token}";
+			string url = $"{facebookParameters.CreateUrlFor("adimages")}?fields={fieldsList}&hashes[]={imageHash}&access_token={facebookParameters.Token}";
 
 			response = await httpClient.GetAsync(url);
 			response.EnsureSuccessStatusCode();
 
 			var responseContent = await response.Content.ReadAsStringAsync();
-			return JsonConvert.DeserializeObject<FacebookAccount>(responseContent);
+			var tokenResponse = JsonConvert.DeserializeObject<FacebookAdImagesResponse>(responseContent);
+			return tokenResponse != null ? tokenResponse.Data : new List<FacebookImageUrl>();
 		}
 		catch (HttpRequestException httpEx) when (httpEx.StatusCode.HasValue)
 		{
@@ -50,11 +51,11 @@ public class TokenFetcher
 			throw new Exception($"Other error occurred: {ex.Message}");
 		}
 	}
-	
-	public static async Task<List<FacebookPageToken>> GetFacebookPageTokensForAccount(FacebookParameters facebookParameters, string accountNumber)
-	{
-		const string fieldsList = "id,name,access_token";
 
+	public static async Task<FacebookVideoSource?> DecodeVideoId(FacebookParameters facebookParameters, string pageToken, string videoId)
+	{
+		const string fieldsList = "source";
+			
 		using var httpClient = new HttpClient()
 		{
 			Timeout = TimeSpan.FromSeconds(SOCKET_TIMEOUT_SECONDS)
@@ -64,15 +65,13 @@ public class TokenFetcher
 		HttpResponseMessage? response = null;
 		try
 		{
-			string rawAccountNumber = accountNumber.StartsWith("act_") ? accountNumber.Substring(4) : accountNumber;
-			string url = $"{facebookParameters.GetBaseUrl()}/{rawAccountNumber}/accounts?fields={fieldsList}&access_token={facebookParameters.Token}";
+			string url = $"{facebookParameters.GetBaseUrl()}/{videoId}/accounts?fields={fieldsList}&access_token={pageToken}";
 
 			response = await httpClient.GetAsync(url);
 			response.EnsureSuccessStatusCode();
 
 			var responseContent = await response.Content.ReadAsStringAsync();
-			var tokenResponse = JsonConvert.DeserializeObject<FacebookPageTokenResponse>(responseContent);
-			return tokenResponse != null ? tokenResponse.Data : new List<FacebookPageToken>();
+			return JsonConvert.DeserializeObject<FacebookVideoSource>(responseContent);
 		}
 		catch (HttpRequestException httpEx) when (httpEx.StatusCode.HasValue)
 		{
@@ -94,5 +93,7 @@ public class TokenFetcher
 		}
 	}
 	
-	public record FacebookPageTokenResponse(List<FacebookPageToken> Data);
+
+	public record FacebookAdImagesResponse(List<FacebookImageUrl> Data);
 }
+

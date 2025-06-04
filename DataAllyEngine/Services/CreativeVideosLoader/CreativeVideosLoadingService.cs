@@ -1,4 +1,6 @@
+using Amazon.S3;
 using DataAllyEngine.Common;
+using DataAllyEngine.Configuration;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using DataAllyEngine.Services.CreativeLoader;
@@ -10,8 +12,9 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
 	private readonly ILogger<ICreativeVideosLoadingService> logger;
 
 	public CreativeVideosLoadingService(ILoaderProxy loaderProxy, ISchedulerProxy schedulerProxy,
-		ITokenHolder tokenHolder, ILogger<ICreativeVideosLoadingService> logger)
-		: base(nameof(CreativeVideosLoadingService), loaderProxy, schedulerProxy, tokenHolder, logger)
+		ITokenHolder tokenHolder, IConfigurationLoader configurationLoader,
+		IAmazonS3 s3Client, ILogger<ICreativeVideosLoadingService> logger)
+		: base(nameof(CreativeVideosLoadingService), loaderProxy, schedulerProxy, tokenHolder, configurationLoader, s3Client, logger)
 	{
 		this.logger = logger;
 	}

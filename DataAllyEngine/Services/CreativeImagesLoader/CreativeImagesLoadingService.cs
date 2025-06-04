@@ -1,7 +1,10 @@
+using Amazon.S3;
 using DataAllyEngine.Common;
+using DataAllyEngine.Configuration;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using DataAllyEngine.Services.CreativeLoader;
+using FacebookLoader.UrlIdDecode;
 
 namespace DataAllyEngine.Services.CreativeImagesLoader;
 
@@ -10,8 +13,9 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 	private readonly ILogger<ICreativeImagesLoadingService> logger;
 
 	public CreativeImagesLoadingService(ILoaderProxy loaderProxy, ISchedulerProxy schedulerProxy, 
-		ITokenHolder tokenHolder, ILogger<ICreativeImagesLoadingService> logger)
-		: base(nameof(CreativeImagesLoadingService), loaderProxy, schedulerProxy, tokenHolder, logger)
+		ITokenHolder tokenHolder, IConfigurationLoader configurationLoader,
+		IAmazonS3 s3Client, ILogger<ICreativeImagesLoadingService> logger)
+		: base(nameof(CreativeImagesLoadingService), loaderProxy, schedulerProxy, tokenHolder, configurationLoader, s3Client, logger)
 	{
 		this.logger = logger;
 	}
@@ -29,11 +33,12 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		}
 		
 		var now = DateTime.UtcNow;
+		var tokenKey = new TokenKey(creative.CompanyId, creative.ChannelId);
 		
 		if (string.IsNullOrEmpty(creative.Url))
 		{
 			// attempt to decode the image from the hash
-			var url = GetImageUrl();
+			var url = GetImageUrl(tokenKey, creative.CreativeKey);
 			if (!string.IsNullOrEmpty(url))
 			{
 				logger.LogWarning($"Cannot get creative image with key {creative.CreativeKey}.");
@@ -56,6 +61,25 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		creative.LastAttemptDateTimedUtc = now;
 		creative.TotalAttempts++;
 		loaderProxy.WriteFbCreativeLoad(creative);
+	}
+
+	private string? GetImageUrl(TokenKey tokenKey, string imageHash)
+	{
+		var facebookParameters = CreateFacebookParameters(tokenKey);
+		if (facebookParameters == null)
+		{
+			logger.LogWarning($"Facebook parameters for key {tokenKey} could not be created");
+			return null;
+		}
+		
+		var response = UrlIdDecoder.DecodeImageHash(facebookParameters, imageHash).GetAwaiter().GetResult();
+		if (response.Count == 0)
+		{
+			logger.LogWarning($"No image found for hash {imageHash} for token {tokenKey} in Facebook");
+			return null;
+		}
+
+		return response[0].Url;
 	}
 
 	private void DownloadAndSaveCreative(FbCreativeLoad creative)
