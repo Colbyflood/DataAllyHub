@@ -90,8 +90,7 @@ public abstract class AbstractCreativeLoader
 					continue;
 				}
 			}
-			
-			ProcessCreative(creative);
+			ProcessCreative(creative, new TokenKey(creative.CompanyId, creative.ChannelId));
 			nextId = creative.Id + 1;
 		}
 
@@ -100,7 +99,7 @@ public abstract class AbstractCreativeLoader
 	
 	protected abstract List<FbCreativeLoad> GetNextPendingCreativesBatch(int minimumId, int batchSize);
 	
-	protected abstract void ProcessCreative(FbCreativeLoad creative);
+	protected abstract void ProcessCreative(FbCreativeLoad creative, TokenKey tokenKey);
 	
 	protected static string ExtractFilenameFromUrl(string url)
 	{
@@ -124,5 +123,23 @@ public abstract class AbstractCreativeLoader
 		}
 		
 		return new FacebookParameters(channel.ChannelAccountId, token.Token1);
+	}
+	
+	protected void SaveCreativeContentToBucket(FbCreativeLoad creative, string uuid, string extension, int binId, MemoryStream? imageStream, string filename)
+	{
+		try
+		{
+			var s3Key = ImageStorageTools.AssembleS3Key(uuid, extension, binId);
+			ImageStorageTools.SaveImageToS3(s3Client, imageStream!, creativesBucket, s3Key);
+			
+			creative.BinId = binId;
+			creative.Guid = uuid;
+			creative.Filename = filename;
+			creative.Extension = extension;
+		}
+		catch (Exception ex)
+		{
+			logger.LogError($"Unable to save image for {filename} as {uuid} for creative {creative.Id} with image hash {creative.CreativeKey}: {ex}");
+		}
 	}
 }

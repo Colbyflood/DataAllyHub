@@ -25,7 +25,7 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		return loaderProxy.GetPendingCreativeImages(minimumId, batchSize);
 	}
 
-	protected override void ProcessCreative(FbCreativeLoad creative)
+	protected override void ProcessCreative(FbCreativeLoad creative, TokenKey tokenKey)
 	{
 		if (creative.BinId != null && !string.IsNullOrEmpty(creative.Guid))
 		{
@@ -33,7 +33,6 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		}
 		
 		var now = DateTime.UtcNow;
-		var tokenKey = new TokenKey(creative.CompanyId, creative.ChannelId);
 		
 		if (string.IsNullOrEmpty(creative.Url))
 		{
@@ -95,20 +94,6 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		var filename = ExtractFilenameFromUrl(creative.Url!);
 		var extension = ImageStorageTools.DeriveExtensionFromFilename(filename);
 		
-		try
-		{
-
-			var s3Key = ImageStorageTools.AssembleS3Key(uuid, extension, binId);
-			ImageStorageTools.SaveImageToS3(s3Client, imageStream!, creativesBucket, s3Key);
-			
-			creative.BinId = binId;
-			creative.Guid = uuid;
-			creative.Filename = filename;
-			creative.Extension = extension;
-		}
-		catch (Exception ex)
-		{
-			logger.LogError($"Unable to save image for {filename} as {uuid} for creative {creative.Id} with image hash {creative.CreativeKey}: {ex}");
-		}
+		SaveCreativeContentToBucket(creative, uuid, extension, binId, imageStream, filename);
 	}
 }

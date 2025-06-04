@@ -4,6 +4,7 @@ using DataAllyEngine.Configuration;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using DataAllyEngine.Services.CreativeLoader;
+using FacebookLoader.UrlIdDecode;
 
 namespace DataAllyEngine.Services.CreativeVideosLoader;
 
@@ -25,7 +26,7 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
 		return loaderProxy.GetPendingCreativeVideos(minimumId, batchSize);
 	}
 
-	protected override void ProcessCreative(FbCreativeLoad creative)
+	protected override void ProcessCreative(FbCreativeLoad creative, TokenKey tokenKey)
 	{
 		if (creative.BinId != null && !string.IsNullOrEmpty(creative.Guid))
 		{
@@ -37,7 +38,7 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
 		if (string.IsNullOrEmpty(creative.Url))
 		{
 			// attempt to decode the image from the hash
-			var url = GetVideoUrl();
+			var url = GetVideoUrl(tokenKey, creative.CreativeKey);
 			if (!string.IsNullOrEmpty(url))
 			{
 				logger.LogWarning($"Cannot get creative video with key {creative.CreativeKey}.");
@@ -62,9 +63,30 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
 		loaderProxy.WriteFbCreativeLoad(creative);
 	}
 
-	private string? GetVideoUrl()
+	private string? GetVideoUrl(TokenKey tokenKey, string videoId)
 	{
-		// get valid page access token for this url
+		var facebookParameters = CreateFacebookParameters(tokenKey);
+		if (facebookParameters == null)
+		{
+			logger.LogWarning($"Facebook parameters for key {tokenKey} could not be created");
+			return null;
+		}
+		
+		var pageToken = tokenHolder.GetFacebookPageToken(tokenKey).GetAwaiter().GetResult();
+		if (pageToken == null)
+		{
+			logger.LogWarning($"No page token found for key {tokenKey}");
+			return null;
+		}
+		
+		var response = UrlIdDecoder.DecodeVideoId(facebookParameters, pageToken.Token, videoId).GetAwaiter().GetResult();
+		if (response == null)
+		{
+			logger.LogWarning($"No video found for video id {videoId} for token {tokenKey} in Facebook");
+			return null;
+		}
+
+		return response.Url;
 	}
 
 	private void DownloadAndSaveCreative(FbCreativeLoad creative)
@@ -80,20 +102,6 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
 		var filename = ExtractFilenameFromUrl(creative.Url!);
 		var extension = ImageStorageTools.DeriveExtensionFromFilename(filename);
 		
-		try
-		{
-
-			var s3Key = ImageStorageTools.AssembleS3Key(uuid, extension, binId);
-			ImageStorageTools.SaveImageToS3(s3Client, imageStream!, creativesBucket, s3Key);
-			
-			creative.BinId = binId;
-			creative.Guid = uuid;
-			creative.Filename = filename;
-			creative.Extension = extension;
-		}
-		catch (Exception ex)
-		{
-			logger.LogError($"Unable to save video for {filename} as {uuid} for company {creative.CompanyId} in Facebook: {ex}");
-		}
+		SaveCreativeContentToBucket(creative, uuid, extension, binId, imageStream, filename);
 	}
 }
