@@ -87,7 +87,7 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		var imageStream = ImageStorageTools.FetchFileToMemory(creative.Url!);
 		if (imageStream == null)
 		{
-			Console.WriteLine($"[WARN] No image for creative {creative.CreativeKey}.");
+			logger.LogWarning($"No image for creative {creative.CreativeKey}.");
 		}
 
 		var uuid = ImageStorageTools.GenerateGuid();
@@ -108,7 +108,7 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"[ERROR] Unable to save image for {filename} as {uuid} for {asset.AssetType} {asset.AssetKey}: {ex}");
+			logger.LogError($"Unable to save image for {filename} as {uuid} for creative {creative.Id} with image hash {creative.CreativeKey}: {ex}");
 		}
 	}
 }

@@ -62,12 +62,17 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
 		loaderProxy.WriteFbCreativeLoad(creative);
 	}
 
+	private string? GetVideoUrl()
+	{
+		// get valid page access token for this url
+	}
+
 	private void DownloadAndSaveCreative(FbCreativeLoad creative)
 	{
 		var imageStream = ImageStorageTools.FetchFileToMemory(creative.Url!);
 		if (imageStream == null)
 		{
-			Console.WriteLine($"[WARN] No video for creative {creative.CreativeKey}.");
+			logger.LogWarning($"No video for creative {creative.CreativeKey}.");
 		}
 
 		var uuid = ImageStorageTools.GenerateGuid();
@@ -88,7 +93,7 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"[ERROR] Unable to save video for {filename} as {uuid} for {asset.AssetType} {asset.AssetKey}: {ex}");
+			logger.LogError($"Unable to save video for {filename} as {uuid} for company {creative.CompanyId} in Facebook: {ex}");
 		}
 	}
 }
