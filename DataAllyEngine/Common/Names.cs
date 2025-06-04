@@ -6,6 +6,7 @@ public class Names
     public const string DB_CONNECTION_STRING_KEY = "DataAllyDatabase";
     public const string EMAIL_SENDER_KEY = "EmailSender";
     public const string THUMBNAIL_BUCKET_KEY = "ThumbnailBucket";
+    public const string CREATIVES_BUCKET_KEY = "CreativesBucket";
 
     public const string FEED_TYPE_AD_CREATIVE = "AdCreative";
     public const string FEED_TYPE_AD_INSIGHT = "AdInsight";

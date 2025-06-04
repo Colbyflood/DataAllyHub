@@ -17,7 +17,7 @@ public static class ImageStorageTools
 
     private static readonly HttpClient HttpClient = new HttpClient();
 
-    public static MemoryStream FetchThumbnail(string url)
+    public static MemoryStream FetchFileToMemory(string url)
     {
         var response = HttpClient.GetAsync(url).Result;
         if (!response.IsSuccessStatusCode)
@@ -91,7 +91,7 @@ public static class ImageStorageTools
         return $"{binId}/{guid}.{extension}";
     }
 
-    public static void SaveThumbnail(IAmazonS3 s3Client, MemoryStream imageStream, string bucketArn, string s3Key)
+    public static void SaveImageToS3(IAmazonS3 s3Client, MemoryStream imageStream, string bucketArn, string s3Key)
     {
         imageStream.Position = 0;
 
@@ -108,5 +108,24 @@ public static class ImageStorageTools
 
         var fileTransferUtility = new TransferUtility(s3Client);
         fileTransferUtility.Upload(uploadRequest);
+    }
+    
+    public static string DeriveExtensionFromFilename(string? filename)
+    {
+        if (!string.IsNullOrWhiteSpace(filename))
+        {
+            var ext = ImageStorageTools.ExtractExtensionFromFilename(filename).ToUpper();
+            if (ext.StartsWith("PNG")) return "png";
+            if (ext.StartsWith("JPEG") || ext.StartsWith("JPG")) return "jpg";
+            if (ext.StartsWith("GIF")) return "gif";
+            if (ext.StartsWith("BMP")) return "bmp";
+            if (ext.StartsWith("MPEG") || ext.StartsWith("MPG")) return "mpeg";
+            if (ext.StartsWith("MP4")) return "mp4";
+            if (ext.StartsWith("WAV")) return "wav";
+            if (ext.StartsWith("MOV")) return "mov";
+            if (ext.StartsWith("WEBM")) return "webm";
+            if (ext.StartsWith("AVI")) return "avi";
+        }
+        return "png";
     }
 }

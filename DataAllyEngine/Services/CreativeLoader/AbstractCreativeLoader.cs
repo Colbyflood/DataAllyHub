@@ -1,3 +1,6 @@
+using Amazon.S3;
+using DataAllyEngine.Common;
+using DataAllyEngine.Configuration;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 
@@ -24,17 +27,22 @@ public abstract class AbstractCreativeLoader
 	protected readonly ILoaderProxy loaderProxy;
 	protected readonly ISchedulerProxy schedulerProxy;
 	protected readonly ITokenHolder tokenHolder;
+	protected readonly IAmazonS3 s3Client;
+	protected readonly string creativesBucket;
 
 	private string serviceName;
 	private ILogger logger;
 
 	protected AbstractCreativeLoader(string serviceName, ILoaderProxy loaderProxy, 
-		ISchedulerProxy schedulerProxy, ITokenHolder tokenHolder, ILogger logger)
+		ISchedulerProxy schedulerProxy, ITokenHolder tokenHolder, IConfigurationLoader configurationLoader,
+		IAmazonS3 s3Client, ILogger logger)
 	{
 		this.serviceName = serviceName;
 		this.loaderProxy = loaderProxy;
 		this.schedulerProxy = schedulerProxy;
 		this.tokenHolder = tokenHolder;
+		creativesBucket = configurationLoader.GetKeyValueFor(Names.CREATIVES_BUCKET_KEY);
+		this.s3Client = s3Client;
 		this.logger = logger;
 	}
 	
@@ -92,4 +100,10 @@ public abstract class AbstractCreativeLoader
 	protected abstract List<FbCreativeLoad> GetNextPendingCreativesBatch(int minimumId, int batchSize);
 	
 	protected abstract void ProcessCreative(FbCreativeLoad creative);
+	
+	protected static string ExtractFilenameFromUrl(string url)
+	{
+		var path = url.Split("?")[0];
+		return path.Split("/").Last();
+	}
 }

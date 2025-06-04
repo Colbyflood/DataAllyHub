@@ -201,19 +201,6 @@ public class ContentProcessor : IContentProcessor
         var path = url.Split("?")[0];
         return path.Split("/").Last();
     }
-
-    public static string DeriveExtensionFromFilename(string? filename)
-    {
-        if (!string.IsNullOrWhiteSpace(filename))
-        {
-            var ext = ImageStorageTools.ExtractExtensionFromFilename(filename).ToUpper();
-            if (ext.StartsWith("PNG")) return "png";
-            if (ext.StartsWith("JPEG") || ext.StartsWith("JPG")) return "jpg";
-            if (ext.StartsWith("GIF")) return "gif";
-            if (ext.StartsWith("BMP")) return "bmp";
-        }
-        return "png";
-    }
     
     private int PrepareAdHierarchy(string channelAdSetId, string adSetName, string channelCampaignId,
         string campaignName, int attributionSetting, string campaignCreated, Channel channel)
@@ -367,7 +354,7 @@ public class ContentProcessor : IContentProcessor
         MemoryStream? imageStream = null;
         try
         {
-            imageStream = ImageStorageTools.FetchThumbnail(asset.Url);
+            imageStream = ImageStorageTools.FetchFileToMemory(asset.Url);
         }
         catch (Exception ex)
         {
@@ -385,10 +372,10 @@ public class ContentProcessor : IContentProcessor
 
         try
         {
-            var extension = DeriveExtensionFromFilename(filename);
+            var extension = ImageStorageTools.DeriveExtensionFromFilename(filename);
             var s3Key = ImageStorageTools.AssembleS3Key(uuid, extension, binId);
             //var imageBytes = ThumbnailTools.ConvertImageToBytes(image);
-            ImageStorageTools.SaveThumbnail(s3Client, imageStream, thumbnailBucket, s3Key);
+            ImageStorageTools.SaveImageToS3(s3Client, imageStream, thumbnailBucket, s3Key);
 
             thumbnail = new Thumbnail
             {
