@@ -111,7 +111,7 @@ public class LoaderProxy : ILoaderProxy
 	public List<FbCreativeLoad> GetPendingCreativeImages(int startId, int batchSize)
 	{
 		return context.Fbcreativeloads
-			.Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_IMAGE)
+			.Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_IMAGE && rec.BinId == null)
 			.OrderBy(rec => rec.Id)
 			.Take(batchSize)
 			.ToList();
@@ -120,7 +120,7 @@ public class LoaderProxy : ILoaderProxy
 	public List<FbCreativeLoad> GetPendingCreativeVideos(int startId, int batchSize)
 	{
 		return context.Fbcreativeloads
-			.Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_VIDEO)
+			.Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_VIDEO && rec.BinId == null)
 			.OrderBy(rec => rec.Id)
 			.Take(batchSize)
 			.ToList();

@@ -25,7 +25,7 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		return loaderProxy.GetPendingCreativeImages(minimumId, batchSize);
 	}
 
-	protected override void ProcessCreative(FbCreativeLoad creative, TokenKey tokenKey)
+	protected override void ProcessCreative(FbCreativeLoad creative, TokenKey tokenKey, int channelId)
 	{
 		if (creative.BinId != null && !string.IsNullOrEmpty(creative.Guid))
 		{
@@ -37,15 +37,17 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 		if (string.IsNullOrEmpty(creative.Url))
 		{
 			// attempt to decode the image from the hash
-			var url = GetImageUrl(tokenKey, creative.CreativeKey);
-			if (!string.IsNullOrEmpty(url))
+			var url = GetImageUrl(tokenKey, channelId, creative.CreativeKey);
+			if (string.IsNullOrEmpty(url))
 			{
 				logger.LogWarning($"Cannot get creative image with key {creative.CreativeKey}.");
-				creative.LastAttemptDateTimedUtc = now;
+				creative.LastAttemptDateTimeUtc = now;
 				creative.TotalAttempts++;
 				loaderProxy.WriteFbCreativeLoad(creative);
 				return;
 			}
+			loaderProxy.WriteFbCreativeLoad(creative);
+			loaderProxy.WriteFbCreativeLoad(creative);
 		}
 
 		try
@@ -57,14 +59,20 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 			logger.LogError(ex, $"Unable to download creative image for {creative.CreativeKey} (id {creative.Id}) because of {ex.Message}");
 		}
 
-		creative.LastAttemptDateTimedUtc = now;
+		creative.LastAttemptDateTimeUtc = now;
 		creative.TotalAttempts++;
 		loaderProxy.WriteFbCreativeLoad(creative);
 	}
 
-	private string? GetImageUrl(TokenKey tokenKey, string imageHash)
+	private string? GetImageUrl(TokenKey tokenKey,int channelId, string imageHash)
 	{
-		var facebookParameters = CreateFacebookParameters(tokenKey);
+		var channel = loaderProxy.GetChannelById(channelId);
+		if (channel == null)
+		{
+			logger.LogWarning($"Channel with ID {channelId} not found");
+			return null;
+		}
+		var facebookParameters = CreateFacebookParameters(tokenKey, channel);
 		if (facebookParameters == null)
 		{
 			logger.LogWarning($"Facebook parameters for key {tokenKey} could not be created");
@@ -83,7 +91,10 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 
 	private void DownloadAndSaveCreative(FbCreativeLoad creative)
 	{
-		var imageStream = ImageStorageTools.FetchFileToMemory(creative.Url!);
+		var filename = ExtractFilenameFromUrl(creative.Url!);
+		var extension = ImageStorageTools.DeriveExtensionFromFilename(filename);
+		
+		var imageStream = ImageStorageTools.FetchFileToMemory(creative.Url!, extension);
 		if (imageStream == null)
 		{
 			logger.LogWarning($"No image for creative {creative.CreativeKey}.");
@@ -91,8 +102,6 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 
 		var uuid = ImageStorageTools.GenerateGuid();
 		var binId = ImageStorageTools.HashCreativeToBinId(uuid);
-		var filename = ExtractFilenameFromUrl(creative.Url!);
-		var extension = ImageStorageTools.DeriveExtensionFromFilename(filename);
 		
 		SaveCreativeContentToBucket(creative, uuid, extension, binId, imageStream, filename);
 	}

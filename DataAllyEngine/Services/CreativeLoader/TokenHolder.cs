@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using DataAllyEngine.Common;
+using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using FacebookLoader.Common;
 using FacebookLoader.Content;
@@ -19,7 +21,7 @@ public class TokenHolder : ITokenHolder
 		this.logger = logger;
 	}
 
-	public async Task<FacebookPageToken?> GetFacebookPageToken(TokenKey key)
+	public async Task<FacebookPageToken?> GetFacebookPageToken(TokenKey key, Channel channel)
 	{
 		if (entries.TryGetValue(key, out var entry))
 		{
@@ -31,7 +33,7 @@ public class TokenHolder : ITokenHolder
 			entries.TryRemove(key, out _);
 		}
 		
-		var facebookParameters = CreateFacebookParameters(key);
+		var facebookParameters = CreateFacebookParameters(key, channel);
 		if (facebookParameters == null)
 		{
 			logger.LogWarning($"Facebook parameters for key {key} could not be created");
@@ -46,7 +48,7 @@ public class TokenHolder : ITokenHolder
 		}
 
 		logger.LogInformation($"Fetching Facebook page tokens for user token account {tokenAccount.Id} controlling key {key}");
-		ProcessFacebookPageTokens(facebookParameters, tokenAccount.Id, key.CompanyId);
+		await ProcessFacebookPageTokens(facebookParameters, tokenAccount.Id, key.CompanyId);
 
 		if (entries.TryGetValue(key, out var newEntry))
 		{
@@ -64,7 +66,7 @@ public class TokenHolder : ITokenHolder
 		{
 			if (entry.Value.IsExpired())
 			{
-				logger.LogInformation($"Removing expired token entry for company {entry.Value.CompanyId}, channel {entry.Value.ChannelId}");
+				logger.LogInformation($"Removing expired token entry for company {entry.Value.CompanyId}, page {entry.Value.PageId}");
 				entries.TryRemove(entry.Key, out _);
 			}
 		}
@@ -72,18 +74,11 @@ public class TokenHolder : ITokenHolder
 		logger.LogInformation("Expired token entries cleared");
 	}
 
-	private FacebookParameters? CreateFacebookParameters(TokenKey key)
+	private FacebookParameters? CreateFacebookParameters(TokenKey key, Channel channel)
 	{
 		using (var scope = serviceProvider.CreateScope())
 		{
 			var loaderProxy = scope.ServiceProvider.GetRequiredService<ILoaderProxy>();
-
-			var channel = loaderProxy.GetChannelById(key.ChannelId);
-			if (channel == null)
-			{
-				logger.LogWarning($"Channel with ID {key.ChannelId} not found");
-				return null;
-			}
 
 			var token = loaderProxy.GetTokenByCompanyIdAndChannelTypeId(key.CompanyId, channel.ChannelTypeId);
 			if (token == null)
@@ -96,7 +91,7 @@ public class TokenHolder : ITokenHolder
 		}
 	}
 
-	private async void ProcessFacebookPageTokens(FacebookParameters facebookParameters, string tokenAccountId, int companyId)
+	private async Task ProcessFacebookPageTokens(FacebookParameters facebookParameters, string tokenAccountId, int companyId)
 	{
 		var pageTokens = await TokenFetcher.GetFacebookPageTokensForAccount(facebookParameters, tokenAccountId);
 		if (pageTokens.Count == 0)
@@ -110,16 +105,15 @@ public class TokenHolder : ITokenHolder
 			using (var scope = serviceProvider.CreateScope())
 			{
 				var loaderProxy = scope.ServiceProvider.GetRequiredService<ILoaderProxy>();
-				
-				var channel = loaderProxy.GetChannelByChannelAccountId(pageToken.PageId);
-				if (channel == null)
-				{
-					logger.LogInformation($"Channel not found for Facebook page token account {pageToken.PageId} - skipping");
-					continue;
-				}
 
-				var facebookPageToken = new FacebookPageToken(pageToken.PageId, pageToken.Name, pageToken.Token);
-				var tokenEntry = new TokenEntry(companyId, channel.Id, facebookPageToken, DateTime.UtcNow.AddDays(TokenEntry.EXPIRE_AFTER_DAYS));
+				var facebookPageToken = new FacebookPageToken()
+				{
+					PageId = pageToken.PageId,
+					Name = pageToken.Name,
+					Token = pageToken.Token
+				};
+					
+				var tokenEntry = new TokenEntry(companyId, facebookPageToken, DateTime.UtcNow.AddDays(TokenEntry.EXPIRE_AFTER_DAYS));
 				var tokenKey = tokenEntry.GetKey();
 
 				entries.AddOrUpdate(tokenKey, tokenEntry, (key, entry) => tokenEntry);

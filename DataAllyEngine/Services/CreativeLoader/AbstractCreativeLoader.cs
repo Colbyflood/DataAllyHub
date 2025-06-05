@@ -82,15 +82,15 @@ public abstract class AbstractCreativeLoader
 
 		foreach (var creative in creativesBatch)
 		{
-			if (creative.LastAttemptDateTimedUtc != null)
+			if (creative.LastAttemptDateTimeUtc != null)
 			{
-				var retryExpirationUtc = DateTime.UtcNow.AddMilliseconds(RETRY_TIMEOUT_MSEC);
-				if (creative.LastAttemptDateTimedUtc < retryExpirationUtc)
+				var retryExpirationUtc = DateTime.UtcNow.AddMilliseconds(RETRY_TIMEOUT_MSEC * -1);
+				if (creative.LastAttemptDateTimeUtc > retryExpirationUtc)
 				{
 					continue;
 				}
 			}
-			ProcessCreative(creative, new TokenKey(creative.CompanyId, creative.ChannelId, creative.CreativePageId));
+			ProcessCreative(creative, new TokenKey(creative.CompanyId, creative.CreativePageId), creative.ChannelId);
 			nextId = creative.Id + 1;
 		}
 
@@ -99,7 +99,7 @@ public abstract class AbstractCreativeLoader
 	
 	protected abstract List<FbCreativeLoad> GetNextPendingCreativesBatch(int minimumId, int batchSize);
 	
-	protected abstract void ProcessCreative(FbCreativeLoad creative, TokenKey tokenKey);
+	protected abstract void ProcessCreative(FbCreativeLoad creative, TokenKey tokenKey, int channelId);
 	
 	protected static string ExtractFilenameFromUrl(string url)
 	{
@@ -107,14 +107,8 @@ public abstract class AbstractCreativeLoader
 		return path.Split("/").Last();
 	}
 	
-	protected FacebookParameters? CreateFacebookParameters(TokenKey key)
+	protected FacebookParameters? CreateFacebookParameters(TokenKey key, Channel channel)
 	{
-		var channel = loaderProxy.GetChannelById(key.ChannelId);
-		if (channel == null)
-		{
-			logger.LogWarning($"Channel with ID {key.ChannelId} not found");
-			return null;
-		}
 		var token = loaderProxy.GetTokenByCompanyIdAndChannelTypeId(key.CompanyId, channel.ChannelTypeId);
 		if (token == null)
 		{

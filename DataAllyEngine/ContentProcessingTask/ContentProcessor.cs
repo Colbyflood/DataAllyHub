@@ -350,49 +350,49 @@ public class ContentProcessor : IContentProcessor
 
     private void QueueVideosAndImages(Company company, Channel channel, FacebookAdCreative record)
     {
-        QueueImageLoader(ExtractImageHashes(record.Creative), company, channel, record.Creative.PageId, record.Id);
-        QueueVideoLoader(ExtractVideoIds(record.Creative), company, channel, record.Creative.PageId, record.Id);
+        QueueImageLoader(ExtractImageHashes(record.Creative), company, channel, record.Id);
+        QueueVideoLoader(ExtractVideoIds(record.Creative), company, channel, record.Id);
     }
 
-    private void QueueImageLoader(List<string> hashes, Company company, Channel channel, string pageId, string channelAdId)
+    private void QueueImageLoader(List<CreativeImageHash> hashes, Company company, Channel channel, string channelAdId)
     {
         foreach (var hash in hashes)
         {
-            if (contentProcessorProxy.GetFbCreativeLoadByImageHash(hash) != null)
-            {
-                continue;
-            }
-            
-         var record = new FbCreativeLoad()
-         {
-             CreativeKey = hash,
-             CreativeType = Names.CREATIVE_TYPE_IMAGE,
-             CreativePageId = pageId,
-             CompanyId = company.Id,
-             ChannelId = channel.Id,
-             ChannelAdId = channelAdId,
-             CreatedDateTimeUtc = DateTime.UtcNow,
-             TotalAttempts = 0
-         };
-
-         contentProcessorProxy.WriteFbCreativeLoad(record);
-        }
-    }
-
-    private void QueueVideoLoader(List<string> videoIds, Company company, Channel channel, string pageId, string channelAdId)
-    {
-        foreach (var videoId in videoIds)
-        {
-            if (contentProcessorProxy.GetFbCreativeLoadByVideoId(videoId) != null)
+            if (contentProcessorProxy.GetFbCreativeLoadByImageHash(hash.Hash) != null)
             {
                 continue;
             }
             
             var record = new FbCreativeLoad()
             {
-                CreativeKey = videoId,
+                CreativeKey = hash.Hash,
+                CreativeType = Names.CREATIVE_TYPE_IMAGE,
+                CreativePageId = hash.PageId,
+                CompanyId = company.Id,
+                ChannelId = channel.Id,
+                ChannelAdId = channelAdId,
+                CreatedDateTimeUtc = DateTime.UtcNow,
+                TotalAttempts = 0
+            };
+
+            contentProcessorProxy.WriteFbCreativeLoad(record);
+        }
+    }
+
+    private void QueueVideoLoader(List<CreativeVideoId> videoIds, Company company, Channel channel, string channelAdId)
+    {
+        foreach (var videoId in videoIds)
+        {
+            if (contentProcessorProxy.GetFbCreativeLoadByVideoId(videoId.VideoId) != null)
+            {
+                continue;
+            }
+            
+            var record = new FbCreativeLoad()
+            {
+                CreativeKey = videoId.VideoId,
                 CreativeType = Names.CREATIVE_TYPE_VIDEO,
-                CreativePageId = pageId,
+                CreativePageId = videoId.PageId,
                 CompanyId = company.Id,
                 ChannelId = channel.Id,
                 ChannelAdId = channelAdId,
@@ -404,31 +404,39 @@ public class ContentProcessor : IContentProcessor
         }
     }
     
-    private List<string> ExtractImageHashes(FacebookCreative record)
+    private List<CreativeImageHash> ExtractImageHashes(FacebookCreative record)
     {
-        var imageHashes = new List<string>();
-        if (!string.IsNullOrWhiteSpace(record.PhotoData.ImageHash))
+        var imageHashes = new List<CreativeImageHash>();
+        string? defaultPageId = record.PageId;
+        if (!string.IsNullOrWhiteSpace(record.PhotoData.ImageHash) && !string.IsNullOrWhiteSpace(record.PhotoData.PageId))
         {
-            imageHashes.Add(record.PhotoData.ImageHash);
+            imageHashes.Add(new CreativeImageHash(record.PhotoData.ImageHash, record.PhotoData.PageId));
+            defaultPageId = record.PhotoData.PageId;
         }
 
-        if (!string.IsNullOrWhiteSpace(record.ImageHash))
+        if (!string.IsNullOrWhiteSpace(record.ImageHash) && !string.IsNullOrWhiteSpace(record.PageId))
         {
-            imageHashes.Add(record.ImageHash);
+            imageHashes.Add(new CreativeImageHash(record.ImageHash, record.PageId));
+        }
+        
+                
+        if (!string.IsNullOrWhiteSpace(record.LinkData.ImageHash) && !string.IsNullOrWhiteSpace(record.LinkData.PageId))
+        {
+            imageHashes.Add(new CreativeImageHash(record.LinkData.ImageHash, record.LinkData.PageId));
+            if (defaultPageId == null)
+            {
+                defaultPageId = record.LinkData.PageId;
+            }
         }
         
         record.LinkData.ChildAttachments.ForEach(attachment =>
         {
-            if (!string.IsNullOrWhiteSpace(attachment.ImageHash))
+            if (!string.IsNullOrWhiteSpace(attachment.ImageHash) && defaultPageId != null)
             {
-                imageHashes.Add(attachment.ImageHash);
+                imageHashes.Add(new CreativeImageHash(attachment.ImageHash, defaultPageId));
             }
         });
-        
-        if (!string.IsNullOrWhiteSpace(record.LinkData.ImageHash))
-        {
-            imageHashes.Add(record.LinkData.ImageHash);
-        }
+
         
         return imageHashes;
         
@@ -464,17 +472,19 @@ public class ContentProcessor : IContentProcessor
         // return array_filter($images); // Remove nulls
     }
 
-    private List<string> ExtractVideoIds(FacebookCreative record)
+    private List<CreativeVideoId> ExtractVideoIds(FacebookCreative record)
     {
-        var videoIds = new List<string>();
-        if (!string.IsNullOrWhiteSpace(record.VideoData.VideoId))
+        var videoIds = new List<CreativeVideoId>();
+        string? defaultPageId = record.PageId;
+        if (!string.IsNullOrWhiteSpace(record.VideoData.VideoId) && !string.IsNullOrWhiteSpace(record.VideoData.PageId))
         {
-            videoIds.Add(record.VideoData.VideoId);
+            videoIds.Add(new CreativeVideoId(record.VideoData.VideoId, record.VideoData.PageId));
+            defaultPageId = record.VideoData.PageId;
         }
 
-        if (!string.IsNullOrWhiteSpace(record.VideoId))
+        if (!string.IsNullOrWhiteSpace(record.VideoId) && !string.IsNullOrWhiteSpace(defaultPageId))
         {
-            videoIds.Add(record.VideoId);
+            videoIds.Add(new CreativeVideoId(record.VideoId, defaultPageId));
         }
         return videoIds;
         // $videoIds = [];

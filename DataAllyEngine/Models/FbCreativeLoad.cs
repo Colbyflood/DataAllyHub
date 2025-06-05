@@ -56,7 +56,7 @@ public class FbCreativeLoad
 	public DateTime CreatedDateTimeUtc { get; set; }
 
 	[Column("last_attempt_datetime_utc", TypeName = "datetime")]
-	public DateTime? LastAttemptDateTimedUtc { get; set; }
+	public DateTime? LastAttemptDateTimeUtc { get; set; }
 	
 	[Column("url")]
 	[StringLength(4096)]

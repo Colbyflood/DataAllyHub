@@ -17,21 +17,31 @@ public static class ImageStorageTools
 
     private static readonly HttpClient HttpClient = new HttpClient();
 
-    public static MemoryStream FetchFileToMemory(string url)
+    public static MemoryStream FetchFileToMemory(string url, string extension = "png")
     {
         var response = HttpClient.GetAsync(url).Result;
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"Failed to fetch thumbnail from {url}: status code {response.StatusCode}");
+            throw new Exception($"Failed to fetch image/video file from {url}: status code {response.StatusCode}");
         }
 
-        using var imageStream = response.Content.ReadAsStreamAsync().Result;
-        using var bitmap = new Bitmap(imageStream);
-
-        var memoryStream = new MemoryStream();
-        bitmap.Save(memoryStream, ImageFormat.Png);
-        
-        return memoryStream;
+        using (var imageStream = response.Content.ReadAsStreamAsync().Result)
+        {
+            var memoryStream = new MemoryStream();
+            if (IsImage(extension))
+            {
+                using (var bitmap = new Bitmap(imageStream))
+                {
+                    bitmap.Save(memoryStream, GetImageFormat(extension));
+                }
+            }
+            else
+            {
+                imageStream.CopyTo(memoryStream);
+            }
+            memoryStream.Position = 0;
+            return memoryStream; 
+        }
     }
 
     public static string GenerateGuid()
@@ -121,11 +131,36 @@ public static class ImageStorageTools
             if (ext.StartsWith("BMP")) return "bmp";
             if (ext.StartsWith("MPEG") || ext.StartsWith("MPG")) return "mpeg";
             if (ext.StartsWith("MP4")) return "mp4";
-            if (ext.StartsWith("WAV")) return "wav";
             if (ext.StartsWith("MOV")) return "mov";
             if (ext.StartsWith("WEBM")) return "webm";
             if (ext.StartsWith("AVI")) return "avi";
         }
         return "png";
+    }
+    
+    public static bool IsImage(string extension)
+    {
+        if (!string.IsNullOrWhiteSpace(extension))
+        {
+            var ext = extension.ToUpper();
+            if (ext.StartsWith("PNG")) return true;
+            if (ext.StartsWith("JPEG") || ext.StartsWith("JPG")) return true;
+            if (ext.StartsWith("GIF")) return true;
+            if (ext.StartsWith("BMP")) return true;
+        }
+        return false;
+    }
+
+    private static ImageFormat GetImageFormat(string extension)
+    {
+        if (!string.IsNullOrWhiteSpace(extension))
+        {
+            var ext = extension.ToUpper();
+            if (ext.StartsWith("PNG")) return ImageFormat.Png;
+            if (ext.StartsWith("JPEG") || ext.StartsWith("JPG")) return ImageFormat.Jpeg;
+            if (ext.StartsWith("GIF")) return ImageFormat.Gif;
+            if (ext.StartsWith("BMP")) return ImageFormat.Bmp;
+        }
+        return ImageFormat.Png;
     }
 }

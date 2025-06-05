@@ -65,7 +65,7 @@ public class UrlIdDecoder
 		HttpResponseMessage? response = null;
 		try
 		{
-			string url = $"{facebookParameters.GetBaseUrl()}/{videoId}/accounts?fields={fieldsList}&access_token={pageToken}";
+			string url = $"{facebookParameters.GetBaseUrl()}/{videoId}?fields={fieldsList}&access_token={pageToken}";
 
 			response = await httpClient.GetAsync(url);
 			response.EnsureSuccessStatusCode();

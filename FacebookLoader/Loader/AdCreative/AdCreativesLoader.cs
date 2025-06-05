@@ -34,11 +34,14 @@ public class AdCreativesLoader : FacebookLoaderBase
     {
         var data = spec.LinkData;
         var childAttachments = new List<FacebookChildAttachment>();
-        data.ChildAttachments.ForEach(attachment =>
+        if (data.ChildAttachments != null)
         {
-            var attachmentCallToAction = DigestCallToAction(attachment.CallToAction);
-            childAttachments.Add(new FacebookChildAttachment(attachment.Link, attachment.ImageHash, attachment.Name, attachmentCallToAction));
-        });        
+            data.ChildAttachments.ForEach(attachment =>
+            {
+                var attachmentCallToAction = DigestCallToAction(attachment.CallToAction);
+                childAttachments.Add(new FacebookChildAttachment(attachment.Link, attachment.ImageHash, attachment.Name, attachmentCallToAction));
+            });  
+        }
         
         var callToAction = DigestCallToAction(data.CallToAction);
         return new FacebookLinkData(spec.PageId, data.Message, data.ImageHash, callToAction, childAttachments);
@@ -77,6 +80,22 @@ public class AdCreativesLoader : FacebookLoaderBase
             linkData,
             photoData
         );
+    }
+
+    public static string DigestJsonStringItem(string jsonString)
+    {
+        var jsonObject = JObject.Parse(jsonString);
+        var root = Root.FromJson(jsonObject);
+
+        var records = new List<FacebookAdCreative>();
+        foreach (var item in root.Data)
+        {
+            records.Add(DigestItem(item));
+        }
+        // records.Add(DigestItem(content));
+        var response = new FacebookAdCreativesResponse(records, false, "Z", false, false, false);
+        return response.ToJson();
+        // return JsonConvert.SerializeObject(response, Formatting.None);
     }
 
     private static FacebookAdCreative DigestItem(Content item)

@@ -103,7 +103,7 @@ public class FacebookCreative
 	public string Body { get; }
 	public string ImageHash { get; }
 	public string VideoId { get; }
-	public string PageId { get; }
+	public string? PageId { get; }
 	public FacebookVideoData VideoData { get; }
 	public FacebookLinkData LinkData { get; }
 	public FacebookPhotoData PhotoData { get; }

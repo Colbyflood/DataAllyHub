@@ -8,17 +8,16 @@ public class TokenEntry
 	public const int EXPIRE_AFTER_DAYS = 15;
 	
 	public int CompanyId { get; }
-	public int ChannelId { get; }
 	public string PageId { get; }
 	public DateTime ExpirationDateUtc { get; }
 	public DateTime LastUsedUtc { get; set; } 
 	
 	public FacebookPageToken PageToken { get; set; }
 	
-	public TokenEntry(int companyId, int channelId, FacebookPageToken pageToken, DateTime expirationDate)
+	public TokenEntry(int companyId, FacebookPageToken pageToken, DateTime expirationDate)
 	{
 		CompanyId = companyId;
-		ChannelId = channelId;
+		PageId = pageToken.PageId;
 		PageToken = pageToken;
 		ExpirationDateUtc = expirationDate;
 		LastUsedUtc = DateTime.UtcNow;
@@ -26,7 +25,7 @@ public class TokenEntry
 	
 	public TokenKey GetKey()
 	{
-		return new TokenKey(CompanyId, ChannelId, PageId);
+		return new TokenKey(CompanyId, PageId);
 	}
 
 	public bool IsExpired()

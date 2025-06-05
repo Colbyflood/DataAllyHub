@@ -26,4 +26,6 @@ public class Names
 
     public const string CREATIVE_TYPE_IMAGE = "IMAGE";
     public const string CREATIVE_TYPE_VIDEO = "VIDEO";
+    
+    public const string FACEBOOK_CHANNEL_TYPE = "Facebook";
 }
