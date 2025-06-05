@@ -407,7 +407,7 @@ public class ContentProcessor : IContentProcessor
     private List<CreativeImageHash> ExtractImageHashes(FacebookCreative record)
     {
         var imageHashes = new List<CreativeImageHash>();
-        string? defaultPageId = string.IsNullOrWhiteSpace(record.PageId) ? "0" : record.PageId;
+        string defaultPageId = string.IsNullOrWhiteSpace(record.PageId) ? "0" : record.PageId;
         if (!string.IsNullOrWhiteSpace(record.PhotoData.ImageHash) && !string.IsNullOrWhiteSpace(record.PhotoData.PageId))
         {
             imageHashes.Add(new CreativeImageHash(record.PhotoData.ImageHash, record.PhotoData.PageId));
