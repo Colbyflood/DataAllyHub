@@ -407,31 +407,26 @@ public class ContentProcessor : IContentProcessor
     private List<CreativeImageHash> ExtractImageHashes(FacebookCreative record)
     {
         var imageHashes = new List<CreativeImageHash>();
-        string? defaultPageId = record.PageId;
+        string? defaultPageId = string.IsNullOrWhiteSpace(record.PageId) ? "0" : record.PageId;
         if (!string.IsNullOrWhiteSpace(record.PhotoData.ImageHash) && !string.IsNullOrWhiteSpace(record.PhotoData.PageId))
         {
             imageHashes.Add(new CreativeImageHash(record.PhotoData.ImageHash, record.PhotoData.PageId));
-            defaultPageId = record.PhotoData.PageId;
         }
 
-        if (!string.IsNullOrWhiteSpace(record.ImageHash) && !string.IsNullOrWhiteSpace(record.PageId))
+        if (!string.IsNullOrWhiteSpace(record.ImageHash))
         {
-            imageHashes.Add(new CreativeImageHash(record.ImageHash, record.PageId));
+            imageHashes.Add(new CreativeImageHash(record.ImageHash, defaultPageId));
         }
         
                 
         if (!string.IsNullOrWhiteSpace(record.LinkData.ImageHash) && !string.IsNullOrWhiteSpace(record.LinkData.PageId))
         {
             imageHashes.Add(new CreativeImageHash(record.LinkData.ImageHash, record.LinkData.PageId));
-            if (defaultPageId == null)
-            {
-                defaultPageId = record.LinkData.PageId;
-            }
         }
         
         record.LinkData.ChildAttachments.ForEach(attachment =>
         {
-            if (!string.IsNullOrWhiteSpace(attachment.ImageHash) && defaultPageId != null)
+            if (!string.IsNullOrWhiteSpace(attachment.ImageHash))
             {
                 imageHashes.Add(new CreativeImageHash(attachment.ImageHash, defaultPageId));
             }
