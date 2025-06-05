@@ -1,3 +1,4 @@
+using DataAllyEngine.Common;
 using DataAllyEngine.Context;
 using DataAllyEngine.Models;
 
@@ -22,6 +23,16 @@ public class LoaderProxy : ILoaderProxy
 	public ChannelType? GetChannelTypeByName(string channelName)
 	{
 		return context.Channeltypes.SingleOrDefault(record => record.Name.ToLower() == channelName.ToLower());
+	}
+
+	public Channel? GetChannelByChannelAccountId(string channelAccountId)
+	{
+		var channelAccount = channelAccountId;
+		if (!channelAccount.StartsWith("act_"))
+		{
+			channelAccount = $"act_{channelAccount}";
+		}
+		return context.Channels.SingleOrDefault(record => record.ChannelAccountId == channelAccount);
 	}
 
 	public FbDailySchedule? GetFbDailyScheduleByChannelId(int channelId)
@@ -90,5 +101,37 @@ public class LoaderProxy : ILoaderProxy
 			context.Fbrunstagings.Add(runStaging);
 		}
 		context.SaveChanges();	
+	}
+
+	public Token? GetTokenByCompanyIdAndChannelTypeId(int companyId, int channelTypeId)
+	{
+		return context.Tokens.SingleOrDefault(record => record.CompanyId == companyId && record.ChannelTypeId == channelTypeId);
+	}
+
+	public List<FbCreativeLoad> GetPendingCreativeImages(int startId, int batchSize)
+	{
+		return context.Fbcreativeloads
+			.Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_IMAGE && rec.BinId == null)
+			.OrderBy(rec => rec.Id)
+			.Take(batchSize)
+			.ToList();
+	}
+
+	public List<FbCreativeLoad> GetPendingCreativeVideos(int startId, int batchSize)
+	{
+		return context.Fbcreativeloads
+			.Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_VIDEO && rec.BinId == null)
+			.OrderBy(rec => rec.Id)
+			.Take(batchSize)
+			.ToList();
+	}
+
+	public void WriteFbCreativeLoad(FbCreativeLoad creativeLoad)
+	{
+		if (creativeLoad.Id <= 0)
+		{
+			context.Fbcreativeloads.Add(creativeLoad);
+		}
+		context.SaveChanges();
 	}
 }

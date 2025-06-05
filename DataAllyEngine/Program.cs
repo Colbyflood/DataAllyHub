@@ -7,6 +7,9 @@ using DataAllyEngine.Context;
 using DataAllyEngine.LoaderTask;
 using DataAllyEngine.Proxy;
 using DataAllyEngine.Services.BackfillLauncher;
+using DataAllyEngine.Services.CreativeImagesLoader;
+using DataAllyEngine.Services.CreativeLoader;
+using DataAllyEngine.Services.CreativeVideosLoader;
 using DataAllyEngine.Services.DailySchedule;
 using DataAllyEngine.Services.Email;
 using DataAllyEngine.Services.Notification;
@@ -33,6 +36,7 @@ builder.Services.AddDbContext<DataAllyDbContext>(options =>
 
 // Add singleton injectables
 builder.Services.AddSingleton<IEmailQueueContainer, EmailQueueContainer>();
+builder.Services.AddSingleton<ITokenHolder, TokenHolder>();
 
 
 // Add injectable proxies
@@ -60,6 +64,8 @@ builder.Services.AddScoped<IDailySchedulerService, DailySchedulerService>();
 builder.Services.AddScoped<IRestartProbeService, RestartProbeService>();
 builder.Services.AddScoped<IProcessContentService, ProcessContentService>();
 builder.Services.AddScoped<IBackfillLauncherService, BackfillLauncherService>();
+builder.Services.AddScoped<ICreativeImagesLoadingService, CreativeImagesLoadingService>();
+builder.Services.AddScoped<ICreativeVideosLoadingService, CreativeVideosLoadingService>();
 
 
 // Add background services
@@ -68,6 +74,9 @@ builder.Services.AddHostedService<DailySchedulerScopedBackgroundService>();
 builder.Services.AddHostedService<BackfillLauncherScopedBackgroundService>();
 builder.Services.AddHostedService<RestartProbeScopedBackgroundService>();
 builder.Services.AddHostedService<ProcessContentScopedBackgroundService>();
+
+builder.Services.AddHostedService<CreativeImagesLoaderScopedBackgroundService>();
+builder.Services.AddHostedService<CreativeVideosLoaderScopedBackgroundService>();
 
 
 // Add services to the container.

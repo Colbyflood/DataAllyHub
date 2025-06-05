@@ -23,4 +23,9 @@ public class FacebookParameters
 
 		return $"https://graph.facebook.com/v{FacebookVersion}/{accountValue}/{endpoint}";
 	}
+	
+	public string GetBaseUrl()
+	{
+		return $"https://graph.facebook.com/v{FacebookVersion}";
+	}
 }

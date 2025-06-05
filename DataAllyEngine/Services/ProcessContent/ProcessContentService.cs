@@ -7,6 +7,7 @@ namespace DataAllyEngine.Services.ProcessContent;
 
 public class ProcessContentService : IProcessContentService
 {
+	// ReSharper disable InconsistentNaming
 	private const int ONE_MINUTE = 1;
 	private const int ONE_MINUTE_MSEC = ONE_MINUTE * 60 * 1000;
 
@@ -15,7 +16,6 @@ public class ProcessContentService : IProcessContentService
 
 	private const int MAXIMUM_WINDOW_HOURS = 10;
 	private const int MAXIMUM_WINDOW_MSEC = MAXIMUM_WINDOW_HOURS * 60 * 60 * 1000;
-
 	
 	private const int PREEMPT_STUCK_MINUTES_BEFORE = 60;
 
@@ -172,7 +172,7 @@ public class ProcessContentService : IProcessContentService
 			switch (container.SaveContent!.Sequence)
 			{
 				case 0:
-					if (container.SaveContent.AdImageFinishedUtc == null)
+					if (container.SaveContent.AdCreativeFinishedUtc == null)
 					{
 						LaunchContentProcessing(container.AdCreativesRunLog, container.SaveContent);
 					}
@@ -194,7 +194,7 @@ public class ProcessContentService : IProcessContentService
 
 
 				case 2:
-					if (container.SaveContent.AdCreativeFinishedUtc != null)
+					if (container.SaveContent.AdInsightFinishedUtc == null)
 					{
 						LaunchContentProcessing(container.AdInsightsRunLog, container.SaveContent);
 					}

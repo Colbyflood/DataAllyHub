@@ -6,6 +6,7 @@ public class Names
     public const string DB_CONNECTION_STRING_KEY = "DataAllyDatabase";
     public const string EMAIL_SENDER_KEY = "EmailSender";
     public const string THUMBNAIL_BUCKET_KEY = "ThumbnailBucket";
+    public const string CREATIVES_BUCKET_KEY = "CreativesBucket";
 
     public const string FEED_TYPE_AD_CREATIVE = "AdCreative";
     public const string FEED_TYPE_AD_INSIGHT = "AdInsight";
@@ -22,4 +23,9 @@ public class Names
     public const string FB_PROBLEM_THROTTLED = "Throttled";
     public const string FB_PROBLEM_DISABLED_TOKEN = "DisabledToken";
     public const string FB_PROBLEM_INTERNAL_PROBLEM = "InternalProblem";
+
+    public const string CREATIVE_TYPE_IMAGE = "IMAGE";
+    public const string CREATIVE_TYPE_VIDEO = "VIDEO";
+    
+    public const string FACEBOOK_CHANNEL_TYPE = "Facebook";
 }

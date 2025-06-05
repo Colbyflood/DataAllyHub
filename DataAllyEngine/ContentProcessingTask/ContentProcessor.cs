@@ -58,6 +58,7 @@ public class ContentProcessor : IContentProcessor
 
     private void ProcessAdCreatives(Channel channel, FbRunLog runlog)
     {
+        var company = ExtractCompanyFromChannel(channel);
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         foreach (var entry in stagingEntries)
         {
@@ -74,7 +75,7 @@ public class ContentProcessor : IContentProcessor
                 var adsetId = PrepareAdHierarchy(record.AdsetId, $"Adset {record.AdsetId}",
                                                  record.CampaignId, $"Campaign {record.CampaignId}",
                                                  0, record.CreatedTime, channel);
-                PrepareAd(adsetId, channel, record);
+                PrepareAd(adsetId, company, channel, record);
             }
         }
         
@@ -86,6 +87,13 @@ public class ContentProcessor : IContentProcessor
         }
 
         CleanStaging(stagingEntries);
+    }
+
+    private Company ExtractCompanyFromChannel(Channel channel)
+    {
+        var client = contentProcessorProxy.GetClientById(channel.ClientId);
+        var account = contentProcessorProxy.GetAccountById(client!.AccountId);
+        return contentProcessorProxy.GetCompanyById(account!.CompanyId)!;
     }
 
     private void ProcessAdImages(Channel channel, FbRunLog runlog)
@@ -201,19 +209,6 @@ public class ContentProcessor : IContentProcessor
         var path = url.Split("?")[0];
         return path.Split("/").Last();
     }
-
-    public static string DeriveExtensionFromFilename(string? filename)
-    {
-        if (!string.IsNullOrWhiteSpace(filename))
-        {
-            var ext = ThumbnailTools.ExtractExtensionFromFilename(filename).ToUpper();
-            if (ext.StartsWith("PNG")) return "png";
-            if (ext.StartsWith("JPEG") || ext.StartsWith("JPG")) return "jpg";
-            if (ext.StartsWith("GIF")) return "gif";
-            if (ext.StartsWith("BMP")) return "bmp";
-        }
-        return "png";
-    }
     
     private int PrepareAdHierarchy(string channelAdSetId, string adSetName, string channelCampaignId,
         string campaignName, int attributionSetting, string campaignCreated, Channel channel)
@@ -265,7 +260,7 @@ public class ContentProcessor : IContentProcessor
     }
 
     
-    private Ad PrepareAd(int adSetId, Channel channel, FacebookAdCreative record)
+    private Ad PrepareAd(int adSetId, Company company, Channel channel, FacebookAdCreative record)
     {
         var asset = PrepareAsset(channel, record);
         Ad? ad = null;
@@ -323,6 +318,8 @@ public class ContentProcessor : IContentProcessor
             contentProcessorProxy.WriteAdMetadata(adMetadata);
         }
 
+        QueueVideosAndImages(company, channel, record);
+
         return ad;
     }
     
@@ -350,6 +347,164 @@ public class ContentProcessor : IContentProcessor
 
         return asset;
     }
+
+    private void QueueVideosAndImages(Company company, Channel channel, FacebookAdCreative record)
+    {
+        QueueImageLoader(ExtractImageHashes(record.Creative), company, channel, record.Id);
+        QueueVideoLoader(ExtractVideoIds(record.Creative), company, channel, record.Id);
+    }
+
+    private void QueueImageLoader(List<CreativeImageHash> hashes, Company company, Channel channel, string channelAdId)
+    {
+        foreach (var hash in hashes)
+        {
+            if (contentProcessorProxy.GetFbCreativeLoadByImageHash(hash.Hash) != null)
+            {
+                continue;
+            }
+            
+            var record = new FbCreativeLoad()
+            {
+                CreativeKey = hash.Hash,
+                CreativeType = Names.CREATIVE_TYPE_IMAGE,
+                CreativePageId = hash.PageId,
+                CompanyId = company.Id,
+                ChannelId = channel.Id,
+                ChannelAdId = channelAdId,
+                CreatedDateTimeUtc = DateTime.UtcNow,
+                TotalAttempts = 0
+            };
+
+            contentProcessorProxy.WriteFbCreativeLoad(record);
+        }
+    }
+
+    private void QueueVideoLoader(List<CreativeVideoId> videoIds, Company company, Channel channel, string channelAdId)
+    {
+        foreach (var videoId in videoIds)
+        {
+            if (contentProcessorProxy.GetFbCreativeLoadByVideoId(videoId.VideoId) != null)
+            {
+                continue;
+            }
+            
+            var record = new FbCreativeLoad()
+            {
+                CreativeKey = videoId.VideoId,
+                CreativeType = Names.CREATIVE_TYPE_VIDEO,
+                CreativePageId = videoId.PageId,
+                CompanyId = company.Id,
+                ChannelId = channel.Id,
+                ChannelAdId = channelAdId,
+                CreatedDateTimeUtc = DateTime.UtcNow,
+                TotalAttempts = 0
+            };
+
+            contentProcessorProxy.WriteFbCreativeLoad(record);
+        }
+    }
+    
+    private List<CreativeImageHash> ExtractImageHashes(FacebookCreative record)
+    {
+        var imageHashes = new List<CreativeImageHash>();
+        string? defaultPageId = record.PageId;
+        if (!string.IsNullOrWhiteSpace(record.PhotoData.ImageHash) && !string.IsNullOrWhiteSpace(record.PhotoData.PageId))
+        {
+            imageHashes.Add(new CreativeImageHash(record.PhotoData.ImageHash, record.PhotoData.PageId));
+            defaultPageId = record.PhotoData.PageId;
+        }
+
+        if (!string.IsNullOrWhiteSpace(record.ImageHash) && !string.IsNullOrWhiteSpace(record.PageId))
+        {
+            imageHashes.Add(new CreativeImageHash(record.ImageHash, record.PageId));
+        }
+        
+                
+        if (!string.IsNullOrWhiteSpace(record.LinkData.ImageHash) && !string.IsNullOrWhiteSpace(record.LinkData.PageId))
+        {
+            imageHashes.Add(new CreativeImageHash(record.LinkData.ImageHash, record.LinkData.PageId));
+            if (defaultPageId == null)
+            {
+                defaultPageId = record.LinkData.PageId;
+            }
+        }
+        
+        record.LinkData.ChildAttachments.ForEach(attachment =>
+        {
+            if (!string.IsNullOrWhiteSpace(attachment.ImageHash) && defaultPageId != null)
+            {
+                imageHashes.Add(new CreativeImageHash(attachment.ImageHash, defaultPageId));
+            }
+        });
+
+        
+        return imageHashes;
+        
+        // $images = [];
+            // // 1. child_attachments[].image_hash
+            // foreach (data_get($this->creative, 'object_story_spec.link_data.child_attachments', []) as $item) {
+            //     $images[] = $this->getImageByHash(data_get($item, 'image_hash'));
+            // }
+            //
+            // // 2. link_data.image_hash
+            // if ($image = $this->getImageByHash(data_get($this->creative, 'object_story_spec.link_data.image_hash'))) {
+            //     $images[] = $image;
+            // }
+        //
+        // // 3. asset_feed_spec.images[].hash
+        // $dynamicImages = collect(data_get($this->creative, 'asset_feed_spec.images'));
+        // if ($dynamicImages->isNotEmpty()) {
+        //     $images = array_merge($images, $dynamicImages->map(function ($image) {
+        //         return $this->getImageByHash(data_get($image, 'hash'));
+        //     })->toArray());
+        // }
+        //
+            // // 4. photo_data.image_hash
+            // if ($hash = data_get($this->creative, 'object_story_spec.photo_data.image_hash')) {
+            //     $images[] = $this->getImageByHash($hash);
+            // }
+            //
+            // // 5. root-level image_hash
+            // if ($rootImageHash = data_get($this->creative, 'image_hash')) {
+            //     $images[] = $this->getImageByHash($rootImageHash);
+            // }
+        //
+        // return array_filter($images); // Remove nulls
+    }
+
+    private List<CreativeVideoId> ExtractVideoIds(FacebookCreative record)
+    {
+        var videoIds = new List<CreativeVideoId>();
+        string? defaultPageId = record.PageId;
+        if (!string.IsNullOrWhiteSpace(record.VideoData.VideoId) && !string.IsNullOrWhiteSpace(record.VideoData.PageId))
+        {
+            videoIds.Add(new CreativeVideoId(record.VideoData.VideoId, record.VideoData.PageId));
+            defaultPageId = record.VideoData.PageId;
+        }
+
+        if (!string.IsNullOrWhiteSpace(record.VideoId) && !string.IsNullOrWhiteSpace(defaultPageId))
+        {
+            videoIds.Add(new CreativeVideoId(record.VideoId, defaultPageId));
+        }
+        return videoIds;
+        // $videoIds = [];
+            // // 1. object_story_spec.video_data.video_id
+            // if ($videoId = data_get($this->creative, 'object_story_spec.video_data.video_id')) {
+            //     $videoIds = Arr::wrap($videoId);
+            // }
+        // // 2. asset_feed_spec.videos[].video_id
+        // if ($videos = data_get($this->creative, 'asset_feed_spec.videos', [])) {
+        //     $videoIds = array_merge($videoIds, collect($videos)->map(function ($video) {
+        //         return data_get($video, 'video_id');
+        //     })->toArray());
+        // }
+        // // 3. root-level video_id
+            // if ($rootVideoId = data_get($this->creative, 'video_id')) {
+            //     $videoIds = array_merge($videoIds, Arr::wrap($rootVideoId));
+            // }
+        //
+        // $videoIds = array_filter($videoIds); // Remove nulls/empties
+    }
     
     private Thumbnail? ProcessThumbnail(Asset asset, string channelAdId)
     {
@@ -367,7 +522,7 @@ public class ContentProcessor : IContentProcessor
         MemoryStream? imageStream = null;
         try
         {
-            imageStream = ThumbnailTools.FetchThumbnail(asset.Url);
+            imageStream = ImageStorageTools.FetchFileToMemory(asset.Url);
         }
         catch (Exception ex)
         {
@@ -380,15 +535,15 @@ public class ContentProcessor : IContentProcessor
             return null;
         }
 
-        var uuid = ThumbnailTools.GenerateGuid();
-        var binId = ThumbnailTools.HashToBinId(uuid);
+        var uuid = ImageStorageTools.GenerateGuid();
+        var binId = ImageStorageTools.HashThumbnailToBinId(uuid);
 
         try
         {
-            var extension = DeriveExtensionFromFilename(filename);
-            var s3Key = ThumbnailTools.AssembleS3Key(uuid, extension, binId);
+            var extension = ImageStorageTools.DeriveExtensionFromFilename(filename);
+            var s3Key = ImageStorageTools.AssembleS3Key(uuid, extension, binId);
             //var imageBytes = ThumbnailTools.ConvertImageToBytes(image);
-            ThumbnailTools.SaveThumbnail(s3Client, imageStream, thumbnailBucket, s3Key);
+            ImageStorageTools.SaveImageToS3(s3Client, imageStream, thumbnailBucket, s3Key);
 
             thumbnail = new Thumbnail
             {
@@ -412,7 +567,6 @@ public class ContentProcessor : IContentProcessor
             return null;
         }
     }
-
 
     private void CreateAdCopy(int adId, string? title, string? copy)
     {

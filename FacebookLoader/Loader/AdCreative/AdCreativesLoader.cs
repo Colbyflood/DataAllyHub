@@ -8,7 +8,7 @@ namespace FacebookLoader.Loader.AdCreative;
 public class AdCreativesLoader : FacebookLoaderBase
 {
     private const string FieldsList = "account_id,id,name,status,adset_id,campaign_id,created_time,updated_time,creative{id,status," +
-        "actor_id,instagram_actor_id,instagram_permalink_url,object_type,image_url,image_hash,thumbnail_url," +
+        "actor_id,instagram_actor_id,video_id,instagram_permalink_url,object_type,image_url,image_hash,thumbnail_url," +
         "thumbnail_id,product_set_id,url_tags,title,body,link_destination_display_url,product_data,template_url_spec," +
         "template_url,object_story_spec{page_id,link_data,video_data,template_data}}";
 
@@ -24,13 +24,43 @@ public class AdCreativesLoader : FacebookLoaderBase
 
     private static FacebookVideoData DigestVideoData(ObjectStorySpec spec)
     {
-        var callToAction = DigestCallToAction(spec.VideoData.CallToAction);
-        return FacebookVideoData.Instance;
+        var data = spec.VideoData;
+        var callToAction = DigestCallToAction(data.CallToAction);
+        return new FacebookVideoData(spec.PageId, data.VideoId, data.Title, data.Message,
+            data.LinkDescription, data.ImageUrl, data.ImageHash, callToAction);
+    }
+    
+    private static FacebookLinkData DigestLinkData(ObjectStorySpec spec)
+    {
+        var data = spec.LinkData;
+        var childAttachments = new List<FacebookChildAttachment>();
+        if (data.ChildAttachments != null)
+        {
+            data.ChildAttachments.ForEach(attachment =>
+            {
+                var attachmentCallToAction = DigestCallToAction(attachment.CallToAction);
+                childAttachments.Add(new FacebookChildAttachment(attachment.Link, attachment.ImageHash, attachment.Name, attachmentCallToAction));
+            });  
+        }
+        
+        var callToAction = DigestCallToAction(data.CallToAction);
+        return new FacebookLinkData(spec.PageId, data.Message, data.ImageHash, callToAction, childAttachments);
+    }
+    
+    private static FacebookPhotoData DigestPhotoData(ObjectStorySpec spec)
+    {
+        var data = spec.PhotoData;
+        return new FacebookPhotoData(spec.PageId, data.ImageHash);
     }
 
     private static FacebookCreative DigestCreative(Creative creative)
     {
         var videoData = DigestVideoData(creative.ObjectStorySpec);
+        var linkData = DigestLinkData(creative.ObjectStorySpec);
+        var photoData = DigestPhotoData(creative.ObjectStorySpec);
+        var imageHash = creative.ObjectStorySpec.ImageHash;
+        var videoId = creative.ObjectStorySpec.VideoId;
+        var pageId = creative.ObjectStorySpec.PageId;
         return new FacebookCreative(
             creative.Id,
             creative.Status,
@@ -43,8 +73,29 @@ public class AdCreativesLoader : FacebookLoaderBase
             creative.UrlTags,
             creative.Title,
             creative.Body,
-            videoData
+            imageHash,
+            videoId,
+            pageId,
+            videoData,
+            linkData,
+            photoData
         );
+    }
+
+    public static string DigestJsonStringItem(string jsonString)
+    {
+        var jsonObject = JObject.Parse(jsonString);
+        var root = Root.FromJson(jsonObject);
+
+        var records = new List<FacebookAdCreative>();
+        foreach (var item in root.Data)
+        {
+            records.Add(DigestItem(item));
+        }
+        // records.Add(DigestItem(content));
+        var response = new FacebookAdCreativesResponse(records, false, "Z", false, false, false);
+        return response.ToJson();
+        // return JsonConvert.SerializeObject(response, Formatting.None);
     }
 
     private static FacebookAdCreative DigestItem(Content item)
@@ -196,24 +247,119 @@ class VideoData
     }
 }
 
+class ChildAttachment
+{
+    public string Link { get; set; } = "";
+    public string ImageHash { get; set; } = "";
+    public string Name { get; set; } = "";
+    public CallToAction CallToAction { get; set; } = new CallToAction();
+
+    public static ChildAttachment FromJson(JToken obj)
+    {
+        var callToActionNode = obj["call_to_action"];
+        CallToAction callToAction = new CallToAction();
+        if (callToActionNode != null)
+        {
+            callToAction = CallToAction.FromJson(callToActionNode);
+        }
+
+        return new ChildAttachment()
+        {
+            CallToAction = callToAction,
+            Link = FacebookLoaderBase.ExtractString(obj, "link"),
+            Name = FacebookLoaderBase.ExtractString(obj, "name"),
+            ImageHash = FacebookLoaderBase.ExtractString(obj, "image_hash")
+        };
+    }
+}
+
+class LinkData
+{
+    public string Message { get; set; } = "";
+    public CallToAction CallToAction { get; set; } = new CallToAction();
+    public List<ChildAttachment> ChildAttachments { get; set; }
+    public string ImageHash { get; set; } = "";
+    
+    public static LinkData FromJson(JToken obj)
+    {
+        var callToActionNode = obj["call_to_action"];
+        CallToAction callToAction = new CallToAction();
+        if (callToActionNode != null)
+        {
+            callToAction = CallToAction.FromJson(callToActionNode);
+        }
+        
+        List<ChildAttachment> childAttachments = new List<ChildAttachment>();
+        var data = FacebookLoaderBase.ExtractObjectArray(obj, "child_attachments");
+        foreach (var item in data)
+        {
+            if (item is JObject dataObject)
+                childAttachments.Add(ChildAttachment.FromJson(dataObject));
+        }
+        
+        return new LinkData
+        {
+            ChildAttachments = childAttachments,
+            Message = FacebookLoaderBase.ExtractString(obj, "message"),
+            CallToAction = callToAction,
+            ImageHash = FacebookLoaderBase.ExtractString(obj, "image_hash")
+        };
+    }
+}
+
+class PhotoData
+{
+    public string ImageHash { get; set; } = "";
+    
+    public static PhotoData FromJson(JToken obj)
+    {
+        return new PhotoData
+        {
+            ImageHash = FacebookLoaderBase.ExtractString(obj, "image_hash")
+        };
+    }
+}
+
 class ObjectStorySpec
 {
     public string PageId { get; set; } = "";
     public VideoData VideoData { get; set; } = new VideoData();
+    public LinkData LinkData { get; set; } = new LinkData();
+    public PhotoData PhotoData { get; set; } = new PhotoData();
+    public string ImageHash { get; set; } = "";
+    public string VideoId { get; set; } = "";
 
     public static ObjectStorySpec FromJson(JToken? obj)
     {
         var pageId = FacebookLoaderBase.ExtractString(obj, "page_id");
+        var imageHash = FacebookLoaderBase.ExtractString(obj, "image_hash");
+        var videoId = FacebookLoaderBase.ExtractString(obj, "video_id");
         var videoDataNode = obj["video_data"];
         VideoData videoData = new VideoData();
         if (videoDataNode != null)
         {
             videoData =  VideoData.FromJson(videoDataNode);
         }
+        var linkDataNode = obj["link_data"];
+        LinkData linkData = new LinkData();
+        if (linkDataNode != null)
+        {
+            linkData = LinkData.FromJson(linkDataNode);
+        }
+        var photoDataNode = obj["photo_data"];
+        PhotoData photoData = new PhotoData();
+        if (photoDataNode != null)
+        {
+            photoData = PhotoData.FromJson(photoDataNode);
+        }
         return new ObjectStorySpec
         {
             PageId = pageId,
-            VideoData = videoData
+            ImageHash = imageHash,
+            VideoId = videoId,
+            VideoData = videoData,
+            LinkData = linkData,
+            PhotoData = photoData
         };
     }
 }
@@ -270,6 +416,8 @@ class Content
     public string CampaignId { get; set; } = "";
     public string CreatedTime { get; set; } = "";
     public string UpdatedTime { get; set; } = "";
+    public string VideoId { get; set; } = "";
+    public string ImageHash { get; set; } = "";
     public Creative Creative { get; set; } = new Creative();
 
     public static Content FromJson(JToken obj)
@@ -286,6 +434,8 @@ class Content
             CampaignId = FacebookLoaderBase.ExtractString(obj, "campaign_id"),
             CreatedTime = FacebookLoaderBase.ExtractString(obj, "created_time"),
             UpdatedTime = FacebookLoaderBase.ExtractString(obj, "updated_time"),
+            VideoId = FacebookLoaderBase.ExtractString(obj, "video_id"),
+            ImageHash = FacebookLoaderBase.ExtractString(obj, "image_hash"),
             Creative = Creative.FromJson(obj["creative"])
         };
     }

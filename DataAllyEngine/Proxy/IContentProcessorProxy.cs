@@ -48,4 +48,8 @@ public interface IContentProcessorProxy
 
 	Thumbnail? GetThumbnailByFilenameAndChannelAdId(string filename, string channelAdId);
 	void WriteThumbnail(Thumbnail thumbnail);
+	
+	FbCreativeLoad? GetFbCreativeLoadByImageHash(string imageHash);
+	FbCreativeLoad? GetFbCreativeLoadByVideoId(string videoId);
+	void WriteFbCreativeLoad(FbCreativeLoad record);
 }

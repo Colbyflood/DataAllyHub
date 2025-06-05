@@ -66,6 +66,8 @@ public partial class DataAllyDbContext : DbContext
     
     public virtual DbSet<FbBackfillRequest> Fbbackfillrequests { get; set; }
 
+    public virtual DbSet<FbCreativeLoad> Fbcreativeloads { get; set; }
+
     public virtual DbSet<FbDailySchedule> Fbdailyschedules { get; set; }
 
     public virtual DbSet<FbRunLog> Fbrunlogs { get; set; }
@@ -333,6 +335,15 @@ public partial class DataAllyDbContext : DbContext
             entity.HasOne(d => d.Channel).WithMany(p => p.Fbbackfillrequests)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fbbackfillrequest_channel_fk");
+        });
+        
+        modelBuilder.Entity<FbCreativeLoad>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+            
+            entity.HasIndex(e => new { e.CreativeType, e.CreativeKey })
+                .HasDatabaseName("creativeload_type_key_uk")
+                .IsUnique();
         });
         
         modelBuilder.Entity<FbDailySchedule>(entity =>
