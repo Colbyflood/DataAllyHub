@@ -8,14 +8,14 @@ namespace DataAllyEngine.Services.CreativeLoader;
 
 public class TokenHolder : ITokenHolder
 {
-	private readonly ILoaderProxy loaderProxy;
+	private readonly IServiceProvider serviceProvider;
 	private readonly ILogger<ITokenHolder> logger;
 	
 	private readonly ConcurrentDictionary<TokenKey, TokenEntry> entries = new ConcurrentDictionary<TokenKey, TokenEntry>();
 
-	public TokenHolder(ILoaderProxy loaderProxy, ILogger<ITokenHolder> logger)
+	public TokenHolder(IServiceProvider serviceProvider, ILogger<ITokenHolder> logger)
 	{
-		this.loaderProxy = loaderProxy;
+		this.serviceProvider = serviceProvider;
 		this.logger = logger;
 	}
 
@@ -74,20 +74,26 @@ public class TokenHolder : ITokenHolder
 
 	private FacebookParameters? CreateFacebookParameters(TokenKey key)
 	{
-		var channel = loaderProxy.GetChannelById(key.ChannelId);
-		if (channel == null)
+		using (var scope = serviceProvider.CreateScope())
 		{
-			logger.LogWarning($"Channel with ID {key.ChannelId} not found");
-			return null;
+			var loaderProxy = scope.ServiceProvider.GetRequiredService<ILoaderProxy>();
+
+			var channel = loaderProxy.GetChannelById(key.ChannelId);
+			if (channel == null)
+			{
+				logger.LogWarning($"Channel with ID {key.ChannelId} not found");
+				return null;
+			}
+
+			var token = loaderProxy.GetTokenByCompanyIdAndChannelTypeId(key.CompanyId, channel.ChannelTypeId);
+			if (token == null)
+			{
+				logger.LogWarning($"Facebook token for company with ID {key.CompanyId} not found");
+				return null;
+			}
+
+			return new FacebookParameters(channel.ChannelAccountId, token.Token1);
 		}
-		var token = loaderProxy.GetTokenByCompanyIdAndChannelTypeId(key.CompanyId, channel.ChannelTypeId);
-		if (token == null)
-		{
-			logger.LogWarning($"Facebook token for company with ID {key.CompanyId} not found");
-			return null;
-		}
-		
-		return new FacebookParameters(channel.ChannelAccountId, token.Token1);
 	}
 
 	private async void ProcessFacebookPageTokens(FacebookParameters facebookParameters, string tokenAccountId, int companyId)
@@ -101,17 +107,23 @@ public class TokenHolder : ITokenHolder
 		
 		foreach (var pageToken in pageTokens)
 		{
-			var channel = loaderProxy.GetChannelByChannelAccountId(pageToken.PageId);
-			if (channel == null)
+			using (var scope = serviceProvider.CreateScope())
 			{
-				logger.LogInformation($"Channel not found for Facebook page token account {pageToken.PageId} - skipping");
-				continue;
-			}
-			var facebookPageToken = new FacebookPageToken(pageToken.PageId, pageToken.Name, pageToken.Token);
-			var tokenEntry = new TokenEntry(companyId, channel.Id, facebookPageToken, DateTime.UtcNow.AddDays(TokenEntry.EXPIRE_AFTER_DAYS));
-			var tokenKey = tokenEntry.GetKey();
+				var loaderProxy = scope.ServiceProvider.GetRequiredService<ILoaderProxy>();
+				
+				var channel = loaderProxy.GetChannelByChannelAccountId(pageToken.PageId);
+				if (channel == null)
+				{
+					logger.LogInformation($"Channel not found for Facebook page token account {pageToken.PageId} - skipping");
+					continue;
+				}
 
-			entries.AddOrUpdate(tokenKey, tokenEntry, (key, entry) => tokenEntry);
+				var facebookPageToken = new FacebookPageToken(pageToken.PageId, pageToken.Name, pageToken.Token);
+				var tokenEntry = new TokenEntry(companyId, channel.Id, facebookPageToken, DateTime.UtcNow.AddDays(TokenEntry.EXPIRE_AFTER_DAYS));
+				var tokenKey = tokenEntry.GetKey();
+
+				entries.AddOrUpdate(tokenKey, tokenEntry, (key, entry) => tokenEntry);
+			}
 		}
 	}
 }
