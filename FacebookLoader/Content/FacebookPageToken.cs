@@ -1,3 +1,3 @@
 namespace FacebookLoader.Content;
 
-public record FacebookPageToken(string Id, string Name, string Token);
+public record FacebookPageToken(string PageId, string Name, string Token);

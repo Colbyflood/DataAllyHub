@@ -9,6 +9,7 @@ public class TokenEntry
 	
 	public int CompanyId { get; }
 	public int ChannelId { get; }
+	public string PageId { get; }
 	public DateTime ExpirationDateUtc { get; }
 	public DateTime LastUsedUtc { get; set; } 
 	
@@ -25,7 +26,7 @@ public class TokenEntry
 	
 	public TokenKey GetKey()
 	{
-		return new TokenKey(CompanyId, ChannelId);
+		return new TokenKey(CompanyId, ChannelId, PageId);
 	}
 
 	public bool IsExpired()

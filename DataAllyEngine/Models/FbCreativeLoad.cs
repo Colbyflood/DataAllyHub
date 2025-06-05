@@ -34,6 +34,10 @@ public class FbCreativeLoad
 	[StringLength(255)]
 	public string CreativeKey { get; set; } = null!;
 	
+	[Column("creative_page_id")]
+	[StringLength(45)]
+	public string CreativePageId { get; set; } = null!;
+	
 	[Column("filename")]
 	[StringLength(255)]
 	public string? Filename { get; set; }

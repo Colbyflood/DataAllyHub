@@ -90,7 +90,7 @@ public abstract class AbstractCreativeLoader
 					continue;
 				}
 			}
-			ProcessCreative(creative, new TokenKey(creative.CompanyId, creative.ChannelId));
+			ProcessCreative(creative, new TokenKey(creative.CompanyId, creative.ChannelId, creative.CreativePageId));
 			nextId = creative.Id + 1;
 		}
 

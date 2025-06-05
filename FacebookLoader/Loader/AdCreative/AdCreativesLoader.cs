@@ -57,6 +57,7 @@ public class AdCreativesLoader : FacebookLoaderBase
         var photoData = DigestPhotoData(creative.ObjectStorySpec);
         var imageHash = creative.ObjectStorySpec.ImageHash;
         var videoId = creative.ObjectStorySpec.VideoId;
+        var pageId = creative.ObjectStorySpec.PageId;
         return new FacebookCreative(
             creative.Id,
             creative.Status,
@@ -71,6 +72,7 @@ public class AdCreativesLoader : FacebookLoaderBase
             creative.Body,
             imageHash,
             videoId,
+            pageId,
             videoData,
             linkData,
             photoData

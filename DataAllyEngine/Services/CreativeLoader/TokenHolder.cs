@@ -101,13 +101,13 @@ public class TokenHolder : ITokenHolder
 		
 		foreach (var pageToken in pageTokens)
 		{
-			var channel = loaderProxy.GetChannelByChannelAccountId(pageToken.Id);
+			var channel = loaderProxy.GetChannelByChannelAccountId(pageToken.PageId);
 			if (channel == null)
 			{
-				logger.LogInformation($"Channel not found for Facebook page token account {pageToken.Id} - skipping");
+				logger.LogInformation($"Channel not found for Facebook page token account {pageToken.PageId} - skipping");
 				continue;
 			}
-			var facebookPageToken = new FacebookPageToken(pageToken.Id, pageToken.Name, pageToken.Token);
+			var facebookPageToken = new FacebookPageToken(pageToken.PageId, pageToken.Name, pageToken.Token);
 			var tokenEntry = new TokenEntry(companyId, channel.Id, facebookPageToken, DateTime.UtcNow.AddDays(TokenEntry.EXPIRE_AFTER_DAYS));
 			var tokenKey = tokenEntry.GetKey();
 

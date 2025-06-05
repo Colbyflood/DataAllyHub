@@ -350,11 +350,11 @@ public class ContentProcessor : IContentProcessor
 
     private void QueueVideosAndImages(Company company, Channel channel, FacebookAdCreative record)
     {
-        QueueImageLoader(ExtractImageHashes(record.Creative), company, channel, record.Id);
-        QueueVideoLoader(ExtractVideoIds(record.Creative), company, channel, record.Id);
+        QueueImageLoader(ExtractImageHashes(record.Creative), company, channel, record.Creative.PageId, record.Id);
+        QueueVideoLoader(ExtractVideoIds(record.Creative), company, channel, record.Creative.PageId, record.Id);
     }
 
-    private void QueueImageLoader(List<string> hashes, Company company, Channel channel, string channelAdId)
+    private void QueueImageLoader(List<string> hashes, Company company, Channel channel, string pageId, string channelAdId)
     {
         foreach (var hash in hashes)
         {
@@ -367,6 +367,7 @@ public class ContentProcessor : IContentProcessor
          {
              CreativeKey = hash,
              CreativeType = Names.CREATIVE_TYPE_IMAGE,
+             CreativePageId = pageId,
              CompanyId = company.Id,
              ChannelId = channel.Id,
              ChannelAdId = channelAdId,
@@ -378,7 +379,7 @@ public class ContentProcessor : IContentProcessor
         }
     }
 
-    private void QueueVideoLoader(List<string> videoIds, Company company, Channel channel, string channelAdId)
+    private void QueueVideoLoader(List<string> videoIds, Company company, Channel channel, string pageId, string channelAdId)
     {
         foreach (var videoId in videoIds)
         {
@@ -391,6 +392,7 @@ public class ContentProcessor : IContentProcessor
             {
                 CreativeKey = videoId,
                 CreativeType = Names.CREATIVE_TYPE_VIDEO,
+                CreativePageId = pageId,
                 CompanyId = company.Id,
                 ChannelId = channel.Id,
                 ChannelAdId = channelAdId,

@@ -103,6 +103,7 @@ public class FacebookCreative
 	public string Body { get; }
 	public string ImageHash { get; }
 	public string VideoId { get; }
+	public string PageId { get; }
 	public FacebookVideoData VideoData { get; }
 	public FacebookLinkData LinkData { get; }
 	public FacebookPhotoData PhotoData { get; }
@@ -110,8 +111,8 @@ public class FacebookCreative
 	public FacebookCreative(string id, string status, string actorId, 
 		string instagramActorId, string instagramPermalinkUrl, string objectType, 
 		string thumbnailUrl, string thumbnailId, string urlTags, string title, 
-		string body, string imageHash, string videoId, FacebookVideoData videoData, 
-		FacebookLinkData linkData, FacebookPhotoData photoData)
+		string body, string imageHash, string videoId, string pageId, 
+		FacebookVideoData videoData, FacebookLinkData linkData, FacebookPhotoData photoData)
 	{
 		Id = id;
 		Status = status;
@@ -126,6 +127,7 @@ public class FacebookCreative
 		Body = body;
 		ImageHash = imageHash;
 		VideoId = videoId;
+		PageId = PageId;
 		VideoData = videoData;
 		LinkData = linkData;
 		PhotoData = photoData;
