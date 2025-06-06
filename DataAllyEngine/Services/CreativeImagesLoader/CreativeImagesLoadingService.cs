@@ -46,7 +46,7 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 				loaderProxy.WriteFbCreativeLoad(creative);
 				return;
 			}
-			loaderProxy.WriteFbCreativeLoad(creative);
+			creative.Url = url;
 			loaderProxy.WriteFbCreativeLoad(creative);
 		}
 

@@ -103,6 +103,10 @@ public abstract class AbstractCreativeLoader
 	
 	protected static string ExtractFilenameFromUrl(string url)
 	{
+		if (string.IsNullOrEmpty(url))
+		{
+			return string.Empty;
+		}
 		var path = url.Split("?")[0];
 		return path.Split("/").Last();
 	}
