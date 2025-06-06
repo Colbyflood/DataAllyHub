@@ -78,15 +78,23 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
 			logger.LogWarning($"Facebook parameters for key {tokenKey} could not be created");
 			return null;
 		}
-		
-		var response = UrlIdDecoder.DecodeImageHash(facebookParameters, imageHash).GetAwaiter().GetResult();
-		if (response.Count == 0)
+
+		try
 		{
-			logger.LogWarning($"No image found for hash {imageHash} for token {tokenKey} in Facebook");
+			var response = UrlIdDecoder.DecodeImageHash(facebookParameters, imageHash).GetAwaiter().GetResult();
+			if (response.Count == 0)
+			{
+				logger.LogWarning($"No image found for hash {imageHash} for token {tokenKey} in Facebook");
+				return null;
+			}
+
+			return response[0].Url;
+		}
+		catch (Exception ex)
+		{
+			logger.LogError(ex, $"Exception while decoding image hash {imageHash} for token {tokenKey}: {ex.Message}");
 			return null;
 		}
-
-		return response[0].Url;
 	}
 
 	private void DownloadAndSaveCreative(FbCreativeLoad creative)

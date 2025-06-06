@@ -88,15 +88,23 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
 			logger.LogWarning($"No page token found for key {tokenKey}");
 			return null;
 		}
-		
-		var response = UrlIdDecoder.DecodeVideoId(facebookParameters, pageToken.Token, videoId).GetAwaiter().GetResult();
-		if (response == null)
+
+		try
 		{
-			logger.LogWarning($"No video found for video id {videoId} for token {tokenKey} in Facebook");
+			var response = UrlIdDecoder.DecodeVideoId(facebookParameters, pageToken.Token, videoId).GetAwaiter().GetResult();
+			if (response == null)
+			{
+				logger.LogWarning($"No video found for video id {videoId} for token {tokenKey} in Facebook");
+				return null;
+			}
+
+			return response.Url;
+		}
+		catch (Exception ex)
+		{
+			logger.LogError(ex, $"Exception while decoding video id {videoId} for token {tokenKey}: {ex.Message}");
 			return null;
 		}
-
-		return response.Url;
 	}
 
 	private void DownloadAndSaveCreative(FbCreativeLoad creative)
