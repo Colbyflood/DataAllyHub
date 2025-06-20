@@ -1,3 +1,3 @@
 namespace DataAllyEngine.Common;
 
-public record CreativeImageHash(string Hash, string PageId);
+public record CreativeImageHash(string Hash, string PageId, int? carouselOrderNo = null);

@@ -64,4 +64,13 @@ public class FbCreativeLoad
 	
 	[Column("total_attempts")]
 	public int TotalAttempts { get; set; }
+
+	[Column("carousel_order_no")]
+	public int? CarouselOrderNo { get; set; }
+
+	[Column("width")]
+	public int? Width { get; set; }
+
+	[Column("height")]
+	public int? Height { get; set; }
 }
