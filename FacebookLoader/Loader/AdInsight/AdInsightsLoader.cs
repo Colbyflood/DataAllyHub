@@ -7,14 +7,18 @@ namespace FacebookLoader.Loader.AdInsight;
 
 public class AdInsightsLoader : FacebookLoaderBase
 {
-    private const string FieldsList = "id,name,created_time,updated_time,preview_shareable_link,previews.ad_format(DESKTOP_FEED_STANDARD),";
+	private const string FieldsList = "id,name,status,effective_status,adset_attribution_spec,created_time," +
+	                                  "updated_time,preview_shareable_link,previews.ad_format(DESKTOP_FEED_STANDARD),";
 
-    private const string InsightFields = "{date_start,date_stop,account_id,account_name,account_currency,attribution_setting,optimization_goal,campaign_id,campaign_name," +
-        "objective,buying_type,adset_id,adset_name,ad_id,ad_name,impressions,reach,frequency,spend,clicks,cpc,ctr,cpm,conversion_rate_ranking," +
-        "engagement_rate_ranking,quality_ranking,actions,action_values,cost_per_action_type,conversions,conversion_values,cost_per_conversion," +
-        "cost_per_unique_click,cost_per_unique_conversion,outbound_clicks,outbound_clicks_ctr,inline_link_click_ctr,cost_per_outbound_click," +
-        "video_30_sec_watched_actions,video_avg_time_watched_actions,video_p100_watched_actions,video_p25_watched_actions,video_p50_watched_actions," +
-        "video_p75_watched_actions,video_p95_watched_actions,video_thruplay_watched_actions,video_play_actions,cost_per_thruplay, video_continuous_2_sec_watched_actions}";
+    private const string InsightFields = "{date_start,date_stop,account_id,account_name,account_currency," +
+                                         "attribution_setting,optimization_goal,campaign_id,campaign_name,objective,buying_type,adset_id,adset_name," +
+                                         "ad_id,ad_name,impressions,reach,frequency,spend,clicks,cpc,ctr,cpm,conversion_rate_ranking," +
+                                         "engagement_rate_ranking,quality_ranking,estimated_ad_recallers,estimated_ad_recall_rate,cost_per_estimated_ad_recallers," +
+                                         "actions,action_values,cost_per_action_type,conversions,conversion_values,cost_per_conversion," +
+                                         "cost_per_unique_click,cost_per_unique_conversion,outbound_clicks,outbound_clicks_ctr,inline_link_click_ctr," +
+                                         "cost_per_outbound_click,video_30_sec_watched_actions,video_avg_time_watched_actions,video_p100_watched_actions," +
+                                         "video_p25_watched_actions,video_p50_watched_actions,video_p75_watched_actions,video_p95_watched_actions," +
+                                         "video_thruplay_watched_actions,video_play_actions,cost_per_thruplay},adset{attribution_spec}";
 
     private const int Limit = 100;
     private const int SubLimit = 500;
@@ -191,8 +195,8 @@ public class AdInsightsLoader : FacebookLoaderBase
             var videoP50Watched = ExtractValueFrom(insight.VideoP50WatchedActions, "video_view");
             var videoP75Watched = ExtractValueFrom(insight.VideoP75WatchedActions, "video_view");
             var videoP95Watched = ExtractValueFrom(insight.VideoP95WatchedActions, "video_view");
-            var videoContinuous2SecWatched = ExtractValueFrom(insight.VideoContinuous2SecWatchedActions, "video_view");
             var videoThruplayWatched = ExtractValueFrom(insight.VideoThruplayWatchedActions, "video_view");
+            var videoPlay3Seconds = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "video_view");
             var videoPlay = ExtractValueFrom(insight.VideoPlayActions, "video_view");
             var costPerThruplay = ExtractValueFrom(insight.CostPerThruplay, "video_view");
 
@@ -304,7 +308,6 @@ public class AdInsightsLoader : FacebookLoaderBase
 				ConvertToInteger(videoP75Watched),
 				ConvertToInteger(videoP95Watched),
 				ConvertToInteger(videoThruplayWatched),
-				ConvertToInteger(videoContinuous2SecWatched),
 				ConvertToInteger(videoPlay),
 				ConvertToDecimal(costPerThruplay),
 				ConvertToInteger(insight.CostPerUniqueClick),
@@ -378,7 +381,8 @@ public class AdInsightsLoader : FacebookLoaderBase
 				totalCheckoutInitiated,
 				totalPurchases,
 				leadgen,
-				estimatedAdRecallers
+				estimatedAdRecallers,
+				videoPlay3Seconds
 				);
 
 
@@ -482,7 +486,6 @@ class InsightDatum
     public List<Action> VideoP95WatchedActions { get; set; }
     public List<Action> VideoThruplayWatchedActions { get; set; }
     public List<Action> VideoPlayActions { get; set; }
-    public List<Action> VideoContinuous2SecWatchedActions { get; set; }
     public List<Action> CostPerThruplay { get; set; }
     public List<Action> Conversions { get; set; }
     public List<Action> ConversionValues { get; set; }
@@ -543,7 +546,6 @@ class InsightDatum
             VideoP95WatchedActions = ExtractActionListFrom(obj, "video_p95_watched_actions"),
             VideoThruplayWatchedActions = ExtractActionListFrom(obj, "video_thruplay_watched_actions"),
             VideoPlayActions = ExtractActionListFrom(obj, "video_play_actions"),
-            VideoContinuous2SecWatchedActions = ExtractActionListFrom(obj, "video_continuous_2_sec_watched_actions"),
             CostPerThruplay = ExtractActionListFrom(obj, "cost_per_thruplay"),
             Conversions = ExtractActionListFrom(obj, "conversions"),
             ConversionValues = ExtractActionListFrom(obj, "conversion_values"),
@@ -563,6 +565,7 @@ class Datum
 {
 	public string Id { get; set; }
 	public string Name { get; set; }
+    public string EffectiveStatus { get; set; }
 	public string CreatedTime { get; set; }
 	public string UpdatedTime { get; set; }
 	public string PreviewShareableLink { get; set; }
@@ -573,6 +576,7 @@ class Datum
 	{
 		var id = FacebookLoaderBase.ExtractString(obj, "id");
 		var name = FacebookLoaderBase.ExtractString(obj, "name");
+        var effectiveStatus = FacebookLoaderBase.ExtractString(obj, "effective_status");
 		var createdTime = FacebookLoaderBase.ExtractString(obj, "created_time");
 		var updatedTime = FacebookLoaderBase.ExtractString(obj, "updated_time");
 		var previewShareableLink = FacebookLoaderBase.ExtractString(obj, "preview_shareable_link");
@@ -589,6 +593,7 @@ class Datum
 		{
 			Id = id,
 			Name = name,
+            EffectiveStatus = effectiveStatus,
 			CreatedTime = createdTime,
 			UpdatedTime = updatedTime,
 			PreviewShareableLink = previewShareableLink,
