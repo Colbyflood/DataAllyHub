@@ -10,9 +10,9 @@ public class UrlIdDecoder
 	// ReSharper disable once InconsistentNaming
 	private const int SOCKET_TIMEOUT_SECONDS = 30;
 	
-	public static async Task<List<FacebookImageUrl>> DecodeImageHash(FacebookParameters facebookParameters, string imageHash)
+	public static async Task<List<FacebookImageUrlWidthHeight>> DecodeImageHash(FacebookParameters facebookParameters, string imageHash)
 	{
-		const string fieldsList = "url";
+		const string fieldsList = "url,width,height";
 			
 		using var httpClient = new HttpClient()
 		{
@@ -30,7 +30,7 @@ public class UrlIdDecoder
 
 			var responseContent = await response.Content.ReadAsStringAsync();
 			var tokenResponse = JsonConvert.DeserializeObject<FacebookAdImagesResponse>(responseContent);
-			return tokenResponse != null ? tokenResponse.Data : new List<FacebookImageUrl>();
+			return tokenResponse != null ? tokenResponse.Data : new List<FacebookImageUrlWidthHeight>();
 		}
 		catch (HttpRequestException httpEx) when (httpEx.StatusCode.HasValue)
 		{
@@ -94,6 +94,6 @@ public class UrlIdDecoder
 	}
 	
 
-	public record FacebookAdImagesResponse(List<FacebookImageUrl> Data);
+	public record FacebookAdImagesResponse(List<FacebookImageUrlWidthHeight> Data);
 }
 

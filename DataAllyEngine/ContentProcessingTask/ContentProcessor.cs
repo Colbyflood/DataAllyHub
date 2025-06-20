@@ -17,8 +17,8 @@ public class ContentProcessor : IContentProcessor
     private readonly IKpiProxy kpiProxy;
     private readonly IAmazonS3 s3Client;
     private readonly ILogger<IContentProcessor> logger;
-    
-    public ContentProcessor(IContentProcessorProxy contentProcessorProxy, IKpiProxy kpiProxy, IConfigurationLoader configurationLoader, 
+
+    public ContentProcessor(IContentProcessorProxy contentProcessorProxy, IKpiProxy kpiProxy, IConfigurationLoader configurationLoader,
         IAmazonS3 s3Client, ILogger<IContentProcessor> logger)
     {
         this.contentProcessorProxy = contentProcessorProxy;
@@ -43,7 +43,7 @@ public class ContentProcessor : IContentProcessor
             ProcessAdImages(channel, runlog);
         }
     }
-    
+
     private static DateTime ParseDate(string dateString)
     {
         if (DateTime.TryParse(dateString, out var dateTime))
@@ -63,7 +63,7 @@ public class ContentProcessor : IContentProcessor
         foreach (var entry in stagingEntries)
         {
             Console.WriteLine("Deserializing a staging entry for ad creatives");
-            
+
             var facebookAdCreativesResponse = FacebookAdCreativesResponse.FromJson(entry.Content);
             if (facebookAdCreativesResponse == null)
             {
@@ -78,7 +78,7 @@ public class ContentProcessor : IContentProcessor
                 PrepareAd(adsetId, company, channel, record);
             }
         }
-        
+
         var saveContent = contentProcessorProxy.LoadFbSaveContentContainingRunlog(runlog.Id);
         if (saveContent != null)
         {
@@ -120,10 +120,10 @@ public class ContentProcessor : IContentProcessor
             saveContent.AdImageFinishedUtc = DateTime.UtcNow;
             contentProcessorProxy.WriteFbSaveContent(saveContent);
         }
-        
+
         CleanStaging(stagingEntries);
     }
-    
+
     private void PrepareImages(Channel channel, FacebookAdImage record)
     {
         foreach (var creativeId in record.Creatives)
@@ -209,7 +209,7 @@ public class ContentProcessor : IContentProcessor
         var path = url.Split("?")[0];
         return path.Split("/").Last();
     }
-    
+
     private int PrepareAdHierarchy(string channelAdSetId, string adSetName, string channelCampaignId,
         string campaignName, int attributionSetting, string campaignCreated, Channel channel)
     {
@@ -259,7 +259,7 @@ public class ContentProcessor : IContentProcessor
         return campaign;
     }
 
-    
+
     private Ad PrepareAd(int adSetId, Company company, Channel channel, FacebookAdCreative record)
     {
         var asset = PrepareAsset(channel, record);
@@ -322,7 +322,7 @@ public class ContentProcessor : IContentProcessor
 
         return ad;
     }
-    
+
     private Asset PrepareAsset(Channel channel, FacebookAdCreative record)
     {
         var assetType = record.Creative.ObjectType.ToUpper();
@@ -358,24 +358,35 @@ public class ContentProcessor : IContentProcessor
     {
         foreach (var hash in hashes)
         {
-            if (contentProcessorProxy.GetFbCreativeLoadByImageHash(hash.Hash) != null)
+            var existingFbCreativeLoad = contentProcessorProxy.GetFbCreativeLoadByImageHash(hash.Hash);
+
+            if (existingFbCreativeLoad != null)
             {
+                if (existingFbCreativeLoad.CarouselOrderNo != hash.carouselOrderNo)
+                {
+                    existingFbCreativeLoad.CarouselOrderNo = hash.carouselOrderNo;
+                    contentProcessorProxy.WriteFbCreativeLoad(existingFbCreativeLoad);
+                }
+
                 continue;
             }
-            
-            var record = new FbCreativeLoad()
+            else
             {
-                CreativeKey = hash.Hash,
-                CreativeType = Names.CREATIVE_TYPE_IMAGE,
-                CreativePageId = hash.PageId,
-                CompanyId = company.Id,
-                ChannelId = channel.Id,
-                ChannelAdId = channelAdId,
-                CreatedDateTimeUtc = DateTime.UtcNow,
-                TotalAttempts = 0
-            };
+                var record = new FbCreativeLoad()
+                {
+                    CreativeKey = hash.Hash,
+                    CreativeType = Names.CREATIVE_TYPE_IMAGE,
+                    CreativePageId = hash.PageId,
+                    CompanyId = company.Id,
+                    ChannelId = channel.Id,
+                    ChannelAdId = channelAdId,
+                    CreatedDateTimeUtc = DateTime.UtcNow,
+                    TotalAttempts = 0,
+                    CarouselOrderNo = hash.carouselOrderNo
+                };
 
-            contentProcessorProxy.WriteFbCreativeLoad(record);
+                contentProcessorProxy.WriteFbCreativeLoad(record);
+            }
         }
     }
 
@@ -387,7 +398,7 @@ public class ContentProcessor : IContentProcessor
             {
                 continue;
             }
-            
+
             var record = new FbCreativeLoad()
             {
                 CreativeKey = videoId.VideoId,
@@ -403,7 +414,7 @@ public class ContentProcessor : IContentProcessor
             contentProcessorProxy.WriteFbCreativeLoad(record);
         }
     }
-    
+
     private List<CreativeImageHash> ExtractImageHashes(FacebookCreative record)
     {
         var imageHashes = new List<CreativeImageHash>();
@@ -417,34 +428,38 @@ public class ContentProcessor : IContentProcessor
         {
             imageHashes.Add(new CreativeImageHash(record.ImageHash, defaultPageId));
         }
-        
-                
+
+
         if (!string.IsNullOrWhiteSpace(record.LinkData.ImageHash) && !string.IsNullOrWhiteSpace(record.LinkData.PageId))
         {
             imageHashes.Add(new CreativeImageHash(record.LinkData.ImageHash, record.LinkData.PageId));
         }
-        
-        record.LinkData.ChildAttachments.ForEach(attachment =>
-        {
-            if (!string.IsNullOrWhiteSpace(attachment.ImageHash))
-            {
-                imageHashes.Add(new CreativeImageHash(attachment.ImageHash, defaultPageId));
-            }
-        });
 
-        
+        // CrousalImages came in child attachments
+        if (record.LinkData.ChildAttachments != null & record.LinkData.ChildAttachments.Count > 0)
+        {
+            int crousalImageOrder = 1;
+            record.LinkData.ChildAttachments.ForEach(attachment =>
+            {
+                if (!string.IsNullOrWhiteSpace(attachment.ImageHash))
+                {
+                    imageHashes.Add(new CreativeImageHash(attachment.ImageHash, defaultPageId, crousalImageOrder++));
+                }
+            });
+        }
+
         return imageHashes;
-        
+
         // $images = [];
-            // // 1. child_attachments[].image_hash
-            // foreach (data_get($this->creative, 'object_story_spec.link_data.child_attachments', []) as $item) {
-            //     $images[] = $this->getImageByHash(data_get($item, 'image_hash'));
-            // }
-            //
-            // // 2. link_data.image_hash
-            // if ($image = $this->getImageByHash(data_get($this->creative, 'object_story_spec.link_data.image_hash'))) {
-            //     $images[] = $image;
-            // }
+        // // 1. child_attachments[].image_hash
+        // foreach (data_get($this->creative, 'object_story_spec.link_data.child_attachments', []) as $item) {
+        //     $images[] = $this->getImageByHash(data_get($item, 'image_hash'));
+        // }
+        //
+        // // 2. link_data.image_hash
+        // if ($image = $this->getImageByHash(data_get($this->creative, 'object_story_spec.link_data.image_hash'))) {
+        //     $images[] = $image;
+        // }
         //
         // // 3. asset_feed_spec.images[].hash
         // $dynamicImages = collect(data_get($this->creative, 'asset_feed_spec.images'));
@@ -454,15 +469,15 @@ public class ContentProcessor : IContentProcessor
         //     })->toArray());
         // }
         //
-            // // 4. photo_data.image_hash
-            // if ($hash = data_get($this->creative, 'object_story_spec.photo_data.image_hash')) {
-            //     $images[] = $this->getImageByHash($hash);
-            // }
-            //
-            // // 5. root-level image_hash
-            // if ($rootImageHash = data_get($this->creative, 'image_hash')) {
-            //     $images[] = $this->getImageByHash($rootImageHash);
-            // }
+        // // 4. photo_data.image_hash
+        // if ($hash = data_get($this->creative, 'object_story_spec.photo_data.image_hash')) {
+        //     $images[] = $this->getImageByHash($hash);
+        // }
+        //
+        // // 5. root-level image_hash
+        // if ($rootImageHash = data_get($this->creative, 'image_hash')) {
+        //     $images[] = $this->getImageByHash($rootImageHash);
+        // }
         //
         // return array_filter($images); // Remove nulls
     }
@@ -483,10 +498,10 @@ public class ContentProcessor : IContentProcessor
         }
         return videoIds;
         // $videoIds = [];
-            // // 1. object_story_spec.video_data.video_id
-            // if ($videoId = data_get($this->creative, 'object_story_spec.video_data.video_id')) {
-            //     $videoIds = Arr::wrap($videoId);
-            // }
+        // // 1. object_story_spec.video_data.video_id
+        // if ($videoId = data_get($this->creative, 'object_story_spec.video_data.video_id')) {
+        //     $videoIds = Arr::wrap($videoId);
+        // }
         // // 2. asset_feed_spec.videos[].video_id
         // if ($videos = data_get($this->creative, 'asset_feed_spec.videos', [])) {
         //     $videoIds = array_merge($videoIds, collect($videos)->map(function ($video) {
@@ -494,13 +509,13 @@ public class ContentProcessor : IContentProcessor
         //     })->toArray());
         // }
         // // 3. root-level video_id
-            // if ($rootVideoId = data_get($this->creative, 'video_id')) {
-            //     $videoIds = array_merge($videoIds, Arr::wrap($rootVideoId));
-            // }
+        // if ($rootVideoId = data_get($this->creative, 'video_id')) {
+        //     $videoIds = array_merge($videoIds, Arr::wrap($rootVideoId));
+        // }
         //
         // $videoIds = array_filter($videoIds); // Remove nulls/empties
     }
-    
+
     private Thumbnail? ProcessThumbnail(Asset asset, string channelAdId)
     {
         if (string.IsNullOrWhiteSpace(asset.Url) || !asset.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
@@ -582,7 +597,7 @@ public class ContentProcessor : IContentProcessor
             contentProcessorProxy.WriteAdCopy(adCopy);
         }
     }
-    
+
     private void PrepareKpis(Channel channel, KpiProcessor kpiProcessor, FacebookAdInsight record)
     {
         var ads = contentProcessorProxy.GetAdsByChannelAdId(record.Id);
@@ -625,7 +640,7 @@ public class ContentProcessor : IContentProcessor
 
         return campaign;
     }
-    
+
     private Adset UpdateAdSet(string adSetId, string adSetName, string createdDate, Campaign campaign)
     {
         var adSet = contentProcessorProxy.GetAdsetByChannelAdsetId(adSetId);
