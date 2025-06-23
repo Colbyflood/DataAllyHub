@@ -123,7 +123,8 @@ public class BackfillLauncherService : IBackfillLauncherService
 			if (adInsightRunLog == null)
 			{
 				var startDate = now.AddDays(-1 * candidate.Days);
-				loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL, startDate, now, candidate.Days);
+				var endDate = now.AddDays(-1);
+				loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL, startDate, endDate, candidate.Days);
 			}
 		}
 	}

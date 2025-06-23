@@ -122,7 +122,7 @@ public class RestartProbeService : IRestartProbeService
 					var endTime = new DateTime(runlog.StartedUtc.Year, runlog.StartedUtc.Month, runlog.StartedUtc.Day, runlog.StartedUtc.Hour, 0, 0, DateTimeKind.Utc);
 					var startTime = endTime.AddDays(-1);
 
-					loaderRunner.StartAdInsightsLoad(facebookParameters, runlog, startTime, endTime);
+					loaderRunner.StartAdInsightsLoad(facebookParameters, runlog, startTime, startTime);
 				}
 				else
 				{
