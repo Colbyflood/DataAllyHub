@@ -51,7 +51,9 @@ public class ProcessContentService : IProcessContentService
 		var preemptTimeWindow = now.AddMinutes(-1 * PREEMPT_STUCK_MINUTES_BEFORE);
 		var absoluteTimeWindow = now.AddHours(-1 * MAXIMUM_HOURS_LOOKBACK);
 
-		foreach (var completeRunLog in FindCompletedUnprocessedRunLogs(absoluteTimeWindow))
+		var completedUnprocessedRunLogs = FindCompletedUnprocessedRunLogs(absoluteTimeWindow);
+
+        foreach (var completeRunLog in completedUnprocessedRunLogs)
 		{
 			if (completeRunLog.SaveContent == null)
 			{

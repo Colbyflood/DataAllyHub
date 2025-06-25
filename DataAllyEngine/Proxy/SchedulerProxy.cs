@@ -101,6 +101,11 @@ public class SchedulerProxy : ISchedulerProxy
 			.ToList();
 	}
 
+    /// <summary>
+    /// Fetch those runlogs which are not finished and started after startedDateUtc
+    /// </summary>
+    /// <param name="startDateUtc"></param>
+    /// <returns></returns>
 	public List<FbRunLog> GetUncachedIncompleteFbRunLogsSince(DateTime startDateUtc)
 	{
 		return context.Fbrunlogs

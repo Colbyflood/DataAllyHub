@@ -29,7 +29,7 @@ public class AdCreativesLoader : FacebookLoaderBase
         return new FacebookVideoData(spec.PageId, data.VideoId, data.Title, data.Message,
             data.LinkDescription, data.ImageUrl, data.ImageHash, callToAction);
     }
-    
+
     private static FacebookLinkData DigestLinkData(ObjectStorySpec spec)
     {
         var data = spec.LinkData;
@@ -40,13 +40,13 @@ public class AdCreativesLoader : FacebookLoaderBase
             {
                 var attachmentCallToAction = DigestCallToAction(attachment.CallToAction);
                 childAttachments.Add(new FacebookChildAttachment(attachment.Link, attachment.ImageHash, attachment.Name, attachmentCallToAction));
-            });  
+            });
         }
-        
+
         var callToAction = DigestCallToAction(data.CallToAction);
         return new FacebookLinkData(spec.PageId, data.Message, data.ImageHash, callToAction, childAttachments);
     }
-    
+
     private static FacebookPhotoData DigestPhotoData(ObjectStorySpec spec)
     {
         var data = spec.PhotoData;
@@ -184,12 +184,30 @@ class Cursors
 {
     public string Before { get; set; }
     public string After { get; set; }
+
+    public static Cursors FromJson(JToken? obj)
+    {
+        return new Cursors
+        {
+            Before = FacebookLoaderBase.ExtractString(obj, "before"),
+            After = FacebookLoaderBase.ExtractString(obj, "after")
+        };
+    }
 }
 
 class Paging
 {
     public Cursors Cursors { get; set; }
     public string Next { get; set; }
+
+    public static Paging FromJson(JToken? obj)
+    {
+        return new Paging
+        {
+            Cursors = Cursors.FromJson(FacebookLoaderBase.ExtractObject(obj, "cursors")),
+            Next = FacebookLoaderBase.ExtractString(obj, "next")
+        };
+    }
 }
 
 class Value
@@ -279,7 +297,7 @@ class LinkData
     public CallToAction CallToAction { get; set; } = new CallToAction();
     public List<ChildAttachment> ChildAttachments { get; set; }
     public string ImageHash { get; set; } = "";
-    
+
     public static LinkData FromJson(JToken obj)
     {
         var callToActionNode = obj["call_to_action"];
@@ -288,7 +306,7 @@ class LinkData
         {
             callToAction = CallToAction.FromJson(callToActionNode);
         }
-        
+
         List<ChildAttachment> childAttachments = new List<ChildAttachment>();
         var data = FacebookLoaderBase.ExtractObjectArray(obj, "child_attachments");
         foreach (var item in data)
@@ -296,7 +314,7 @@ class LinkData
             if (item is JObject dataObject)
                 childAttachments.Add(ChildAttachment.FromJson(dataObject));
         }
-        
+
         return new LinkData
         {
             ChildAttachments = childAttachments,
@@ -310,7 +328,7 @@ class LinkData
 class PhotoData
 {
     public string ImageHash { get; set; } = "";
-    
+
     public static PhotoData FromJson(JToken obj)
     {
         return new PhotoData
@@ -338,7 +356,7 @@ class ObjectStorySpec
         VideoData videoData = new VideoData();
         if (videoDataNode != null)
         {
-            videoData =  VideoData.FromJson(videoDataNode);
+            videoData = VideoData.FromJson(videoDataNode);
         }
         var linkDataNode = obj["link_data"];
         LinkData linkData = new LinkData();
@@ -449,7 +467,10 @@ class Root
     public static Root FromJson(JToken obj)
     {
         var dataList = new List<Content>();
-        foreach (var item in FacebookLoaderBase.ExtractObjectArray(obj, "data"))
+
+        var extractObjects = FacebookLoaderBase.ExtractObjectArray(obj, "data");
+
+        foreach (var item in extractObjects)
         {
             dataList.Add(Content.FromJson(item));
         }
@@ -457,15 +478,7 @@ class Root
         return new Root
         {
             Data = dataList,
-            Paging = new Paging
-            {
-                Cursors = new Cursors
-                {
-                    Before = FacebookLoaderBase.ExtractString(obj["paging"]["cursors"], "before"),
-                    After = FacebookLoaderBase.ExtractString(obj["paging"]["cursors"], "after")
-                },
-                Next = FacebookLoaderBase.ExtractString(obj["paging"], "next")
-            }
+            Paging = Paging.FromJson(FacebookLoaderBase.ExtractObject(obj, "paging"))
         };
     }
 }

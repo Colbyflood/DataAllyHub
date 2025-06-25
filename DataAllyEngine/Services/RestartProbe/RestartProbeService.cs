@@ -148,16 +148,17 @@ public class RestartProbeService : IRestartProbeService
 	private List<FbRunLog> FindStalledItems()
     {
 	    var now = DateTime.UtcNow;
-	    var ignoreTimeWindow = now.AddMinutes(-1 * IGNORE_START_MINUTES_BEFORE);
-	    var preemptTimeWindow = now.AddMinutes(-1 * PREEMPT_STUCK_MINUTES_BEFORE);
+	    var ignoreTimeWindow = now.AddMinutes(-1 * IGNORE_START_MINUTES_BEFORE); // 30 minutes
+	    var preemptTimeWindow = now.AddMinutes(-1 * PREEMPT_STUCK_MINUTES_BEFORE); // 30 minutes
 	    var absoluteTimeWindow = now.AddHours(-1 * MAXIMUM_HOURS_LOOKBACK);
 
+        // Fetch those runlogs which are not finished and started from absoluteTimeWindow, which is 24 hours ago
         var runlogs = schedulerProxy.GetUncachedIncompleteFbRunLogsSince(absoluteTimeWindow);
         var stalled = new List<FbRunLog>();
         foreach (var runlog in runlogs)
         { 
             var lastStartedTime = DateTime.SpecifyKind(runlog.LastStartedUtc, DateTimeKind.Utc);
-            if (lastStartedTime >= ignoreTimeWindow)
+            if (lastStartedTime >= ignoreTimeWindow) // Ignore those which were already triggered in 30 minutes before window
                 continue;
 
             var problem = GetCurrentProblem(runlog);
