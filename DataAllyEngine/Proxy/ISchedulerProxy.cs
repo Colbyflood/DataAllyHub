@@ -8,7 +8,7 @@ public interface ISchedulerProxy
 
 	void WriteFbDailySchedule(FbDailySchedule schedule);
 	
-	Channel? GetChannelById(int channelId);
+	Channel? GetChannelById(int channelId, bool includeAccount = false);
 
 	ChannelType? GetChannelTypeByName(string channelName);
 	

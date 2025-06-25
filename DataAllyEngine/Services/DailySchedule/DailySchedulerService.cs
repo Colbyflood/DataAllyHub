@@ -11,7 +11,7 @@ public class DailySchedulerService : IDailySchedulerService
 	// ReSharper disable InconsistentNaming
 	private const int ONE_MINUTE = 1;
 	private const int ONE_MINUTE_MSEC = ONE_MINUTE * 60 * 1000;
-	private const int MAXIMUM_STARTS_PER_MINUTE = 10;		// approx 600 per hour
+    private const int MAXIMUM_STARTS_PER_MINUTE = 10;       // approx 600 per hour
 	private const string FACEBOOK_CHANNEL_NAME = "Facebook";
 	private const int RUNLOGS_PER_CANDIDATE = 3;
 	
@@ -58,12 +58,19 @@ public class DailySchedulerService : IDailySchedulerService
 		}
 		foreach (var candidate in candidates)
 		{
-			var channel = schedulerProxy.GetChannelById(candidate.ChannelId);
+            var channel = schedulerProxy.GetChannelById(candidate.ChannelId, includeAccount: true);
 			if (channel == null)
 			{
 				logger.LogError($"Could not find channel for candidate with channel Id {candidate.ChannelId}");
 				continue;				
 			}
+
+            if (channel?.Client?.Account?.Active == false)
+            {
+                logger.LogInformation($"Ignoring daily scheduler for inactive account {channel!.Client!.AccountId} channel {candidate.ChannelId}");
+                continue;
+            }
+
 			var company = schedulerProxy.GetCompanyByChannelId(candidate.ChannelId);
 			if (company == null)
 			{

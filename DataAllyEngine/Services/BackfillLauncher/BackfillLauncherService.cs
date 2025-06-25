@@ -52,12 +52,19 @@ public class BackfillLauncherService : IBackfillLauncherService
 
 		foreach (var candidate in candidates)
 		{
-			var channel = schedulerProxy.GetChannelById(candidate.ChannelId);
+            var channel = schedulerProxy.GetChannelById(candidate.ChannelId, includeAccount: true);
 			if (channel == null)
 			{
 				logger.LogError($"Could not find channel for candidate with channel Id {candidate.ChannelId}");
 				continue;				
 			}
+
+            if (channel?.Client?.Account?.Active == false)
+            {
+                logger.LogInformation($"Ignoring backfill launcher for inactive account {channel!.Client!.AccountId} channel {candidate.ChannelId}");
+                continue;
+            }
+
 			var company = schedulerProxy.GetCompanyByChannelId(candidate.ChannelId);
 			if (company == null)
 			{

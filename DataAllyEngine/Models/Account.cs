@@ -26,7 +26,7 @@ public partial class Account
     public int AccountTypeId { get; set; }
 
     [Column("active", TypeName = "bit(1)")]
-    public ulong Active { get; set; }
+    public bool Active { get; set; }
 
     [Column("created", TypeName = "datetime")]
     public DateTime Created { get; set; }

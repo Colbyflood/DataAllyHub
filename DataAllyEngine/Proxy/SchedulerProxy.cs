@@ -29,9 +29,20 @@ public class SchedulerProxy : ISchedulerProxy
 		context.SaveChanges();
 	}
 
-	public Channel? GetChannelById(int channelId)
+    public Channel? GetChannelById(int channelId, bool includeAccount = false)
+    {
+        if (includeAccount)
+        {
+            return context.Channels
+                          .Include(channel => channel.Client)
+                          .ThenInclude(client => client.Account)
+                          .SingleOrDefault(record => record.Id == channelId);
+        }
+        else
 	{
-		return context.Channels.SingleOrDefault(record => record.Id == channelId);
+            return context.Channels
+                          .SingleOrDefault(record => record.Id == channelId);
+        }
 	}
 	
 	public ChannelType? GetChannelTypeByName(string channelName)
@@ -86,11 +97,18 @@ public class SchedulerProxy : ISchedulerProxy
 			.ToList();
 	}
 
+    /// <summary>
+    /// Fetch those runlogs which are finished and started after date and ignore those whose Account is inactive.
+    /// </summary>
+    /// <param name="date"></param>
+    /// <returns></returns>
 	public List<FbRunLog> GetUncachedFinishedFbRunLogsAfterDate(DateTime date)
 	{
 		return context.Fbrunlogs
 			.AsNoTracking()
-			.Where(record => record.StartedUtc >= date && record.FinishedUtc != null)
+            .Where(record => record.StartedUtc >= date && record.FinishedUtc != null 
+                            && record.Channel.Client.Account.Active != false // Ignore those whose Account is inactive, Channel \ Client \ Account references can be null
+            )
 			.ToList();
 	}
 

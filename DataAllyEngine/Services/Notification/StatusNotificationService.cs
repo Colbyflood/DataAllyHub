@@ -16,7 +16,7 @@ public class StatusNotificationService : IStatusNotificationService
 	private List<string> GetRecipients()
 	{
 		// TODO: configure notification recipients
-		return ["support@dataally.ai", "laforet@chrislaforetsoftware.com"];
+		return ["support@dataally.ai", "786hammadsajid+dataally@gmail.com"];
 	}
 
 
