@@ -135,7 +135,8 @@ public class DailySchedulerService : IDailySchedulerService
 			if (adInsightRunLog == null)
 			{
 				var yesterday = windowStartTime.AddDays(-1);
-				loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY, yesterday, yesterday); // Fetch data for yesterday only
+                var startDay = windowStartTime.AddDays(-7); // Fetch data for last 7 days
+                loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY, startDay, yesterday);
 			}
 
 			++candidateCount;
