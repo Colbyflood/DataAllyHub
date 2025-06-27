@@ -20,160 +20,160 @@ public class AdInsightsLoader : FacebookLoaderBase
     private const int SubLimit = 500;
     private const int MaxTestLoops = 4;
 
-    public AdInsightsLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) {}
+    public AdInsightsLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) { }
 
     public async Task<FacebookAdInsightsResponse?> StartLoadAsync(string startDate, string endDate, bool testMode = false)
     {
-	    var url =
-		    $"{FacebookParameters.CreateUrlFor("ads")}?fields={FieldsList}{PrepareInsights(startDate, endDate)}&limit={Limit}&access_token={FacebookParameters.Token}";
-	    
-	    return await LoadAsync(url, testMode);
+        var url =
+            $"{FacebookParameters.CreateUrlFor("ads")}?fields={FieldsList}{PrepareInsights(startDate, endDate)}&limit={Limit}&access_token={FacebookParameters.Token}";
+
+        return await LoadAsync(url, testMode);
     }
 
     public async Task<FacebookAdInsightsResponse?> LoadAsync(string startUrl, bool testMode = false)
     {
-	    var loopCount = 0;
-	    var currentUrl = startUrl;
-	    var records = new List<FacebookAdInsight>();
-	    
-	    var currentLimitSize = GetLimitFromUrl(startUrl) ?? Limit;
+        var loopCount = 0;
+        var currentUrl = startUrl;
+        var records = new List<FacebookAdInsight>();
 
-	    while (true)
-	    {
-		    try
-		    {
-			    var data = await CallGraphApiAsync(currentUrl);
-			    var root = Root.FromJson(data);
+        var currentLimitSize = GetLimitFromUrl(startUrl) ?? Limit;
 
-			    foreach (var item in root.Data)
-			    {
-				    var previews = DigestPreviews(item.Previews);
-				    var insights = DigestInsights(item.Insights);
+        while (true)
+        {
+            try
+            {
+                var data = await CallGraphApiAsync(currentUrl);
+                var root = Root.FromJson(data);
 
-				    records.Add(new FacebookAdInsight(
-					    item.Id,
-					    item.Name,
-					    item.CreatedTime,
-					    item.UpdatedTime,
-					    item.PreviewShareableLink,
-					    previews,
-					    insights));
-			    }
+                foreach (var item in root.Data)
+                {
+                    var previews = DigestPreviews(item.Previews);
+                    var insights = DigestInsights(item.Insights);
 
-			    if (string.IsNullOrEmpty(root.Paging?.Next) || (testMode && loopCount >= MaxTestLoops))
-			    {
-				    break;
-			    }
+                    records.Add(new FacebookAdInsight(
+                        item.Id,
+                        item.Name,
+                        item.CreatedTime,
+                        item.UpdatedTime,
+                        item.PreviewShareableLink,
+                        previews,
+                        insights));
+                }
 
-			    currentUrl = root.Paging.Next;
-			    loopCount++;
-		    }
-		    catch (FacebookHttpException fe)
-		    {
-			    if (fe.RequestSizeTooLarge)
-			    {
-				    if (currentLimitSize == 1)
-				    {
-					    Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message} and the Limit cannot be less than 1 - marking as NotPermitted for {GetSanitizedUrl(currentUrl)}");
-					    return new FacebookAdInsightsResponse(records, false, currentUrl, true, fe.TokenExpired, fe.Throttled);
-				    }
-				    currentLimitSize /= 2;
-				    if (currentLimitSize < 0)
-				    {
-					    currentLimitSize = 1;
-				    }
-				    Logger.LogWarning($"Cutting limit size down to {currentLimitSize} for {GetSanitizedUrl(currentUrl)}");
-				    currentUrl = UpdateUrlWithLimit(currentUrl, currentLimitSize);
-			    }
-			    else
-			    {
-				    Logger.LogInformation($"Caught FacebookHttpException at FacebookInsightsLoader.Load(): {fe}");
-				    return new FacebookAdInsightsResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
-			    }
-		    }
-		    catch (Exception ex)
-		    {
-			    Logger.LogInformation($"Caught exception at FacebookAdInsightsLoader.Load(): {ex}");
-			    return new FacebookAdInsightsResponse(records, false, currentUrl, true);
-		    }
-	    }
+                if (string.IsNullOrEmpty(root.Paging?.Next) || (testMode && loopCount >= MaxTestLoops))
+                {
+                    break;
+                }
 
-	    return new FacebookAdInsightsResponse(records);
+                currentUrl = root.Paging.Next;
+                loopCount++;
+            }
+            catch (FacebookHttpException fe)
+            {
+                if (fe.RequestSizeTooLarge)
+                {
+                    if (currentLimitSize == 1)
+                    {
+                        Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message} and the Limit cannot be less than 1 - marking as NotPermitted for {GetSanitizedUrl(currentUrl)}");
+                        return new FacebookAdInsightsResponse(records, false, currentUrl, true, fe.TokenExpired, fe.Throttled, fe.ResponseBody);
+                    }
+                    currentLimitSize /= 2;
+                    if (currentLimitSize < 0)
+                    {
+                        currentLimitSize = 1;
+                    }
+                    Logger.LogWarning($"Cutting limit size down to {currentLimitSize} for {GetSanitizedUrl(currentUrl)}");
+                    currentUrl = UpdateUrlWithLimit(currentUrl, currentLimitSize);
+                }
+                else
+                {
+                    Logger.LogInformation($"Caught FacebookHttpException at FacebookInsightsLoader.Load(): {fe}");
+                    return new FacebookAdInsightsResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled, fe.ResponseBody);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogInformation($"Caught exception at FacebookAdInsightsLoader.Load(): {ex}");
+                return new FacebookAdInsightsResponse(records, false, currentUrl, true);
+            }
+        }
+
+        return new FacebookAdInsightsResponse(records);
     }
-    
+
 
     private string PrepareInsights(string startDate, string endDate)
     {
         return $"insights.time_range({{\"since\":\"{startDate}\",\"until\":\"{endDate}\"}}).time_increment(1).limit({SubLimit}){InsightFields}";
     }
-    
+
     private List<string> DigestPreviews(Previews previews)
     {
-	    var digest = new List<string>();
+        var digest = new List<string>();
 
-	    if (previews?.Data != null)
-	    {
-		    foreach (var preview in previews.Data)
-		    {
-			    if (!string.IsNullOrEmpty(preview.Body))
-			    {
-				    digest.Add(preview.Body);
-			    }
-		    }
-	    }
+        if (previews?.Data != null)
+        {
+            foreach (var preview in previews.Data)
+            {
+                if (!string.IsNullOrEmpty(preview.Body))
+                {
+                    digest.Add(preview.Body);
+                }
+            }
+        }
 
-	    return digest;
+        return digest;
     }
-    
+
     private static string ExtractValueFrom(List<Action> actions, string actionType)
     {
-	    foreach (var action in actions)
-	    {
-		    if (action.ActionType == actionType)
-		    {
-			    return action.Value;
-		    }
-	    }
+        foreach (var action in actions)
+        {
+            if (action.ActionType == actionType)
+            {
+                return action.Value;
+            }
+        }
 
-	    return string.Empty;
+        return string.Empty;
     }
 
     private static int? ConvertToInteger(string value)
     {
-	    if (string.IsNullOrEmpty(value))
-		    return null;
+        if (string.IsNullOrEmpty(value))
+            return null;
 
-	    if (int.TryParse(value, out var result))
-		    return result;
+        if (int.TryParse(value, out var result))
+            return result;
 
-	    return null;
+        return null;
     }
 
     private static float? ConvertToDecimal(string value)
     {
-	    if (string.IsNullOrEmpty(value))
-		    return null;
+        if (string.IsNullOrEmpty(value))
+            return null;
 
-	    if (float.TryParse(value, out var result))
-		    return result;
+        if (float.TryParse(value, out var result))
+            return result;
 
-	    return null;
+        return null;
     }
 
     private static ActionData ExtractActionFrom(
-	    List<Action> actions,
-	    List<Action> values,
-	    List<Action> costs,
-	    string actionType)
+        List<Action> actions,
+        List<Action> values,
+        List<Action> costs,
+        string actionType)
     {
-	    var count = ExtractValueFrom(actions, actionType);
-	    var value = ExtractValueFrom(values, actionType);
-	    var cost = ExtractValueFrom(costs, actionType);
+        var count = ExtractValueFrom(actions, actionType);
+        var value = ExtractValueFrom(values, actionType);
+        var cost = ExtractValueFrom(costs, actionType);
 
-	    return new ActionData(ConvertToInteger(count), ConvertToDecimal(value), ConvertToDecimal(cost));
+        return new ActionData(ConvertToInteger(count), ConvertToDecimal(value), ConvertToDecimal(cost));
     }
-    
-	private List<FacebookInsight> DigestInsights(Insights insights)
+
+    private List<FacebookInsight> DigestInsights(Insights insights)
     {
         var digest = new List<FacebookInsight>();
 
@@ -208,178 +208,178 @@ public class AdInsightsLoader : FacebookLoaderBase
             var mobileAddToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_add_to_wishlist");
             var mobileAppInstall = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_install");
             var mobileCompleteRegistration = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_complete_registration");
-            var mobileInitiatedCheckout = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_initiated_checkout");			
+            var mobileInitiatedCheckout = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_initiated_checkout");
             var mobilePurchase = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_custom_event.fb_mobile_purchase");
             var appInstall = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_install");
-			var appUse = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_use");
-			var comment = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "comment");
-			var completeRegistration = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_complete_registration");
-			var contactMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "contact_mobile_app");
-			var contactOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "contact_offline");
-			var contactTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "contact_total");
-			var contactWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "contact_website");
-			var findLocationMobile = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_mobile_app");
-			var findLocationOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_offline");
-			var findLocationTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_total");
-			var findLocationWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_website");
-			var initiateCheckout = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_initiated_checkout");
-			var landingPageView = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "landing_page_view");
-			var lead = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "lead");
-			var like = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "like");
-			var linkClick = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "link_click");
-			var offsiteConversionAddPayment = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_payment_info");
-			var offsiteConversionAddToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_cart");
-			var offsiteConversionAddToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_wishlist");
-			var offsiteConversionCompleteRegistration = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_complete_registration");
-			var offsiteConversionInitiateCheckout = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_initiate_checkout");
-			var offsiteConversionLead = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_lead");
-			var offsiteConversionPurchase = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_purchase");
-			var offsiteConversionViewContent = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_view_content");
-			var omniPurchase = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "omni_purchase");
-			var onsiteConversionPostSave = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_conversion.post_save");
-			var onsiteConversionPurchase = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_conversion.purchase");
-			var pageEngagement = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "page_engagement");
-			var photoView = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "photo_view");
-			var post = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "post");
-			var postEngagement = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "post_engagement");
-			var postReaction = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "post_reaction");
-			var scheduleMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_mobile_app");
-			var scheduleOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_offline");
-			var scheduleTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_total");
-			var scheduleWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_website");
-			var startTrialMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_mobile_app");
-			var startTrialOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offline_conversion.fb_offline_trial_started");
-			var startTrialTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_total");
-			var startTrialWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_website");
-			var submitApplicationMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "submit_application_mobile_app");
-			var submitApplicationOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "submit_application_offline");
-			var submitApplicationTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "submit_application_total");
-			var submitApplicationWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "submit_application_website");
-			var subscribeMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "subscribe_mobile_app");
-			var subscribeTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "subscribe_total");
-			var subscribeWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "subscribe_website");
-			var videoView = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "video_view");
-			var onsitePurchases = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_conversion.purchase");
-			
-			var totalAddPaymentInfo = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_payment_info");
-			var totalAddToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_to_cart");
-			var totalAddToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_to_wishlist");
-			var totalCheckoutInitiated = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "initiate_checkout");
-			var totalPurchases = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "purchase");
-			var leadgen = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "leadgen");
-			var estimatedAdRecallers = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "estimated_ad_recallers");
+            var appUse = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "app_use");
+            var comment = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "comment");
+            var completeRegistration = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_complete_registration");
+            var contactMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "contact_mobile_app");
+            var contactOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "contact_offline");
+            var contactTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "contact_total");
+            var contactWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "contact_website");
+            var findLocationMobile = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_mobile_app");
+            var findLocationOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_offline");
+            var findLocationTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_total");
+            var findLocationWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "find_location_website");
+            var initiateCheckout = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_initiated_checkout");
+            var landingPageView = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "landing_page_view");
+            var lead = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "lead");
+            var like = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "like");
+            var linkClick = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "link_click");
+            var offsiteConversionAddPayment = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_payment_info");
+            var offsiteConversionAddToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_cart");
+            var offsiteConversionAddToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_add_to_wishlist");
+            var offsiteConversionCompleteRegistration = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_complete_registration");
+            var offsiteConversionInitiateCheckout = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_initiate_checkout");
+            var offsiteConversionLead = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_lead");
+            var offsiteConversionPurchase = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_purchase");
+            var offsiteConversionViewContent = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offsite_conversion.fb_pixel_view_content");
+            var omniPurchase = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "omni_purchase");
+            var onsiteConversionPostSave = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_conversion.post_save");
+            var onsiteConversionPurchase = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_conversion.purchase");
+            var pageEngagement = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "page_engagement");
+            var photoView = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "photo_view");
+            var post = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "post");
+            var postEngagement = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "post_engagement");
+            var postReaction = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "post_reaction");
+            var scheduleMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_mobile_app");
+            var scheduleOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_offline");
+            var scheduleTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_total");
+            var scheduleWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "schedule_website");
+            var startTrialMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_mobile_app");
+            var startTrialOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "offline_conversion.fb_offline_trial_started");
+            var startTrialTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_total");
+            var startTrialWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "start_trial_website");
+            var submitApplicationMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "submit_application_mobile_app");
+            var submitApplicationOffline = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "submit_application_offline");
+            var submitApplicationTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "submit_application_total");
+            var submitApplicationWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "submit_application_website");
+            var subscribeMobileApp = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "subscribe_mobile_app");
+            var subscribeTotal = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "subscribe_total");
+            var subscribeWebsite = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "subscribe_website");
+            var videoView = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "video_view");
+            var onsitePurchases = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "onsite_conversion.purchase");
 
-			var insightModel = new FacebookInsight(
-				insight.DateStart, 
-				insight.DateStop, 
-				insight.AccountId,
-				insight.AccountName, 
-				insight.AccountCurrency,
-				insight.AttributionSetting, 
-				insight.OptimizationGoal,
-				insight.CampaignId, 
-				insight.CampaignName, 
-				insight.Objective,
-				insight.BuyingType, 
-				insight.AdsetId, 
-				insight.AdsetName, 
-				insight.AdId,
-				insight.AdName,
-				insight.Reach,
-				insight.Frequency,
-				ConvertToDecimal(insight.Spend),
-				ConvertToInteger(insight.Clicks),
-				ConvertToDecimal(insight.Cpc),
-				ConvertToDecimal(insight.Ctr),
-				ConvertToDecimal(insight.Cpm),
-				ConvertToInteger(insight.Impressions),
-				insight.ConversionRateRanking, 
-				insight.EngagementRateRanking,
-				insight.QualityRanking,
-				ConvertToInteger(video30SecWatched),
-				ConvertToDecimal(videoAvgTimeWatched),
-				ConvertToInteger(videoP100Watched),
-				ConvertToInteger(videoP25Watched),
-				ConvertToInteger(videoP50Watched),
-				ConvertToInteger(videoP75Watched),
-				ConvertToInteger(videoP95Watched),
-				ConvertToInteger(videoThruplayWatched),
-				ConvertToInteger(videoContinuous2SecWatched),
-				ConvertToInteger(videoPlay),
-				ConvertToDecimal(costPerThruplay),
-				ConvertToInteger(insight.CostPerUniqueClick),
-				ConvertToInteger(outboundClicks),
-				ConvertToDecimal(outboundClicksCtr),
-				ConvertToDecimal(costPerOutboundClick),
-				ConvertToDecimal(insight.InlineLinkClickCtr),
-				addPayment,
-				addToCart,
-				addToWishlist,
-				mobileAddPayment,
-				mobileAddToCart,
-				mobileAddToWishlist,
-				mobileAppInstall,
-				mobileCompleteRegistration,
-				mobileInitiatedCheckout,
-				mobilePurchase,
-				appInstall,
-				appUse,
-				comment,
-				completeRegistration,
-				contactMobileApp,
-				contactOffline,
-				contactTotal,
-				contactWebsite,
-				findLocationMobile,
-				findLocationOffline,
-				findLocationTotal,
-				findLocationWebsite,
-				initiateCheckout,
-				landingPageView,
-				lead,
-				like,
-				linkClick,
-				offsiteConversionAddPayment,
-				offsiteConversionAddToCart,
-				offsiteConversionAddToWishlist,
-				offsiteConversionCompleteRegistration,
-				offsiteConversionInitiateCheckout,
-				offsiteConversionLead,
-				offsiteConversionPurchase,
-				offsiteConversionViewContent,
-				omniPurchase,
-				onsiteConversionPostSave,
-				onsiteConversionPurchase,
-				pageEngagement,
-				photoView,
-				post,
-				postEngagement,
-				postReaction,
-				scheduleMobileApp,
-				scheduleOffline,
-				scheduleTotal,
-				scheduleWebsite,
-				startTrialMobileApp,
-				startTrialOffline,
-				startTrialTotal,
-				startTrialWebsite,
-				submitApplicationMobileApp,
-				submitApplicationOffline,
-				submitApplicationTotal,
-				submitApplicationWebsite,
-				subscribeMobileApp,
-				subscribeTotal,
-				subscribeWebsite,
-				videoView,
-				onsitePurchases,
-				totalAddPaymentInfo,
-				totalAddToCart,
-				totalAddToWishlist,
-				totalCheckoutInitiated,
-				totalPurchases,
-				leadgen,
-				estimatedAdRecallers
-				);
+            var totalAddPaymentInfo = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_payment_info");
+            var totalAddToCart = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_to_cart");
+            var totalAddToWishlist = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "add_to_wishlist");
+            var totalCheckoutInitiated = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "initiate_checkout");
+            var totalPurchases = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "purchase");
+            var leadgen = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "leadgen");
+            var estimatedAdRecallers = ExtractActionFrom(insight.Actions, insight.ActionValues, insight.CostPerActionType, "estimated_ad_recallers");
+
+            var insightModel = new FacebookInsight(
+                insight.DateStart,
+                insight.DateStop,
+                insight.AccountId,
+                insight.AccountName,
+                insight.AccountCurrency,
+                insight.AttributionSetting,
+                insight.OptimizationGoal,
+                insight.CampaignId,
+                insight.CampaignName,
+                insight.Objective,
+                insight.BuyingType,
+                insight.AdsetId,
+                insight.AdsetName,
+                insight.AdId,
+                insight.AdName,
+                insight.Reach,
+                insight.Frequency,
+                ConvertToDecimal(insight.Spend),
+                ConvertToInteger(insight.Clicks),
+                ConvertToDecimal(insight.Cpc),
+                ConvertToDecimal(insight.Ctr),
+                ConvertToDecimal(insight.Cpm),
+                ConvertToInteger(insight.Impressions),
+                insight.ConversionRateRanking,
+                insight.EngagementRateRanking,
+                insight.QualityRanking,
+                ConvertToInteger(video30SecWatched),
+                ConvertToDecimal(videoAvgTimeWatched),
+                ConvertToInteger(videoP100Watched),
+                ConvertToInteger(videoP25Watched),
+                ConvertToInteger(videoP50Watched),
+                ConvertToInteger(videoP75Watched),
+                ConvertToInteger(videoP95Watched),
+                ConvertToInteger(videoThruplayWatched),
+                ConvertToInteger(videoContinuous2SecWatched),
+                ConvertToInteger(videoPlay),
+                ConvertToDecimal(costPerThruplay),
+                ConvertToInteger(insight.CostPerUniqueClick),
+                ConvertToInteger(outboundClicks),
+                ConvertToDecimal(outboundClicksCtr),
+                ConvertToDecimal(costPerOutboundClick),
+                ConvertToDecimal(insight.InlineLinkClickCtr),
+                addPayment,
+                addToCart,
+                addToWishlist,
+                mobileAddPayment,
+                mobileAddToCart,
+                mobileAddToWishlist,
+                mobileAppInstall,
+                mobileCompleteRegistration,
+                mobileInitiatedCheckout,
+                mobilePurchase,
+                appInstall,
+                appUse,
+                comment,
+                completeRegistration,
+                contactMobileApp,
+                contactOffline,
+                contactTotal,
+                contactWebsite,
+                findLocationMobile,
+                findLocationOffline,
+                findLocationTotal,
+                findLocationWebsite,
+                initiateCheckout,
+                landingPageView,
+                lead,
+                like,
+                linkClick,
+                offsiteConversionAddPayment,
+                offsiteConversionAddToCart,
+                offsiteConversionAddToWishlist,
+                offsiteConversionCompleteRegistration,
+                offsiteConversionInitiateCheckout,
+                offsiteConversionLead,
+                offsiteConversionPurchase,
+                offsiteConversionViewContent,
+                omniPurchase,
+                onsiteConversionPostSave,
+                onsiteConversionPurchase,
+                pageEngagement,
+                photoView,
+                post,
+                postEngagement,
+                postReaction,
+                scheduleMobileApp,
+                scheduleOffline,
+                scheduleTotal,
+                scheduleWebsite,
+                startTrialMobileApp,
+                startTrialOffline,
+                startTrialTotal,
+                startTrialWebsite,
+                submitApplicationMobileApp,
+                submitApplicationOffline,
+                submitApplicationTotal,
+                submitApplicationWebsite,
+                subscribeMobileApp,
+                subscribeTotal,
+                subscribeWebsite,
+                videoView,
+                onsitePurchases,
+                totalAddPaymentInfo,
+                totalAddToCart,
+                totalAddToWishlist,
+                totalCheckoutInitiated,
+                totalPurchases,
+                leadgen,
+                estimatedAdRecallers
+                );
 
 
             digest.Add(insightModel);
@@ -391,55 +391,55 @@ public class AdInsightsLoader : FacebookLoaderBase
 
 class Action
 {
-	public string ActionType { get; set; }
-	public string ActionDevice { get; set; }
-	public string Value { get; set; }
+    public string ActionType { get; set; }
+    public string ActionDevice { get; set; }
+    public string Value { get; set; }
 
-	public static Action FromJson(JToken? obj)
-	{
-		return new Action
-		{
-			ActionType = FacebookLoaderBase.ExtractString(obj, "action_type"),
-			ActionDevice = FacebookLoaderBase.ExtractString(obj, "action_device"),
-			Value = FacebookLoaderBase.ExtractString(obj, "value")
-		};
-	}
+    public static Action FromJson(JToken? obj)
+    {
+        return new Action
+        {
+            ActionType = FacebookLoaderBase.ExtractString(obj, "action_type"),
+            ActionDevice = FacebookLoaderBase.ExtractString(obj, "action_device"),
+            Value = FacebookLoaderBase.ExtractString(obj, "value")
+        };
+    }
 }
 
 
 class PreviewDatum
 {
-	public string Body { get; set; }
+    public string Body { get; set; }
 
-	public static PreviewDatum FromJson(JToken? obj)
-	{
-		return new PreviewDatum
-		{
-			Body = FacebookLoaderBase.ExtractString(obj, "body")
-		};
-	}
+    public static PreviewDatum FromJson(JToken? obj)
+    {
+        return new PreviewDatum
+        {
+            Body = FacebookLoaderBase.ExtractString(obj, "body")
+        };
+    }
 }
 
 class Previews
 {
-	public List<PreviewDatum> Data { get; set; }
+    public List<PreviewDatum> Data { get; set; }
 
-	public static Previews FromJson(JToken? obj)
-	{
-		var list = new List<PreviewDatum>();
-		var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
+    public static Previews FromJson(JToken? obj)
+    {
+        var list = new List<PreviewDatum>();
+        var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
 
-		foreach (var item in data)
-		{
-			if (item is JObject dataObject)
-				list.Add(PreviewDatum.FromJson(dataObject));
-		}
+        foreach (var item in data)
+        {
+            if (item is JObject dataObject)
+                list.Add(PreviewDatum.FromJson(dataObject));
+        }
 
-		return new Previews
-		{
-			Data = list
-		};
-	}
+        return new Previews
+        {
+            Data = list
+        };
+    }
 }
 
 class InsightDatum
@@ -494,13 +494,13 @@ class InsightDatum
     public List<Action> CostPerOutboundClick { get; set; }
     public string InlineLinkClickCtr { get; set; }
 
-    
+
     private static List<Action> ExtractActionListFrom(JToken obj, string actionTag)
     {
-	    return FacebookLoaderBase.ExtractObjectArray(obj, actionTag)
-					.Select(item => Action.FromJson(item)).ToList();
+        return FacebookLoaderBase.ExtractObjectArray(obj, actionTag)
+                    .Select(item => Action.FromJson(item)).ToList();
     }
-    
+
     public static InsightDatum FromJson(JToken? obj)
     {
         return new InsightDatum
@@ -561,118 +561,118 @@ class InsightDatum
 
 class Datum
 {
-	public string Id { get; set; }
-	public string Name { get; set; }
-	public string CreatedTime { get; set; }
-	public string UpdatedTime { get; set; }
-	public string PreviewShareableLink { get; set; }
-	public Previews Previews { get; set; }
-	public Insights Insights { get; set; }
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string CreatedTime { get; set; }
+    public string UpdatedTime { get; set; }
+    public string PreviewShareableLink { get; set; }
+    public Previews Previews { get; set; }
+    public Insights Insights { get; set; }
 
-	public static Datum FromJson(JToken? obj)
-	{
-		var id = FacebookLoaderBase.ExtractString(obj, "id");
-		var name = FacebookLoaderBase.ExtractString(obj, "name");
-		var createdTime = FacebookLoaderBase.ExtractString(obj, "created_time");
-		var updatedTime = FacebookLoaderBase.ExtractString(obj, "updated_time");
-		var previewShareableLink = FacebookLoaderBase.ExtractString(obj, "preview_shareable_link");
+    public static Datum FromJson(JToken? obj)
+    {
+        var id = FacebookLoaderBase.ExtractString(obj, "id");
+        var name = FacebookLoaderBase.ExtractString(obj, "name");
+        var createdTime = FacebookLoaderBase.ExtractString(obj, "created_time");
+        var updatedTime = FacebookLoaderBase.ExtractString(obj, "updated_time");
+        var previewShareableLink = FacebookLoaderBase.ExtractString(obj, "preview_shareable_link");
 
-		// var previewsArray = FacebookLoaderBase.ExtractObjectArray(obj, "previews");
-		var previewsArray = FacebookLoaderBase.ExtractObject(obj, "previews");
-		var previews = Previews.FromJson(previewsArray);
+        // var previewsArray = FacebookLoaderBase.ExtractObjectArray(obj, "previews");
+        var previewsArray = FacebookLoaderBase.ExtractObject(obj, "previews");
+        var previews = Previews.FromJson(previewsArray);
 
-		// var insightsArray = FacebookLoaderBase.ExtractObjectArray(obj, "insights");
-		var insightsArray = FacebookLoaderBase.ExtractObject(obj, "insights");
-		var insights = Insights.FromJson(insightsArray);
+        // var insightsArray = FacebookLoaderBase.ExtractObjectArray(obj, "insights");
+        var insightsArray = FacebookLoaderBase.ExtractObject(obj, "insights");
+        var insights = Insights.FromJson(insightsArray);
 
-		return new Datum
-		{
-			Id = id,
-			Name = name,
-			CreatedTime = createdTime,
-			UpdatedTime = updatedTime,
-			PreviewShareableLink = previewShareableLink,
-			Previews = previews,
-			Insights = insights
-		};
-	}
+        return new Datum
+        {
+            Id = id,
+            Name = name,
+            CreatedTime = createdTime,
+            UpdatedTime = updatedTime,
+            PreviewShareableLink = previewShareableLink,
+            Previews = previews,
+            Insights = insights
+        };
+    }
 }
 
 
 class Insights
 {
-	public List<InsightDatum> Data { get; set; }
-	public Paging Paging { get; set; }
+    public List<InsightDatum> Data { get; set; }
+    public Paging Paging { get; set; }
 
-	public static Insights FromJson(JToken? obj)
-	{
-		var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
-		var list = new List<InsightDatum>();
-		foreach (var item in data)
-		{
-			if (item is JObject dataObject)
-				list.Add(InsightDatum.FromJson(dataObject));
-		}
+    public static Insights FromJson(JToken? obj)
+    {
+        var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
+        var list = new List<InsightDatum>();
+        foreach (var item in data)
+        {
+            if (item is JObject dataObject)
+                list.Add(InsightDatum.FromJson(dataObject));
+        }
 
-		var paging = Paging.FromJson(FacebookLoaderBase.ExtractObject(obj, "paging"));
-		return new Insights
-		{
-			Data = list,
-			Paging = paging
-		};
-	}
+        var paging = Paging.FromJson(FacebookLoaderBase.ExtractObject(obj, "paging"));
+        return new Insights
+        {
+            Data = list,
+            Paging = paging
+        };
+    }
 }
 
 class Cursors
 {
-	public string Before { get; set; }
-	public string After { get; set; }
+    public string Before { get; set; }
+    public string After { get; set; }
 
-	public static Cursors FromJson(JToken? obj)
-	{
-		return new Cursors
-		{
-			Before = FacebookLoaderBase.ExtractString(obj, "before"),
-			After = FacebookLoaderBase.ExtractString(obj, "after")
-		};
-	}
+    public static Cursors FromJson(JToken? obj)
+    {
+        return new Cursors
+        {
+            Before = FacebookLoaderBase.ExtractString(obj, "before"),
+            After = FacebookLoaderBase.ExtractString(obj, "after")
+        };
+    }
 }
 
 class Paging
 {
-	public Cursors Cursors { get; set; }
-	public string Next { get; set; }
+    public Cursors Cursors { get; set; }
+    public string Next { get; set; }
 
-	public static Paging FromJson(JToken? obj)
-	{
-		return new Paging
-		{
-			Cursors = Cursors.FromJson(FacebookLoaderBase.ExtractObject(obj, "cursors")),
-			Next = FacebookLoaderBase.ExtractString(obj, "next")
-		};
-	}
+    public static Paging FromJson(JToken? obj)
+    {
+        return new Paging
+        {
+            Cursors = Cursors.FromJson(FacebookLoaderBase.ExtractObject(obj, "cursors")),
+            Next = FacebookLoaderBase.ExtractString(obj, "next")
+        };
+    }
 }
 
 class Root
 {
-	public List<Datum> Data { get; set; }
-	public Paging Paging { get; set; }
+    public List<Datum> Data { get; set; }
+    public Paging Paging { get; set; }
 
-	public static Root FromJson(JToken? obj)
-	{
-		var list = new List<Datum>();
-		var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
+    public static Root FromJson(JToken? obj)
+    {
+        var list = new List<Datum>();
+        var data = FacebookLoaderBase.ExtractObjectArray(obj, "data");
 
-		foreach (var item in data)
-		{
-			if (item is JObject o)
-				list.Add(Datum.FromJson(o));
-		}
+        foreach (var item in data)
+        {
+            if (item is JObject o)
+                list.Add(Datum.FromJson(o));
+        }
 
-		return new Root
-		{
-			Data = list,
-			Paging = Paging.FromJson(FacebookLoaderBase.ExtractObject(obj, "paging"))
-		};
-	}
+        return new Root
+        {
+            Data = list,
+            Paging = Paging.FromJson(FacebookLoaderBase.ExtractObject(obj, "paging"))
+        };
+    }
 }

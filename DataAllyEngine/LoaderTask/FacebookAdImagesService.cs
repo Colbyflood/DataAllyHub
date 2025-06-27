@@ -8,10 +8,10 @@ namespace DataAllyEngine.LoaderTask;
 
 public class FacebookAdImagesService : FacebookServiceBase
 {
-	public FacebookAdImagesService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging) 
-		: base(channel, loaderProxy, facebookParameters, logging)
-	{
-	}
+    public FacebookAdImagesService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging)
+        : base(channel, loaderProxy, facebookParameters, logging)
+    {
+    }
 
     public async Task<FbRunLog> InitiateAdImagesLoad(string scopeType, int? backfillDays)
     {
@@ -49,10 +49,10 @@ public class FacebookAdImagesService : FacebookServiceBase
         if (response == null)
         {
             logging.LogError($"Failed to load ad images and response is null for {runlog.Id}");
-            LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null);
+            LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null, null);
             return false;
         }
-        
+
         if (response.Content.Count > 0)
         {
             var content = response.ToJson();
@@ -61,7 +61,7 @@ public class FacebookAdImagesService : FacebookServiceBase
             runStaging.FbRunlogId = runlog.Id;
             runStaging.Sequence = GetNextSequence(runlog);
             runStaging.Content = content;
-            
+
             loaderProxy.WriteFbRunStaging(runStaging);
         }
 
@@ -78,7 +78,7 @@ public class FacebookAdImagesService : FacebookServiceBase
             else if (response.TokenExpired)
                 reason = Names.FB_PROBLEM_BAD_TOKEN;
 
-            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl);
+            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl, response.ExceptionBody);
         }
 
         return response.IsSuccessful;
@@ -102,7 +102,7 @@ public class FacebookAdImagesService : FacebookServiceBase
             runStaging.FbRunlogId = runlog.Id;
             runStaging.Sequence = GetNextSequence(runlog);
             runStaging.Content = content;
-            
+
             loaderProxy.WriteFbRunStaging(runStaging);
         }
 
@@ -119,7 +119,7 @@ public class FacebookAdImagesService : FacebookServiceBase
             else if (response.TokenExpired)
                 reason = Names.FB_PROBLEM_BAD_TOKEN;
 
-            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl);
+            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl, response.ExceptionBody);
         }
 
         return response.IsSuccessful;

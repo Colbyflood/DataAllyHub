@@ -8,10 +8,10 @@ namespace DataAllyEngine.LoaderTask;
 
 public class FacebookAdCreativesService : FacebookServiceBase
 {
-	public FacebookAdCreativesService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging) 
-		: base(channel, loaderProxy, facebookParameters, logging)
-	{
-	}
+    public FacebookAdCreativesService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging)
+        : base(channel, loaderProxy, facebookParameters, logging)
+    {
+    }
 
     public async Task<FbRunLog> InitiateAdCreativesLoad(string scopeType, int? backfillDays)
     {
@@ -49,10 +49,10 @@ public class FacebookAdCreativesService : FacebookServiceBase
         if (response == null)
         {
             logging.LogError($"Failed to load ad creatives and response is null for {runlog.Id}");
-            LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null);
+            LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null, null);
             return false;
         }
-        
+
         if (response.Content.Count > 0)
         {
             var content = response.ToJson();
@@ -61,7 +61,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
             runStaging.FbRunlogId = runlog.Id;
             runStaging.Sequence = GetNextSequence(runlog);
             runStaging.Content = content;
-            
+
             loaderProxy.WriteFbRunStaging(runStaging);
 
         }
@@ -79,7 +79,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
             else if (response.TokenExpired)
                 reason = Names.FB_PROBLEM_BAD_TOKEN;
 
-            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl);
+            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl, response.ExceptionBody);
         }
 
         return response.IsSuccessful;
@@ -88,10 +88,10 @@ public class FacebookAdCreativesService : FacebookServiceBase
     public async Task<bool> ResumeAdCreativesLoad(FbRunLog runlog, string url)
     {
         logging.LogInformation($"Resuming and processing ad creatives for scope {runlog.ScopeType} in runlog {runlog.Id}");
-        
+
         runlog.LastStartedUtc = DateTime.UtcNow;
         loaderProxy.WriteFbRunLog(runlog);
-        
+
         var loader = new AdCreativesLoader(facebookParameters, logging);
         var response = await loader.LoadAsync(url);
 
@@ -103,7 +103,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
             runStaging.FbRunlogId = runlog.Id;
             runStaging.Sequence = GetNextSequence(runlog);
             runStaging.Content = content;
-            
+
             loaderProxy.WriteFbRunStaging(runStaging);
         }
 
@@ -120,7 +120,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
             else if (response.TokenExpired)
                 reason = Names.FB_PROBLEM_BAD_TOKEN;
 
-            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl);
+            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl, response.ExceptionBody);
         }
 
         return response.IsSuccessful;

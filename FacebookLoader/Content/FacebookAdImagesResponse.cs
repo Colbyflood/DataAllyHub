@@ -10,15 +10,18 @@ public class FacebookAdImagesResponse
 	public bool NotPermitted { get; }
 	public bool TokenExpired { get; }
 	public bool Throttled { get; }
+    public string ExceptionBody { get; }
 
-	[JsonConstructor]
+    [JsonConstructor]
 	public FacebookAdImagesResponse(
 		List<FacebookAdImage> content,
 		bool isSuccessful = true,
 		string? restartUrl = null,
 		bool notPermitted = false,
 		bool tokenExpired = false,
-		bool throttled = false)
+		bool throttled = false,
+        string exceptionBody = ""
+        )
 	{
 		Content = content;
 		IsSuccessful = isSuccessful;
@@ -26,7 +29,8 @@ public class FacebookAdImagesResponse
 		NotPermitted = notPermitted;
 		TokenExpired = tokenExpired;
 		Throttled = throttled;
-	}
+		ExceptionBody = exceptionBody;
+    }
 	
 	public static FacebookAdImagesResponse? FromJson(string json)
 	{

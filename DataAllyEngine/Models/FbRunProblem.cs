@@ -34,6 +34,9 @@ public partial class FbRunProblem
     [Column("restarted_utc", TypeName = "datetime")]
     public DateTime? RestartedUtc { get; set; }
 
+    [Column("fb_api_response")]
+    public string? FbErrorResponse { get; set; }
+
     [ForeignKey("FbRunlogId")]
     [InverseProperty("Fbrunproblems")]
     public virtual FbRunLog FbRunlog { get; set; } = null!;

@@ -9,17 +9,19 @@ public class FacebookHttpException : Exception
     public string TypeCode { get; private set; } = string.Empty;
     public string ErrorCode { get; private set; } = string.Empty;
     public string ErrorSubcode { get; private set; } = string.Empty;
-    
+
     public override string Message { get; }
 
     public bool TokenExpired { get; private set; } = false;
     public bool Throttled { get; private set; } = false;
     public bool NotPermitted { get; private set; } = false;
     public bool RequestSizeTooLarge { get; private set; } = false;
+    public string ResponseBody { get; private set; } = string.Empty;
 
     public FacebookHttpException(int httpCode, string errorData)
     {
         HttpCode = httpCode;
+        ResponseBody = errorData;
 
         try
         {

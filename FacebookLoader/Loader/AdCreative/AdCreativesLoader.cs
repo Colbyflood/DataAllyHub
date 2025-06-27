@@ -153,7 +153,7 @@ public class AdCreativesLoader : FacebookLoaderBase
                     if (currentLimitSize == 1)
                     {
                         Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message} and the Limit cannot be less than 1 - marking as NotPermitted for {GetSanitizedUrl(currentUrl)}");
-                        return new FacebookAdCreativesResponse(records, false, currentUrl, true, fe.TokenExpired, fe.Throttled);
+                        return new FacebookAdCreativesResponse(records, false, currentUrl, true, fe.TokenExpired, fe.Throttled, fe.ResponseBody);
                     }
                     currentLimitSize /= 2;
                     if (currentLimitSize < 0)
@@ -166,7 +166,7 @@ public class AdCreativesLoader : FacebookLoaderBase
                 else
                 {
                     Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message}");
-                    return new FacebookAdCreativesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled);
+                    return new FacebookAdCreativesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled, fe.ResponseBody);
                 }
             }
             catch (Exception ex)

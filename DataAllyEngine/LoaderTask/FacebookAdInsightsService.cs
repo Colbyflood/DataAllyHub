@@ -8,10 +8,10 @@ namespace DataAllyEngine.LoaderTask;
 
 public class FacebookAdInsightsService : FacebookServiceBase
 {
-	public FacebookAdInsightsService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging) 
-		: base(channel, loaderProxy, facebookParameters, logging)
-	{
-	}
+    public FacebookAdInsightsService(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging)
+        : base(channel, loaderProxy, facebookParameters, logging)
+    {
+    }
 
     public async Task<FbRunLog> InitiateAdInsightsLoad(string scopeType, DateTime startDate, DateTime endDate, int? backfillDays)
     {
@@ -39,7 +39,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
     public async Task<bool> StartAdInsightsLoad(FbRunLog runlog, DateTime startDate, DateTime endDate)
     {
         logging.LogInformation($"Requesting and processing ad insights for scope {runlog.ScopeType} in runlog {runlog.Id}");
-        
+
         runlog.LastStartedUtc = DateTime.UtcNow;
         loaderProxy.WriteFbRunLog(runlog);
 
@@ -49,10 +49,10 @@ public class FacebookAdInsightsService : FacebookServiceBase
         if (response == null)
         {
             logging.LogError($"Failed to load ad insights and response is null for {runlog.Id}");
-            LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null);
+            LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null, null);
             return false;
         }
-        
+
         if (response.Content.Count > 0)
         {
             var content = response.ToJson();
@@ -61,7 +61,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
             runStaging.FbRunlogId = runlog.Id;
             runStaging.Sequence = GetNextSequence(runlog);
             runStaging.Content = content;
-            
+
             loaderProxy.WriteFbRunStaging(runStaging);
         }
 
@@ -78,7 +78,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
             else if (response.TokenExpired)
                 reason = Names.FB_PROBLEM_BAD_TOKEN;
 
-            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl);
+            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl, response.ExceptionBody);
         }
 
         return response.IsSuccessful;
@@ -102,7 +102,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
             runStaging.FbRunlogId = runlog.Id;
             runStaging.Sequence = GetNextSequence(runlog);
             runStaging.Content = content;
-            
+
             loaderProxy.WriteFbRunStaging(runStaging);
         }
 
@@ -119,7 +119,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
             else if (response.TokenExpired)
                 reason = Names.FB_PROBLEM_BAD_TOKEN;
 
-            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl);
+            LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl, response.ExceptionBody);
         }
 
         return response.IsSuccessful;

@@ -10,15 +10,18 @@ public class FacebookAdInsightsResponse
 	public bool NotPermitted { get; }
 	public bool TokenExpired { get; }
 	public bool Throttled { get; }
+    public string ExceptionBody { get; }
 
-	[JsonConstructor]
+    [JsonConstructor]
 	public FacebookAdInsightsResponse(
 		List<FacebookAdInsight> content,
 		bool isSuccessful = true,
 		string? restartUrl = null,
 		bool notPermitted = false,
 		bool tokenExpired = false,
-		bool throttled = false)
+		bool throttled = false,
+        string exceptionBody = ""
+        )
 	{
 		Content = content;
 		IsSuccessful = isSuccessful;
@@ -26,7 +29,8 @@ public class FacebookAdInsightsResponse
 		NotPermitted = notPermitted;
 		TokenExpired = tokenExpired;
 		Throttled = throttled;
-	}
+		ExceptionBody = exceptionBody;
+    }
 	
 	public static FacebookAdInsightsResponse? FromJson(string json)
 	{
