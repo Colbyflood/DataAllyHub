@@ -1,6 +1,7 @@
 ﻿using FacebookLoader.Common;
 using FacebookLoader.Content;
 using Newtonsoft.Json.Linq;
+using System.Web;
 
 namespace FacebookLoader.Loader.AdImage;
 
@@ -32,6 +33,8 @@ public class AdImagesLoader : FacebookLoaderBase
         {
             try
             {
+                currentUrl = HttpUtility.UrlDecode(currentUrl); // Removing non URL encoded characters
+
                 var data = await CallGraphApiAsync(currentUrl);
                 var root = Root.FromJson(data);
 
