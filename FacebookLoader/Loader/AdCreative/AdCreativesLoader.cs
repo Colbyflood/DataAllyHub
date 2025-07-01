@@ -10,7 +10,7 @@ public class AdCreativesLoader : FacebookLoaderBase
 {
     private const string FieldsList = "account_id,id,name,status,adset_id,campaign_id,created_time,updated_time,creative{id,status," +
         "actor_id,instagram_actor_id,video_id,instagram_permalink_url,object_type,image_url,image_hash,thumbnail_url," +
-        "thumbnail_id,product_set_id,url_tags,title,body,link_destination_display_url,product_data,template_url_spec," +
+        "thumbnail_id,product_set_id,url_tags,title,body,link_destination_display_url,template_url_spec," +
         "template_url,object_story_spec{page_id,link_data,video_data,template_data}}";
 
     private const int Limit = 100;

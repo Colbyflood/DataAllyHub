@@ -6,7 +6,7 @@ public class FacebookParameters
 	public string Token { get; }
 	public string FacebookVersion { get; }
 
-	public FacebookParameters(string accountId, string token, string facebookVersion = "22.0")
+	public FacebookParameters(string accountId, string token, string facebookVersion = "23.0")
 	{
 		AccountId = accountId;
 		Token = token;
