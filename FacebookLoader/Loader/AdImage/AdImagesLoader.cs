@@ -12,7 +12,7 @@ public class AdImagesLoader : FacebookLoaderBase
 
     private const int Limit = 200;
     private const int MaxTestLoops = 4;
-    
+
     public AdImagesLoader(FacebookParameters facebookParameters, ILogging logger) : base(facebookParameters, logger) { }
 
     public async Task<FacebookAdImagesResponse?> StartLoadAsync(bool testMode = false)
@@ -67,6 +67,8 @@ public class AdImagesLoader : FacebookLoaderBase
 
                 currentUrl = root.Paging.Next;
                 loopCount++;
+
+                serviceDownRetriesCount = 0;
             }
             catch (FacebookHttpException fe)
             {
@@ -104,7 +106,7 @@ public class AdImagesLoader : FacebookLoaderBase
             catch (Exception ex)
             {
                 Logger.LogException(ex, $"Caught exception at FacebookAdImagesLoader.Load(): {ex.Message}");
-                return new FacebookAdImagesResponse(records, false, currentUrl, true);
+                return new FacebookAdImagesResponse(records, false, currentUrl, true, false, false, false, ex.Message);
             }
         }
 
@@ -190,11 +192,11 @@ class Root
     public static Root FromJson(JToken obj)
     {
         var data = new List<Content>();
-        foreach (var item in FacebookLoaderBase.ExtractObjectArray(obj, "data")) 
+        foreach (var item in FacebookLoaderBase.ExtractObjectArray(obj, "data"))
         {
             data.Add(Content.FromJson(item));
         }
-        
+
         return new Root
         {
             Data = data,

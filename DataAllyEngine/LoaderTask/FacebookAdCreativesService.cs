@@ -121,6 +121,8 @@ public class FacebookAdCreativesService : FacebookServiceBase
                 reason = Names.FB_PROBLEM_NOT_PERMITTED;
             else if (response.TokenExpired)
                 reason = Names.FB_PROBLEM_BAD_TOKEN;
+            else if (response.TemporaryDowntime)
+                reason = Names.FB_PROBLEM_TEMPORARY_DOWNTIME;
 
             LogProblem(runlog.Id, reason, DateTime.UtcNow, response.RestartUrl, response.ExceptionBody);
         }

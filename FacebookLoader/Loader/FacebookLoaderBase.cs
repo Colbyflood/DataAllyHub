@@ -10,7 +10,7 @@ public abstract class FacebookLoaderBase
 {
     // ReSharper disable once InconsistentNaming
     private const int SOCKET_TIMEOUT_SECONDS = 120;
-    
+
     public FacebookParameters FacebookParameters { get; }
     public ILogging Logger { get; }
 
@@ -27,9 +27,9 @@ public abstract class FacebookLoaderBase
         {
             return url;     // no parameters means no access_token is in url
         }
-        
+
         var urlBase = url.Substring(0, questionIndex);
-        
+
         var parameters = url.Substring(questionIndex + 1).Split('&');
         var sanitizedUrl = new StringBuilder();
         sanitizedUrl.Append(urlBase);
@@ -60,9 +60,9 @@ public abstract class FacebookLoaderBase
                     ++paramCount;
                 }
             }
-            
+
         }
-        
+
         return sanitizedUrl.ToString();
     }
 
@@ -73,9 +73,9 @@ public abstract class FacebookLoaderBase
         {
             return null;     // no parameters means no access_token is in url
         }
-        
+
         var urlBase = url.Substring(0, questionIndex);
-        
+
         var parameters = url.Substring(questionIndex + 1).Split('&');
         var updatedUrl = new StringBuilder();
         updatedUrl.Append(urlBase);
@@ -99,7 +99,7 @@ public abstract class FacebookLoaderBase
 
         return null;
     }
-    
+
     protected static string UpdateUrlWithLimit(string url, int limit)
     {
         var questionIndex = url.IndexOf("?");
@@ -107,9 +107,9 @@ public abstract class FacebookLoaderBase
         {
             return url;     // no parameters means no access_token is in url
         }
-        
+
         var urlBase = url.Substring(0, questionIndex);
-        
+
         var parameters = url.Substring(questionIndex + 1).Split('&');
         var updatedUrl = new StringBuilder();
         updatedUrl.Append(urlBase);
@@ -146,7 +146,7 @@ public abstract class FacebookLoaderBase
             }
             updatedUrl.Append($"limit={limit}");
         }
-        
+
         return updatedUrl.ToString();
     }
 
@@ -182,8 +182,13 @@ public abstract class FacebookLoaderBase
         }
         catch (Exception ex)
         {
+            if (ex.Message.Contains("Error while copying content to a stream",StringComparison.Ordinal)) // Incase stream was closed by host
+            {
+                throw new FacebookHttpException(-1, $"FacebookLoaderBase:CallGraphApiAsync : {ex.Message} : {ex.InnerException?.Message}");
+            }
+
             Console.Error.WriteLine($"An error occurred: {ex} while calling graph api");
-            throw new Exception($"Other error occurred: {ex.Message}");
+            throw new Exception($"FacebookLoaderBase:CallGraphApiAsync Other error occurred: {ex.Message} : {ex.InnerException?.Message}");
         }
     }
 

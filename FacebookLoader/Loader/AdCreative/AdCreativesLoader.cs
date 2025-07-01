@@ -150,6 +150,8 @@ public class AdCreativesLoader : FacebookLoaderBase
 
                 currentUrl = root.Paging.Next;
                 loopCount++;
+
+                serviceDownRetriesCount = 0;
             }
             catch (FacebookHttpException fe)
             {
@@ -187,7 +189,7 @@ public class AdCreativesLoader : FacebookLoaderBase
             catch (Exception ex)
             {
                 Logger.LogException(ex, $"Caught exception: {ex.Message}");
-                return new FacebookAdCreativesResponse(records, false, currentUrl, true);
+                return new FacebookAdCreativesResponse(records, false, currentUrl, true, false, false, false, ex.Message);
             }
         }
 

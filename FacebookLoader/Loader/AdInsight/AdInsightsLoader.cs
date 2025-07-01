@@ -72,6 +72,8 @@ public class AdInsightsLoader : FacebookLoaderBase
 
                 currentUrl = root.Paging.Next;
                 loopCount++;
+
+                serviceDownRetriesCount = 0;
             }
             catch (FacebookHttpException fe)
             {
@@ -109,7 +111,7 @@ public class AdInsightsLoader : FacebookLoaderBase
             catch (Exception ex)
             {
                 Logger.LogInformation($"Caught exception at FacebookAdInsightsLoader.Load(): {ex}");
-                return new FacebookAdInsightsResponse(records, false, currentUrl, true);
+                return new FacebookAdInsightsResponse(records, false, currentUrl, true, false, false, false, ex.Message);
             }
         }
 
