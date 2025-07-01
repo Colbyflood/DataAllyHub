@@ -16,6 +16,7 @@ public class FacebookHttpException : Exception
     public bool Throttled { get; private set; } = false;
     public bool NotPermitted { get; private set; } = false;
     public bool RequestSizeTooLarge { get; private set; } = false;
+    public bool ServiceDown { get; private set; } = false;
     public string ResponseBody { get; private set; } = string.Empty;
 
     public FacebookHttpException(int httpCode, string errorData)
@@ -41,6 +42,8 @@ public class FacebookHttpException : Exception
             {
                 if (ErrorCode == "4" && ErrorSubcode == "1504022")
                     Throttled = true;
+                else if (ErrorCode == "2")
+                    ServiceDown = true;
                 else
                     TokenExpired = true;
             }

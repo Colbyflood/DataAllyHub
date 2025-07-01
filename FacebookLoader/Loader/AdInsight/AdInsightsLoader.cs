@@ -78,7 +78,7 @@ public class AdInsightsLoader : FacebookLoaderBase
                     if (currentLimitSize == 1)
                     {
                         Logger.LogException(fe, $"Caught FacebookHttpException: {fe.Message} and the Limit cannot be less than 1 - marking as NotPermitted for {GetSanitizedUrl(currentUrl)}");
-                        return new FacebookAdInsightsResponse(records, false, currentUrl, true, fe.TokenExpired, fe.Throttled, fe.ResponseBody);
+                        return new FacebookAdInsightsResponse(records, false, currentUrl, true, fe.TokenExpired, fe.Throttled, fe.ServiceDown, fe.ResponseBody);
                     }
                     currentLimitSize /= 2;
                     if (currentLimitSize < 0)
@@ -91,7 +91,7 @@ public class AdInsightsLoader : FacebookLoaderBase
                 else
                 {
                     Logger.LogInformation($"Caught FacebookHttpException at FacebookInsightsLoader.Load(): {fe}");
-                    return new FacebookAdInsightsResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled, fe.ResponseBody);
+                    return new FacebookAdInsightsResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled, fe.ServiceDown, fe.ResponseBody);
                 }
             }
             catch (Exception ex)

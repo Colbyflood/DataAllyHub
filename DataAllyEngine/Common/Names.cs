@@ -23,9 +23,11 @@ public class Names
     public const string FB_PROBLEM_THROTTLED = "Throttled";
     public const string FB_PROBLEM_DISABLED_TOKEN = "DisabledToken";
     public const string FB_PROBLEM_INTERNAL_PROBLEM = "InternalProblem";
+    public const string FB_PROBLEM_TEMPORARY_DOWNTIME = "TemporaryDowntime";
+    public const string FB_PROBLEM_RESPONSE_NON_JSON = "ResponseNotJson";
 
     public const string CREATIVE_TYPE_IMAGE = "IMAGE";
     public const string CREATIVE_TYPE_VIDEO = "VIDEO";
-    
+
     public const string FACEBOOK_CHANNEL_TYPE = "Facebook";
 }

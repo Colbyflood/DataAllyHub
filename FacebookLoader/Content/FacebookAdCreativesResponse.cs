@@ -10,6 +10,7 @@ public class FacebookAdCreativesResponse
     public bool NotPermitted { get; }
     public bool TokenExpired { get; }
     public bool Throttled { get; }
+    public bool TemporaryDowntime { get; }
     public string ExceptionBody { get; }
 
     [JsonConstructor]
@@ -20,6 +21,7 @@ public class FacebookAdCreativesResponse
         bool notPermitted = false,
         bool tokenExpired = false,
         bool throttled = false,
+        bool temporaryDowntime = false,
         string exceptionBody = ""
         )
     {
@@ -29,6 +31,7 @@ public class FacebookAdCreativesResponse
         NotPermitted = notPermitted;
         TokenExpired = tokenExpired;
         Throttled = throttled;
+        TemporaryDowntime = temporaryDowntime;
         ExceptionBody = exceptionBody;
     }
 
