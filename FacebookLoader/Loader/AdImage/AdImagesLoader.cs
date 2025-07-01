@@ -27,6 +27,8 @@ public class AdImagesLoader : FacebookLoaderBase
         string currentUrl = startUrl;
         var records = new List<FacebookAdImage>();
 
+        int serviceDownRetriesCount = 0;
+
         var currentLimitSize = GetLimitFromUrl(startUrl) ?? Limit;
 
         while (true)
@@ -59,7 +61,9 @@ public class AdImagesLoader : FacebookLoaderBase
                 }
 
                 if (string.IsNullOrEmpty(root.Paging.Next) || (testMode && loopCount >= MaxTestLoops))
+                {
                     break;
+                }
 
                 currentUrl = root.Paging.Next;
                 loopCount++;
@@ -80,6 +84,16 @@ public class AdImagesLoader : FacebookLoaderBase
                     }
                     Logger.LogWarning($"Cutting limit size down to {currentLimitSize} for {GetSanitizedUrl(currentUrl)}");
                     currentUrl = UpdateUrlWithLimit(currentUrl, currentLimitSize);
+                }
+                else if (fe.ServiceDown)
+                {
+                    if (++serviceDownRetriesCount > 3)
+                    {
+                        Logger.LogWarning($"service down to retrying {serviceDownRetriesCount} for {GetSanitizedUrl(currentUrl)}");
+                        return new FacebookAdImagesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled, fe.ServiceDown, fe.ResponseBody);
+                    }
+
+                    Thread.Sleep(3000);
                 }
                 else
                 {

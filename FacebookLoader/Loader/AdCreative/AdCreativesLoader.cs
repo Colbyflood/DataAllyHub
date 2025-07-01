@@ -129,6 +129,8 @@ public class AdCreativesLoader : FacebookLoaderBase
 
         var currentLimitSize = GetLimitFromUrl(startUrl) ?? Limit;
 
+        int serviceDownRetriesCount = 0;
+
         while (true)
         {
             try
@@ -165,6 +167,16 @@ public class AdCreativesLoader : FacebookLoaderBase
                     }
                     Logger.LogWarning($"Cutting limit size down to {currentLimitSize} for {GetSanitizedUrl(currentUrl)}");
                     currentUrl = UpdateUrlWithLimit(currentUrl, currentLimitSize);
+                }
+                else if (fe.ServiceDown)
+                {
+                    if (++serviceDownRetriesCount > 3)
+                    {
+                        Logger.LogWarning($"service down to retrying {serviceDownRetriesCount} for {GetSanitizedUrl(currentUrl)}");
+                        return new FacebookAdCreativesResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled, fe.ServiceDown, fe.ResponseBody);
+                    }
+
+                    Thread.Sleep(3000);
                 }
                 else
                 {

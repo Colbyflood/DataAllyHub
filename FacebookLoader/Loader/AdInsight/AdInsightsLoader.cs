@@ -37,6 +37,8 @@ public class AdInsightsLoader : FacebookLoaderBase
         var currentUrl = startUrl;
         var records = new List<FacebookAdInsight>();
 
+        int serviceDownRetriesCount = 0;
+
         var currentLimitSize = GetLimitFromUrl(startUrl) ?? Limit;
 
         while (true)
@@ -87,6 +89,16 @@ public class AdInsightsLoader : FacebookLoaderBase
                     }
                     Logger.LogWarning($"Cutting limit size down to {currentLimitSize} for {GetSanitizedUrl(currentUrl)}");
                     currentUrl = UpdateUrlWithLimit(currentUrl, currentLimitSize);
+                }
+                else if (fe.ServiceDown)
+                {
+                    if (++serviceDownRetriesCount > 3)
+                    {
+                        Logger.LogWarning($"service down to retrying {serviceDownRetriesCount} for {GetSanitizedUrl(currentUrl)}");
+                        return new FacebookAdInsightsResponse(records, false, currentUrl, fe.NotPermitted, fe.TokenExpired, fe.Throttled, fe.ServiceDown, fe.ResponseBody);
+                    }
+
+                    Thread.Sleep(3000);
                 }
                 else
                 {

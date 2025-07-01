@@ -227,7 +227,7 @@ public class RestartProbeService : IRestartProbeService
     private FbRunProblem? GetMostRecentThrottleOrStallProblem(FbRunLog runlog)
     {
         var problems = schedulerProxy.GetUncachedFbRunProblemsByRunlogIdOrderByDescendingCreated(runlog.Id);
-        return problems.FirstOrDefault(problem => problem.Reason == Names.FB_PROBLEM_THROTTLED || problem.Reason == Names.FB_PROBLEM_STALLED);
+        return problems.FirstOrDefault(problem => problem.Reason == Names.FB_PROBLEM_THROTTLED || problem.Reason == Names.FB_PROBLEM_STALLED || problem.Reason == Names.FB_PROBLEM_TEMPORARY_DOWNTIME);
     }
 
     private void MarkTokenFailure(Channel channel, bool isTokenDisabled, FbRunLog runlog)

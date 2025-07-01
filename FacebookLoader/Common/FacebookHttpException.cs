@@ -66,7 +66,7 @@ public class FacebookHttpException : Exception
         catch (Exception)
         {
             Console.WriteLine($"Cannot parse http exception data: {errorData}");
-            NotPermitted = true;
+            ServiceDown = true;
         }
     }
 }
