@@ -7,8 +7,10 @@ public interface ISchedulerProxy
 	List<FbDailySchedule> GetDailySchedulesByTriggerHour(int hour);
 
 	void WriteFbDailySchedule(FbDailySchedule schedule);
-	
-	Channel? GetChannelById(int channelId, bool includeAccount = false);
+
+	public FbDailySchedule? GetFbDailyScheduleById(int id);
+
+    Channel? GetChannelById(int channelId, bool includeAccount = false);
 
 	ChannelType? GetChannelTypeByName(string channelName);
 	

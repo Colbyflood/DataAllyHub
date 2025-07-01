@@ -55,7 +55,7 @@ public class FacebookHttpException : Exception
                     else
                         TokenExpired = true;
                 }
-                else if (ErrorCode == "1" && ErrorCode == "99") // {"error":{"code":1,"message":"An unknown error occurred","error_subcode":99}}
+                else if (ErrorCode == "1" && ErrorSubcode == "99") // {"error":{"code":1,"message":"An unknown error occurred","error_subcode":99}}
                 {
                     ServiceDown = true;
                 }
