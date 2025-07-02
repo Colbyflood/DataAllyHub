@@ -182,13 +182,9 @@ public abstract class FacebookLoaderBase
         }
         catch (Exception ex)
         {
-            if (ex.Message.Contains("Error while copying content to a stream",StringComparison.Ordinal)) // Incase stream was closed by host
-            {
-                throw new FacebookHttpException(-1, $"FacebookLoaderBase:CallGraphApiAsync : {ex.Message} : {ex.InnerException?.Message}");
-            }
-
             Console.Error.WriteLine($"An error occurred: {ex} while calling graph api");
-            throw new Exception($"FacebookLoaderBase:CallGraphApiAsync Other error occurred: {ex.Message} : {ex.InnerException?.Message}");
+
+            throw new FacebookHttpException(-1, $"FacebookLoaderBase:CallGraphApiAsync : {ex.Message} : {ex.InnerException?.Message}");
         }
     }
 
