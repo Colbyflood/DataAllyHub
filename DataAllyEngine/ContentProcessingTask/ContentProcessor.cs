@@ -70,12 +70,15 @@ public class ContentProcessor : IContentProcessor
                 logger.LogWarning($"Empty facebook ad creatives response for runlog {runlog.Id}");
                 continue;
             }
+
+            int contentProcessed = 0;
             foreach (var record in facebookAdCreativesResponse.Content)
             {
                 var adsetId = PrepareAdHierarchy(record.AdsetId, $"Adset {record.AdsetId}",
                                                  record.CampaignId, $"Campaign {record.CampaignId}",
                                                  0, record.CreatedTime, channel);
                 PrepareAd(adsetId, company, channel, record);
+                contentProcessed++;
             }
         }
 
@@ -213,7 +216,7 @@ public class ContentProcessor : IContentProcessor
     private int PrepareAdHierarchy(string channelAdSetId, string adSetName, string channelCampaignId,
         string campaignName, int attributionSetting, string campaignCreated, Channel channel)
     {
-        var Adset = contentProcessorProxy.GetAdsetByChannelAdsetId(channelAdSetId);
+        var Adset = contentProcessorProxy.GetAdsetByChannelAdsetIdAndChannelId(channelAdSetId, channel.Id);
         if (Adset == null)
         {
             Adset = CreateAdSet(channel, channelAdSetId, adSetName, channelCampaignId, campaignName, attributionSetting, campaignCreated);
@@ -224,7 +227,7 @@ public class ContentProcessor : IContentProcessor
     private Adset CreateAdSet(Channel channel, string channelAdSetId, string adSetName, string channelCampaignId,
         string campaignName, int attributionSetting, string campaignCreated)
     {
-        var campaign = contentProcessorProxy.GetCampaignByChannelCampaignId(channelCampaignId);
+        var campaign = contentProcessorProxy.GetCampaignByChannelCampaignIdAndChannelId(channelCampaignId, channel.Id);
         if (campaign == null)
         {
             campaign = CreateCampaign(channel, channelCampaignId, campaignName, attributionSetting, campaignCreated, "");
@@ -264,7 +267,7 @@ public class ContentProcessor : IContentProcessor
     {
         var asset = PrepareAsset(channel, record);
         Ad? ad = null;
-        var ads = contentProcessorProxy.GetAdsByChannelAdId(record.Id);
+        var ads = contentProcessorProxy.GetAdsByChannelAdIdAndChannelId(record.Id, channel.Id);
         if (ads != null && ads.Any())
         {
             ad = ads.FirstOrDefault(a => a.AssetId == asset.Id);
@@ -600,7 +603,7 @@ public class ContentProcessor : IContentProcessor
 
     private void PrepareKpis(Channel channel, KpiProcessor kpiProcessor, FacebookAdInsight record)
     {
-        var ads = contentProcessorProxy.GetAdsByChannelAdId(record.Id);
+        var ads = contentProcessorProxy.GetAdsByChannelAdIdAndChannelId(record.Id, channel.Id);
         if (ads == null || !ads.Any())
         {
             Console.WriteLine($"[WARN] Cannot find an Ad entry for KPI referencing ad Id {record.Id} in channel {channel.Id}");
@@ -619,7 +622,7 @@ public class ContentProcessor : IContentProcessor
 
     private Campaign UpdateCampaign(Channel channel, string campaignId, string campaignName, string objective, string createdDate)
     {
-        var campaign = contentProcessorProxy.GetCampaignByChannelCampaignId(campaignId);
+        var campaign = contentProcessorProxy.GetCampaignByChannelCampaignIdAndChannelId(campaignId, channel.Id);
         if (campaign == null)
         {
             return CreateCampaign(channel, campaignId, campaignName, 0, createdDate, objective);
@@ -643,7 +646,7 @@ public class ContentProcessor : IContentProcessor
 
     private Adset UpdateAdSet(string adSetId, string adSetName, string createdDate, Campaign campaign)
     {
-        var adSet = contentProcessorProxy.GetAdsetByChannelAdsetId(adSetId);
+        var adSet = contentProcessorProxy.GetAdsetByChannelAdsetIdAndChannelId(adSetId, campaign.ChannelId);
         if (adSet == null)
         {
             adSet = new Adset
