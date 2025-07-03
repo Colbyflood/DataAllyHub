@@ -99,7 +99,7 @@ public class ContentProcessorProxy : IContentProcessorProxy
 
     public List<Ad> GetAdsByChannelAdIdAndChannelId(string channelAdId, int channelId)
     {
-        return context.Ads.Where(a => 
+        return context.Ads.Where(a =>
                                      a.ChannelAdId == channelAdId
                                      &&
                                      a.Adset.Campaign.ChannelId == channelId
@@ -142,9 +142,13 @@ public class ContentProcessorProxy : IContentProcessorProxy
         context.SaveChanges();
     }
 
-    public Ad? GetAdByChannelAdId(string channelAdId)
+    public Ad? GetAdByChannelAdId(string channelAdId, int channelId)
     {
-        return context.Ads.FirstOrDefault(a => a.ChannelAdId.ToLower() == channelAdId.ToLower());
+        return context.Ads.FirstOrDefault(a => 
+                                            a.ChannelAdId.ToLower() == channelAdId.ToLower()
+                                            &&
+                                            a.Adset.Campaign.ChannelId == channelId
+                                         );
     }
 
     public void WriteAd(Ad ad)

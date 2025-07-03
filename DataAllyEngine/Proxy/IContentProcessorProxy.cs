@@ -32,7 +32,7 @@ public interface IContentProcessorProxy
     Campaign? GetCampaignByChannelCampaignIdAndChannelId(string channelCampaignId, int channelId);
     void WriteCampaign(Campaign campaign);
 
-    Ad? GetAdByChannelAdId(string channelAdId);
+    Ad? GetAdByChannelAdId(string channelAdId, int channelId);
     void WriteAd(Ad ad);
 
     AdMetadata? GetAdMetadataByAdId(int adId);
