@@ -16,8 +16,9 @@ public interface ILoaderProxy
 	FbRunLog? GetFbRunLogById(int runlogId);
 	List<FbRunLog> GetFbRunLogsByChannelIdAfterDate(int channelId, DateTime date);
 	void WriteFbRunLog(FbRunLog runLog);
-	
-	void WriteFbSaveContent(FbSaveContent saveContent);
+	FbSaveContent? GetFbSaveContentById(int saveContentId);
+
+    void WriteFbSaveContent(FbSaveContent saveContent);
 	
 	void WriteFbRunProblem(FbRunProblem runProblem);
 	

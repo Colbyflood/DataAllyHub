@@ -15,11 +15,15 @@ public class SchedulerProxy : ISchedulerProxy
         this.logger = logger;
     }
 
-    public List<FbDailySchedule> GetDailySchedulesByTriggerHour(int hour)
+    public List<FbDailySchedule> GetDailySchedulesByTriggerHour(DateTime utcNowHour)
     {
         return context.Fbdailyschedules
                         .AsNoTracking()
-                        .Where(record => record.TriggerHourUtc == hour)
+                        .Where(record =>
+                                    record.TriggerHourUtc == utcNowHour.Hour
+                                    &&
+                                    (record.LastStartedUtc == null || record.LastStartedUtc < utcNowHour) // Only fetch those which are not started yet or started before this hour
+                                    )
                         .OrderBy(record => record.LastStartedUtc)
                         .ToList();
     }
@@ -177,6 +181,57 @@ public class SchedulerProxy : ISchedulerProxy
     public FbSaveContent? LoadFbSaveContentContainingRunlog(int runlogId)
     {
         return context.Fbsavecontents.FirstOrDefault(f => f.AdCreativeRunlogId == runlogId || f.AdImageRunlogId == runlogId || f.AdInsightRunlogId == runlogId);
+    }
+
+    public FbSaveContent? LoadFbSaveContentById(int id)
+    {
+        return context.Fbsavecontents.FirstOrDefault(f => f.Id == id);
+    }
+
+    public FbSaveContent? GetFbSaveContentByRunlogsIds(int? fbCreativeRunlogId, int? fbImageRunlogId, int? fbInsightRunlogId)
+    {
+        if (fbCreativeRunlogId is null && fbImageRunlogId is null & fbInsightRunlogId is null)
+            return null;
+
+        var query = context.Fbsavecontents.AsQueryable();
+
+        if (fbCreativeRunlogId != null)
+            query = query.Where(f => f.AdCreativeRunlogId == fbCreativeRunlogId);
+
+        if (fbImageRunlogId != null)
+            query = query.Where(f => f.AdImageRunlogId == fbImageRunlogId);
+
+        if (fbInsightRunlogId != null)
+            query = query.Where(f => f.AdInsightRunlogId == fbInsightRunlogId);
+
+        return query.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Fetch those fbSaveContents whose fbRunLogs are finished and started after date and ignore those whose Account is inactive.
+    /// </summary>
+    /// <param name="date"></param>
+    /// <returns></returns>
+	public List<FbSaveContent> GetPendingFinishedFbRunLogsSaveContentsAfterDate(DateTime date, int maxAttempts)
+    {
+        var query = context.Fbsavecontents
+            .Where(record =>
+                            (record.AdCreativeRunlogId != null && record.AdCreativeRunlog.FinishedUtc != null)
+                            && (record.AdImageRunlogId != null && record.AdImageRunlog.FinishedUtc != null)
+                            && (record.AdInsightRunlogId != null && record.AdInsightRunlog.FinishedUtc != null)
+                            && (record.AdCreativeFinishedUtc == null || record.AdImageFinishedUtc == null || record.AdInsightFinishedUtc == null)
+                            && (record.QueuedUtc == null || record.QueuedUtc >= date)
+                            && (record.Attempts <= maxAttempts)
+                            && (record.AdCreativeRunlog.Channel.Client.Account.Active != false) // Ignore those whose Account is inactive, Channel \ Client \ Account references can be null
+            )
+            .OrderBy(record => record.Attempts) // Those which are not processed even should be give first chance
+            .ThenBy(record => record.QueuedUtc);
+
+#if DEBUG
+        string queryInString = query.ToQueryString();
+#endif
+
+        return query.ToList();
     }
 
     public void WriteFbSaveContent(FbSaveContent saveContent)

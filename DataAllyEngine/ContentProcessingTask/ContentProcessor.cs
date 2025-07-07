@@ -28,19 +28,19 @@ public class ContentProcessor : IContentProcessor
         this.logger = logger;
     }
 
-    public void ProcessContentFor(Channel channel, FbRunLog runlog)
+    public void ProcessContentFor(Channel channel, FbRunLog runlog, FbSaveContent fbSaveContent)
     {
         if (runlog.FeedType == Names.FEED_TYPE_AD_INSIGHT)
         {
-            ProcessAdInsights(channel, runlog);
+            ProcessAdInsights(channel, runlog, fbSaveContent);
         }
         else if (runlog.FeedType == Names.FEED_TYPE_AD_CREATIVE)
         {
-            ProcessAdCreatives(channel, runlog);
+            ProcessAdCreatives(channel, runlog, fbSaveContent);
         }
         else
         {
-            ProcessAdImages(channel, runlog);
+            ProcessAdImages(channel, runlog, fbSaveContent);
         }
     }
 
@@ -56,8 +56,10 @@ public class ContentProcessor : IContentProcessor
         }
     }
 
-    private void ProcessAdCreatives(Channel channel, FbRunLog runlog)
+    private void ProcessAdCreatives(Channel channel, FbRunLog runlog, FbSaveContent fbSaveContent)
     {
+        UpdateSaveContentLastStarted(fbSaveContent.Id);
+
         var company = ExtractCompanyFromChannel(channel);
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         foreach (var entry in stagingEntries)
@@ -78,18 +80,24 @@ public class ContentProcessor : IContentProcessor
                                                  record.CampaignId, $"Campaign {record.CampaignId}",
                                                  0, record.CreatedTime, channel);
                 PrepareAd(adsetId, company, channel, record);
+
+                if (contentProcessed % 10 == 0)
+                {
+                    contentProcessorProxy.WriteFbSaveContentHeartBeat(fbSaveContent.Id);
+                }
                 contentProcessed++;
             }
+
+            contentProcessorProxy.DeleteFbRunStaging(entry);
         }
 
-        var saveContent = contentProcessorProxy.LoadFbSaveContentContainingRunlog(runlog.Id);
+        var saveContent = contentProcessorProxy.LoadFbSaveContentById(fbSaveContent.Id);
         if (saveContent != null)
         {
             saveContent.AdCreativeFinishedUtc = DateTime.UtcNow;
             contentProcessorProxy.WriteFbSaveContent(saveContent);
         }
 
-        CleanStaging(stagingEntries);
     }
 
     private Company ExtractCompanyFromChannel(Channel channel)
@@ -99,8 +107,10 @@ public class ContentProcessor : IContentProcessor
         return contentProcessorProxy.GetCompanyById(account!.CompanyId)!;
     }
 
-    private void ProcessAdImages(Channel channel, FbRunLog runlog)
+    private void ProcessAdImages(Channel channel, FbRunLog runlog, FbSaveContent fbSaveContent)
     {
+        UpdateSaveContentLastStarted(fbSaveContent.Id);
+
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         Console.WriteLine("Deserializing a staging entry for ad images");
         foreach (var entry in stagingEntries)
@@ -111,20 +121,29 @@ public class ContentProcessor : IContentProcessor
                 logger.LogWarning($"Empty facebook ad images response for runlog {runlog.Id}");
                 continue;
             }
+
+            int contentProcessed = 0;
             foreach (var record in facebookAdImagesResponse.Content)
             {
                 PrepareImages(channel, record);
+
+                if (contentProcessed % 10 == 0)
+                {
+                    contentProcessorProxy.WriteFbSaveContentHeartBeat(fbSaveContent.Id);
+                }
+                contentProcessed++;
             }
+
+            contentProcessorProxy.DeleteFbRunStaging(entry);
         }
 
-        var saveContent = contentProcessorProxy.LoadFbSaveContentContainingRunlog(runlog.Id);
+        var saveContent = contentProcessorProxy.LoadFbSaveContentById(fbSaveContent.Id);
         if (saveContent != null)
         {
             saveContent.AdImageFinishedUtc = DateTime.UtcNow;
             contentProcessorProxy.WriteFbSaveContent(saveContent);
         }
 
-        CleanStaging(stagingEntries);
     }
 
     private void PrepareImages(Channel channel, FacebookAdImage record)
@@ -154,10 +173,11 @@ public class ContentProcessor : IContentProcessor
     }
 
 
-    private void ProcessAdInsights(Channel channel, FbRunLog runlog)
+    private void ProcessAdInsights(Channel channel, FbRunLog runlog, FbSaveContent fbSaveContent)
     {
+        UpdateSaveContentLastStarted(fbSaveContent.Id);
+
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
-        if (stagingEntries == null || !stagingEntries.Any()) return;
 
         var kpiProcessor = new KpiProcessor(channel, kpiProxy, logger);
         foreach (var entry in stagingEntries)
@@ -169,20 +189,40 @@ public class ContentProcessor : IContentProcessor
                 logger.LogWarning($"Empty facebook ad insights response for runlog {runlog.Id}");
                 continue;
             }
+
+            int contentProcessed = 0;
             foreach (var record in facebookAdInsightsResponse.Content)
             {
                 PrepareKpis(channel, kpiProcessor, record);
+
+                if (contentProcessed % 5 == 0)
+                {
+                    contentProcessorProxy.WriteFbSaveContentHeartBeat(fbSaveContent.Id);
+                }
+                contentProcessed++;
             }
+
+            contentProcessorProxy.DeleteFbRunStaging(entry);
         }
 
-        var saveContent = contentProcessorProxy.LoadFbSaveContentContainingRunlog(runlog.Id);
+        var saveContent = contentProcessorProxy.LoadFbSaveContentById(fbSaveContent.Id);
         if (saveContent != null)
         {
             saveContent.AdInsightFinishedUtc = DateTime.UtcNow;
             contentProcessorProxy.WriteFbSaveContent(saveContent);
         }
 
-        CleanStaging(stagingEntries);
+    }
+
+    private void UpdateSaveContentLastStarted(int fbSaveContentId)
+    {
+        var saveContent = contentProcessorProxy.LoadFbSaveContentById(fbSaveContentId);
+        if (saveContent != null)
+        {
+            saveContent.LastStartedUtc = DateTime.UtcNow;
+            saveContent.HeartBeatLastReceivedAtUtc = saveContent.LastStartedUtc;
+            contentProcessorProxy.WriteFbSaveContent(saveContent);
+        }
     }
 
     private void CleanStaging(List<FbRunStaging> stagingEntries)

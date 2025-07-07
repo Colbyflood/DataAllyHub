@@ -17,19 +17,19 @@ public partial class FbSaveContent
     public int Id { get; set; }
 
     [Column("ad_creative_runlog_id")]
-    public int AdCreativeRunlogId { get; set; }
+    public int? AdCreativeRunlogId { get; set; }
 
     [Column("ad_image_runlog_id")]
-    public int AdImageRunlogId { get; set; }
+    public int? AdImageRunlogId { get; set; }
 
     [Column("ad_insight_runlog_id")]
-    public int AdInsightRunlogId { get; set; }
+    public int? AdInsightRunlogId { get; set; }
 
     [Column("queued_utc", TypeName = "datetime")]
-    public DateTime QueuedUtc { get; set; }
+    public DateTime? QueuedUtc { get; set; }
 
     [Column("started_utc", TypeName = "datetime")]
-    public DateTime? StartedUtc { get; set; }
+    public DateTime? StartedUtc { get; set; }  // TODO: This might be created datetime
 
     [Column("last_started_utc", TypeName = "datetime")]
     public DateTime? LastStartedUtc { get; set; }
@@ -45,9 +45,15 @@ public partial class FbSaveContent
 
     [Column("attempts")]
     public int Attempts { get; set; }
-    
+
     [Column("sequence")]
     public int Sequence { get; set; }
+
+    [Column("heart_beat_last_received_at_utc", TypeName = "datetime")]
+    public DateTime? HeartBeatLastReceivedAtUtc { get; set; }
+
+    [Column("error")]
+    public string? ErrorMessage { get; set; }
 
     [ForeignKey("AdCreativeRunlogId")]
     [InverseProperty("FbsavecontentAdCreativeRunlogs")]

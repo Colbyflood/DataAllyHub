@@ -19,8 +19,10 @@ public interface IContentProcessorProxy
 
     List<FbSaveContent> LoadIncompleteSaveContentsAfter(DateTime startDateUtc);
     FbSaveContent? LoadFbSaveContentContainingRunlog(int runlogId);
-    void WriteFbSaveContent(FbSaveContent saveContent);
+    FbSaveContent? LoadFbSaveContentById(int id);
 
+    void WriteFbSaveContent(FbSaveContent saveContent);
+    void WriteFbSaveContentHeartBeat(int id);
     List<FbRunStaging> LoadFbRunStagingForRunlog(int runlogId);
     void DeleteFbRunStaging(FbRunStaging staging);
 

@@ -48,7 +48,7 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
 				return;
 			}
 			creative.Url = url;
-			loaderProxy.WriteFbCreativeLoad(creative);
+
 			loaderProxy.WriteFbCreativeLoad(creative);
 		}
 

@@ -78,6 +78,11 @@ public class ContentProcessorProxy : IContentProcessorProxy
         return context.Fbsavecontents.FirstOrDefault(f => f.AdCreativeRunlogId == runlogId || f.AdImageRunlogId == runlogId || f.AdInsightRunlogId == runlogId);
     }
 
+    public FbSaveContent? LoadFbSaveContentById(int id)
+    {
+        return context.Fbsavecontents.FirstOrDefault(f => f.Id == id);
+    }
+
     public void WriteFbSaveContent(FbSaveContent saveContent)
     {
         if (saveContent.Id <= 0)
@@ -85,6 +90,28 @@ public class ContentProcessorProxy : IContentProcessorProxy
             context.Fbsavecontents.Add(saveContent);
         }
         context.SaveChanges();
+    }
+
+    public void WriteFbSaveContentHeartBeat(int id)
+    {
+        FbSaveContent? fbSaveContent = LoadFbSaveContentById(id);
+        if (fbSaveContent != null)
+        {
+            var utcNow = DateTime.UtcNow;
+
+            if (fbSaveContent.HeartBeatLastReceivedAtUtc != null)
+            {
+                var lastHeartBeatUtc = DateTime.SpecifyKind(fbSaveContent.HeartBeatLastReceivedAtUtc.Value, DateTimeKind.Utc);
+                var diff = (utcNow - lastHeartBeatUtc).TotalSeconds;
+                if (diff < 15)
+                {
+                    return;
+                }
+            }
+
+            fbSaveContent.HeartBeatLastReceivedAtUtc = utcNow;
+            WriteFbSaveContent(fbSaveContent);
+        }
     }
 
     public List<FbRunStaging> LoadFbRunStagingForRunlog(int runlogId)
@@ -95,6 +122,7 @@ public class ContentProcessorProxy : IContentProcessorProxy
     public void DeleteFbRunStaging(FbRunStaging staging)
     {
         context.Fbrunstagings.Remove(staging);
+        context.SaveChanges();
     }
 
     public List<Ad> GetAdsByChannelAdIdAndChannelId(string channelAdId, int channelId)
@@ -144,7 +172,7 @@ public class ContentProcessorProxy : IContentProcessorProxy
 
     public Ad? GetAdByChannelAdId(string channelAdId, int channelId)
     {
-        return context.Ads.FirstOrDefault(a => 
+        return context.Ads.FirstOrDefault(a =>
                                             a.ChannelAdId.ToLower() == channelAdId.ToLower()
                                             &&
                                             a.Adset.Campaign.ChannelId == channelId

@@ -2,6 +2,7 @@ using DataAllyEngine.Common;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using FacebookLoader.Common;
+using FacebookLoader.Content;
 using FacebookLoader.Loader.AdCreative;
 
 namespace DataAllyEngine.LoaderTask;
@@ -13,7 +14,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
     {
     }
 
-    public async Task<FbRunLog> InitiateAdCreativesLoad(string scopeType, int? backfillDays)
+    public async Task<FbRunLog> InitiateAdCreativesLoad(string scopeType, int? backfillDays, int fbSaveContentId)
     {
         logging.LogInformation($"Requesting loading of ad creatives for channel {channel.Id} in scope {scopeType}");
 
@@ -25,6 +26,13 @@ public class FacebookAdCreativesService : FacebookServiceBase
         runlog.LastStartedUtc = runlog.StartedUtc;
         runlog.BackfillDays = backfillDays;
         loaderProxy.WriteFbRunLog(runlog);
+
+        var fbSaveContent = loaderProxy.GetFbSaveContentById(fbSaveContentId);
+        if (fbSaveContent != null)
+        {
+            fbSaveContent.AdCreativeRunlogId = runlog.Id;
+            loaderProxy.WriteFbSaveContent(fbSaveContent);
+        }
 
         var success = await StartAdCreativesLoad(runlog);
         if (success)
@@ -55,15 +63,24 @@ public class FacebookAdCreativesService : FacebookServiceBase
 
         if (response.Content.Count > 0)
         {
-            var content = response.ToJson();
+            int contentCount = response.Content.Count;
+            int batchSize = 500;
 
-            var runStaging = new FbRunStaging();
-            runStaging.FbRunlogId = runlog.Id;
-            runStaging.Sequence = GetNextSequence(runlog);
-            runStaging.Content = content;
+            int totalBatches = (contentCount + batchSize - 1) / batchSize;
 
-            loaderProxy.WriteFbRunStaging(runStaging);
+            for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++)
+            {
+                var batch = response.Content.Skip(batchIndex * batchSize).Take(batchSize).ToList<FacebookAdCreative>();
 
+                var content = new FacebookAdCreativesResponse(batch);
+
+                var runStaging = new FbRunStaging();
+                runStaging.FbRunlogId = runlog.Id;
+                runStaging.Sequence = GetNextSequence(runlog);
+                runStaging.Content = content.ToJson();
+
+                loaderProxy.WriteFbRunStaging(runStaging);
+            }
         }
 
         if (response.IsSuccessful)

@@ -50,11 +50,18 @@ public class DailySchedulerService : IDailySchedulerService
         var now = DateTime.UtcNow;
         var windowStartTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, DateTimeKind.Utc);
 
-        var candidates = GetPendingDailySchedulesChunk(now);
+        var candidates = GetPendingDailySchedulesChunk(windowStartTime);
         var candidateCount = 0;
 
         foreach (var candidate in candidates)
         {
+            var dailyScheduleRecord = schedulerProxy.GetFbDailyScheduleById(candidate.Id);
+            if (dailyScheduleRecord != null)
+            {
+                dailyScheduleRecord.LastStartedUtc = DateTime.UtcNow;
+                schedulerProxy.WriteFbDailySchedule(dailyScheduleRecord);
+            }
+
             var channel = schedulerProxy.GetChannelById(candidate.ChannelId, includeAccount: true);
             if (channel == null)
             {
@@ -117,30 +124,41 @@ public class DailySchedulerService : IDailySchedulerService
 
             logger.LogInformation($"Launching previously unstarted daily loads for channel Id {candidate.ChannelId} ({channel.ChannelAccountName})");
 
-            var dailyScheduleRecord = schedulerProxy.GetFbDailyScheduleById(candidate.Id);
-            if (dailyScheduleRecord != null)
+            // Fetch existing saveContent
+            var fbSaveContent = schedulerProxy.GetFbSaveContentByRunlogsIds(adCreativeRunLog?.Id, adImageRunLog?.Id, adInsightRunLog?.Id);
+            if (fbSaveContent == null)
             {
-                dailyScheduleRecord.LastStartedUtc = DateTime.UtcNow;
-                schedulerProxy.WriteFbDailySchedule(dailyScheduleRecord);
+                var saveContent = new FbSaveContent();
+                saveContent.AdCreativeRunlogId = adCreativeRunLog?.Id;
+                saveContent.AdImageRunlogId = adImageRunLog?.Id;
+                saveContent.AdInsightRunlogId = adInsightRunLog?.Id;
+                saveContent.StartedUtc = DateTime.UtcNow;
+                saveContent.Attempts = 0;
+                saveContent.Sequence = 0;
+                schedulerProxy.WriteFbSaveContent(saveContent);
+
+                fbSaveContent = saveContent;
             }
 
             var facebookParameters = new FacebookParameters(channel.ChannelAccountId, token.Token1);
             if (adImageRunLog == null)
             {
-                loaderRunner.StartAdImagesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY);
+                loaderRunner.StartAdImagesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY, null, fbSaveContent!.Id);
             }
 
             if (adCreativeRunLog == null)
             {
-                loaderRunner.StartAdCreativesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY);
+                loaderRunner.StartAdCreativesLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY, null, fbSaveContent!.Id);
             }
 
             if (adInsightRunLog == null)
             {
                 var yesterday = windowStartTime.AddDays(-1);
                 var startDay = windowStartTime.AddDays(-7); // Fetch data for last 7 days
-                loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY, startDay, yesterday);
+                loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_DAILY, startDay, yesterday, null, fbSaveContent!.Id);
             }
+
+            Thread.Sleep(1000); // Sleep for a second to avoid overwhelming the API
 
             ++candidateCount;
             if (candidateCount >= MAXIMUM_STARTS_PER_MINUTE)
@@ -150,9 +168,9 @@ public class DailySchedulerService : IDailySchedulerService
         }
     }
 
-    private List<FbDailySchedule> GetPendingDailySchedulesChunk(DateTime utcNow)
+    private List<FbDailySchedule> GetPendingDailySchedulesChunk(DateTime utcNowHour)
     {
-        var possibles = schedulerProxy.GetDailySchedulesByTriggerHour(utcNow.Hour);
+        var possibles = schedulerProxy.GetDailySchedulesByTriggerHour(utcNowHour);
         if (possibles.Count == 0)
         {
             return possibles;
@@ -162,7 +180,7 @@ public class DailySchedulerService : IDailySchedulerService
 
         foreach (var possible in possibles)
         {
-            if (schedulerProxy.GetFbRunLogsByChannelIdAfterDate(possible.ChannelId, Names.SCOPE_TYPE_DAILY, utcNow).Count < RUNLOGS_PER_CANDIDATE)
+            if (schedulerProxy.GetFbRunLogsByChannelIdAfterDate(possible.ChannelId, Names.SCOPE_TYPE_DAILY, utcNowHour).Count < RUNLOGS_PER_CANDIDATE)
             {
                 candidates.Add(possible);
 

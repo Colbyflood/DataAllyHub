@@ -2,6 +2,7 @@ using DataAllyEngine.Common;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using FacebookLoader.Common;
+using FacebookLoader.Content;
 using FacebookLoader.Loader.AdInsight;
 
 namespace DataAllyEngine.LoaderTask;
@@ -13,7 +14,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
     {
     }
 
-    public async Task<FbRunLog> InitiateAdInsightsLoad(string scopeType, DateTime startDate, DateTime endDate, int? backfillDays)
+    public async Task<FbRunLog> InitiateAdInsightsLoad(string scopeType, DateTime startDate, DateTime endDate, int? backfillDays, int fbSaveContentId)
     {
         logging.LogInformation($"Requesting loading of ad insights for channel {channel.Id} in scope {scopeType} between {startDate} and {endDate}");
 
@@ -25,6 +26,14 @@ public class FacebookAdInsightsService : FacebookServiceBase
         runlog.LastStartedUtc = runlog.StartedUtc;
         runlog.BackfillDays = backfillDays;
         loaderProxy.WriteFbRunLog(runlog);
+
+
+        var fbSaveContent = loaderProxy.GetFbSaveContentById(fbSaveContentId);
+        if (fbSaveContent != null)
+        {
+            fbSaveContent.AdInsightRunlogId = runlog.Id;
+            loaderProxy.WriteFbSaveContent(fbSaveContent);
+        }
 
         var success = await StartAdInsightsLoad(runlog, startDate, endDate);
         if (success)
@@ -55,14 +64,24 @@ public class FacebookAdInsightsService : FacebookServiceBase
 
         if (response.Content.Count > 0)
         {
-            var content = response.ToJson();
+            int contentCount = response.Content.Count;
+            int batchSize = 500;
 
-            var runStaging = new FbRunStaging();
-            runStaging.FbRunlogId = runlog.Id;
-            runStaging.Sequence = GetNextSequence(runlog);
-            runStaging.Content = content;
+            int totalBatches = (contentCount + batchSize - 1) / batchSize;
 
-            loaderProxy.WriteFbRunStaging(runStaging);
+            for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++)
+            {
+                var batch = response.Content.Skip(batchIndex * batchSize).Take(batchSize).ToList<FacebookAdInsight>();
+
+                var content = new FacebookAdInsightsResponse(batch);
+
+                var runStaging = new FbRunStaging();
+                runStaging.FbRunlogId = runlog.Id;
+                runStaging.Sequence = GetNextSequence(runlog);
+                runStaging.Content = content.ToJson();
+
+                loaderProxy.WriteFbRunStaging(runStaging);
+            }
         }
 
         if (response.IsSuccessful)
