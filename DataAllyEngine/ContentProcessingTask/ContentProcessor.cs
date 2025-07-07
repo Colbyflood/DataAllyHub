@@ -401,7 +401,7 @@ public class ContentProcessor : IContentProcessor
     {
         foreach (var hash in hashes)
         {
-            var existingFbCreativeLoad = contentProcessorProxy.GetFbCreativeLoadByImageHash(hash.Hash);
+            var existingFbCreativeLoad = contentProcessorProxy.GetFbCreativeLoadByImageHash(hash.Hash, channel.Id);
 
             if (existingFbCreativeLoad != null)
             {
@@ -437,7 +437,7 @@ public class ContentProcessor : IContentProcessor
     {
         foreach (var videoId in videoIds)
         {
-            if (contentProcessorProxy.GetFbCreativeLoadByVideoId(videoId.VideoId) != null)
+            if (contentProcessorProxy.GetFbCreativeLoadByVideoId(videoId.VideoId, channel.Id) != null)
             {
                 continue;
             }

@@ -55,7 +55,6 @@ public abstract class AbstractCreativeLoader
 		int startId = 0;
 		while (!stoppingToken.IsCancellationRequested)
 		{
-			
 			if (CheckAndProcessPendingContent(startId, out startId))
 			{
 				await Task.Delay(FIVE_MINUTES_MSEC, stoppingToken);

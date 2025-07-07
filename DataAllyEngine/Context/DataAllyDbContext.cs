@@ -57,13 +57,13 @@ public partial class DataAllyDbContext : DbContext
     public virtual DbSet<EcommerceChannel> Ecommercechannels { get; set; }
 
     public virtual DbSet<EcommerceKpi> Ecommercekpis { get; set; }
-    
+
     public virtual DbSet<EcommerceMobile> Ecommercemobiles { get; set; }
 
     public virtual DbSet<EcommerceTotal> Ecommercetotals { get; set; }
 
     public virtual DbSet<EcommerceWebsite> Ecommercewebsites { get; set; }
-    
+
     public virtual DbSet<FbBackfillRequest> Fbbackfillrequests { get; set; }
 
     public virtual DbSet<FbCreativeLoad> Fbcreativeloads { get; set; }
@@ -99,7 +99,7 @@ public partial class DataAllyDbContext : DbContext
     public virtual DbSet<LeadgenSubscription> Leadgensubscriptions { get; set; }
 
     public virtual DbSet<LeadgenTrial> Leadgentrials { get; set; }
-    
+
     public virtual DbSet<Thumbnail> Thumbnails { get; set; }
 
     public virtual DbSet<Token> Tokens { get; set; }
@@ -151,7 +151,7 @@ public partial class DataAllyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Adset_Campaign_FK");
         });
-        
+
         modelBuilder.Entity<AdCopy>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -160,7 +160,7 @@ public partial class DataAllyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("adcopy_ad_fk");
         });
-        
+
         modelBuilder.Entity<AdMetadata>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -189,7 +189,7 @@ public partial class DataAllyDbContext : DbContext
 
             entity.HasOne(d => d.Ad).WithMany(p => p.Appkpis).HasConstraintName("AppKpi_Ad_FK");
         });
-        
+
         modelBuilder.Entity<Asset>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -306,7 +306,7 @@ public partial class DataAllyDbContext : DbContext
 
             entity.HasOne(d => d.Ad).WithMany(p => p.Ecommercekpis).HasConstraintName("EcommerceKpi_Ad_FK");
         });
-        
+
         modelBuilder.Entity<EcommerceMobile>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -336,16 +336,16 @@ public partial class DataAllyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fbbackfillrequest_channel_fk");
         });
-        
+
         modelBuilder.Entity<FbCreativeLoad>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
-            
-            entity.HasIndex(e => new { e.CreativeType, e.CreativeKey })
-                .HasDatabaseName("creativeload_type_key_uk")
+
+            entity.HasIndex(e => new { e.ChannelId, e.CreativeKey, e.CreativeType, })
+                .HasDatabaseName("creativeload_channel_id_creative_type_key_uk")
                 .IsUnique();
         });
-        
+
         modelBuilder.Entity<FbDailySchedule>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -475,7 +475,7 @@ public partial class DataAllyDbContext : DbContext
 
             entity.HasOne(d => d.LeadgenKpi).WithOne(p => p.Leadgentrial).HasConstraintName("LeadGenTrial_LeadGen_FK");
         });
-        
+
         modelBuilder.Entity<Thumbnail>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");

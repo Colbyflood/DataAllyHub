@@ -119,7 +119,7 @@ public class ProcessContentService : IProcessContentService
         }
     }
 
-    private async Task StartContentProcessingTask(IServiceScopeFactory serviceScopeFactory, /*ILogging logger,*/ int fbSaveContentId)
+    private async Task StartContentProcessingTask(IServiceScopeFactory serviceScopeFactory, int fbSaveContentId)
     {
         logger.LogInformation($"Starting StartContentProcessingTask for fbSaveContentId {fbSaveContentId}");
 
@@ -150,7 +150,7 @@ public class ProcessContentService : IProcessContentService
         var iScopedService = serviceScopeFactory.CreateScope().ServiceProvider.GetService<IServiceScopeFactory>();
         var service = new ProcessContentService(contentProcessor, schedulerProxy, loaderProxy, processContentService, iScopedService!);
         await service.CheckAndContinueProcessing(fbSaveContentId);
-        logger.LogInformation($"Exiting started AdImageLoadTask for channel {fbSaveContentId}");
+        logger.LogInformation($"Exiting started StartContentProcessingTask for fbSaveContentId {fbSaveContentId}");
     }
 
     [Obsolete]

@@ -229,7 +229,11 @@ public class ContentProcessorProxy : IContentProcessorProxy
 
     public Asset? GetAssetByChannelIdTypeNameAndKey(int channelId, string assetTypeName, string key)
     {
-        return context.Assets.FirstOrDefault(a => a.ChannelId == channelId && a.AssetType.ToLower() == assetTypeName.ToLower() && a.AssetKey.ToLower() == key.ToLower());
+        return context.Assets.FirstOrDefault(a =>
+                                                   a.ChannelId == channelId
+                                                && a.AssetType.ToLower() == assetTypeName.ToLower()
+                                                && a.AssetKey.ToLower() == key.ToLower()
+                                            );
     }
 
     public void WriteAsset(Asset asset)
@@ -243,7 +247,10 @@ public class ContentProcessorProxy : IContentProcessorProxy
 
     public Thumbnail? GetThumbnailByFilenameAndChannelAdId(string filename, string channelAdId)
     {
-        return context.Thumbnails.FirstOrDefault(t => t.ChannelAdId.ToLower() == channelAdId.ToLower() && t.Filename.ToLower() == filename.ToLower());
+        return context.Thumbnails.FirstOrDefault(t =>
+                                                    t.ChannelAdId.ToLower() == channelAdId.ToLower()
+                                                 && t.Filename.ToLower() == filename.ToLower()
+                                                );
     }
 
     public void WriteThumbnail(Thumbnail thumbnail)
@@ -255,16 +262,24 @@ public class ContentProcessorProxy : IContentProcessorProxy
         context.SaveChanges();
     }
 
-    public FbCreativeLoad? GetFbCreativeLoadByImageHash(string imageHash)
+    public FbCreativeLoad? GetFbCreativeLoadByImageHash(string imageHash, int channelId)
     {
         return context.Fbcreativeloads
-            .SingleOrDefault(rec => rec.CreativeKey.ToUpper() == imageHash.ToUpper() && rec.CreativeType == Names.CREATIVE_TYPE_IMAGE);
+            .SingleOrDefault(rec =>
+                                    rec.ChannelId == channelId
+                                 && rec.CreativeKey.ToUpper() == imageHash.ToUpper()
+                                 && rec.CreativeType == Names.CREATIVE_TYPE_IMAGE
+                                 );
     }
 
-    public FbCreativeLoad? GetFbCreativeLoadByVideoId(string videoId)
+    public FbCreativeLoad? GetFbCreativeLoadByVideoId(string videoId, int channelId)
     {
         return context.Fbcreativeloads
-            .SingleOrDefault(rec => rec.CreativeKey.ToUpper() == videoId.ToUpper() && rec.CreativeType == Names.CREATIVE_TYPE_VIDEO);
+            .SingleOrDefault(rec =>
+                                    rec.ChannelId == channelId
+                                 && rec.CreativeKey.ToUpper() == videoId.ToUpper()
+                                 && rec.CreativeType == Names.CREATIVE_TYPE_VIDEO
+                                 );
     }
 
     public void WriteFbCreativeLoad(FbCreativeLoad record)
