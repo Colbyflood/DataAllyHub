@@ -192,6 +192,7 @@ public class FacebookInsight
         this.Impressions = Impressions;
         this.ConversionRateRanking = ConversionRateRanking;
         this.EngagementRateRanking = EngagementRateRanking;
+        this.QualityRanking = QualityRanking;
         this.Video30SecWatched = Video30SecWatched;
         this.VideoAvgTimeWatched = VideoAvgTimeWatched;
         this.VideoP100Watched = VideoP100Watched;

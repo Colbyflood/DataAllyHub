@@ -49,6 +49,7 @@ public class ProcessContentService : IProcessContentService
         await Task.Yield();
         logger.LogInformation("{ServiceName} working", nameof(ProcessContentService));
 
+        concurrencySemaphore = new SemaphoreSlim(10); // Reset the semaphore for new work
         while (!stoppingToken.IsCancellationRequested)
         {
             CheckAndProcessPendingContent(stoppingToken);
@@ -56,7 +57,7 @@ public class ProcessContentService : IProcessContentService
         }
     }
 
-    private static readonly SemaphoreSlim concurrencySemaphore = new SemaphoreSlim(5); // Limit to 5 concurrent tasks
+    private SemaphoreSlim concurrencySemaphore = new SemaphoreSlim(10); // Limit to 10 concurrent tasks
     private void CheckAndProcessPendingContent(CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
@@ -65,6 +66,10 @@ public class ProcessContentService : IProcessContentService
         var absoluteTimeWindow = now.AddHours(-1 * MAXIMUM_HOURS_LOOKBACK); // 1 day before
 
         var fbSaveContents = schedulerProxy.GetPendingFinishedFbRunLogsSaveContentsAfterDate(absoluteTimeWindow, MAXIMUM_ATTEMPTS);
+
+        List<int> channelsCurrentlyProcessingList = new List<int>();
+
+        var tasksList = new List<Task>();
 
         foreach (var fbSaveContent in fbSaveContents)
         {
@@ -84,7 +89,6 @@ public class ProcessContentService : IProcessContentService
 
                     if (fbSaveContent.HeartBeatLastReceivedAtUtc != null)
                     {
-
                         var heartBeatLastReceived = DateTime.SpecifyKind(fbSaveContent.HeartBeatLastReceivedAtUtc.Value, DateTimeKind.Utc);
                         if (heartBeatLastReceived >= ignoreTimeWindow)
                             continue;
@@ -92,7 +96,17 @@ public class ProcessContentService : IProcessContentService
 
                 }
 
+                // Don't process same channel if that's already processing in current thread, Let's that finish first
+                if (channelsCurrentlyProcessingList.Contains(fbSaveContent.AdCreativeRunlog.ChannelId))
+                {
+                    continue;
+                }
+
+                channelsCurrentlyProcessingList.Add(fbSaveContent.AdCreativeRunlog.ChannelId);
+
                 concurrencySemaphore.Wait(cancellationToken);
+
+                logger.LogWarning($"Currently Semaphore Left: {concurrencySemaphore.CurrentCount}");
 
                 fbSaveContent.LastStartedUtc = DateTime.UtcNow;
                 fbSaveContent.Attempts += 1;
@@ -102,8 +116,8 @@ public class ProcessContentService : IProcessContentService
                 StartContentProcessingTask(serviceScopeFactory, fbSaveContent.Id).GetAwaiter().GetResult();
                 concurrencySemaphore.Release();
 #else
-                // Limit concurrency to 5
-                Task.Run(async () =>
+                // Limit concurrency 
+                var task = Task.Run(async () =>
                 {
                     try
                     {
@@ -114,9 +128,14 @@ public class ProcessContentService : IProcessContentService
                         concurrencySemaphore.Release();
                     }
                 }, cancellationToken);
+
+                tasksList.Add(task);
 #endif
             }
         }
+
+        // Wait for all started tasks to finish
+        Task.WhenAll(tasksList).GetAwaiter().GetResult();
     }
 
     private async Task StartContentProcessingTask(IServiceScopeFactory serviceScopeFactory, int fbSaveContentId)
@@ -245,7 +264,7 @@ public class ProcessContentService : IProcessContentService
     }
 
 
-    private async Task CheckAndContinueProcessing(/*FbSaveContent fbSaveContent, */int fbSaveContentId)
+    private async Task CheckAndContinueProcessing(int fbSaveContentId)
     {
         int sequenceProcessingRunning = -1;
         try
@@ -285,6 +304,9 @@ public class ProcessContentService : IProcessContentService
                             sequenceProcessingRunning = 2;
                             LaunchContentProcessing(fbSaveContent, fbSaveContent.AdInsightRunlogId!.Value);
                         }
+
+                        fbSaveContent.Sequence = 3; // Mark as completed
+                        schedulerProxy.WriteFbSaveContent(fbSaveContent);
 
                         return;
 

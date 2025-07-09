@@ -215,6 +215,7 @@ public class SchedulerProxy : ISchedulerProxy
 	public List<FbSaveContent> GetPendingFinishedFbRunLogsSaveContentsAfterDate(DateTime date, int maxAttempts)
     {
         var query = context.Fbsavecontents
+            .Include(record => record.AdCreativeRunlog)
             .Where(record =>
                             (record.AdCreativeRunlogId != null && record.AdCreativeRunlog.FinishedUtc != null)
                             && (record.AdImageRunlogId != null && record.AdImageRunlog.FinishedUtc != null)
