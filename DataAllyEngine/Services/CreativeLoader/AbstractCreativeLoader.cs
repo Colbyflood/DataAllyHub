@@ -21,9 +21,9 @@ public abstract class AbstractCreativeLoader
 	
 	protected const int ONE_HOUR_MINUTES = 60;
 	protected const int RETRY_TIMEOUT_MINUTES = ONE_HOUR_MINUTES;
-	protected const int RETRY_TIMEOUT_MSEC = RETRY_TIMEOUT_MINUTES * 60 * 1000;
-	
-	protected const int BATCH_SIZE = 1000;
+	protected const int RETRY_TIMEOUT_MSEC = RETRY_TIMEOUT_MINUTES * 60 * 1000; // 1 Hour milliseconds
+
+    protected const int BATCH_SIZE = 1000;
 	
 	protected readonly ILoaderProxy loaderProxy;
 	protected readonly ISchedulerProxy schedulerProxy;

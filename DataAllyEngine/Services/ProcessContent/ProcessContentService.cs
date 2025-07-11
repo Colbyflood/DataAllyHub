@@ -2,6 +2,7 @@ using DataAllyEngine.Common;
 using DataAllyEngine.ContentProcessingTask;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
+using System.Collections.Concurrent;
 
 namespace DataAllyEngine.Services.ProcessContent;
 
@@ -22,7 +23,7 @@ public class ProcessContentService : IProcessContentService
     private const int MAXIMUM_DAYS_LOOKBACK = 2;
     private const int MAXIMUM_HOURS_LOOKBACK = MAXIMUM_DAYS_LOOKBACK * 24;
 
-    private const int MAXIMUM_ATTEMPTS = 15;
+    private const int MAXIMUM_ATTEMPTS = 5;
 
     private readonly IContentProcessor contentProcessor;
     private readonly ISchedulerProxy schedulerProxy;
@@ -49,7 +50,6 @@ public class ProcessContentService : IProcessContentService
         await Task.Yield();
         logger.LogInformation("{ServiceName} working", nameof(ProcessContentService));
 
-        concurrencySemaphore = new SemaphoreSlim(10); // Reset the semaphore for new work
         while (!stoppingToken.IsCancellationRequested)
         {
             CheckAndProcessPendingContent(stoppingToken);
@@ -57,9 +57,15 @@ public class ProcessContentService : IProcessContentService
         }
     }
 
-    private SemaphoreSlim concurrencySemaphore = new SemaphoreSlim(10); // Limit to 10 concurrent tasks
+    private SemaphoreSlim concurrencySemaphoreThreads = new SemaphoreSlim(10); // Limit to 10 concurrent tasks
+    ConcurrentDictionary<int, (int, DateTime)> channelsCurrentProcessingDic = new ConcurrentDictionary<int, (int, DateTime)>();
     private void CheckAndProcessPendingContent(CancellationToken cancellationToken)
     {
+        string warningMessage = $"CheckAndProcessPendingContent: Currently Semaphore Left: {concurrencySemaphoreThreads.CurrentCount} : {DateTime.Now}";
+        string processingChannels = string.Join(", ", channelsCurrentProcessingDic.Keys);
+        warningMessage += $" | Channels in processing: [{processingChannels}]";
+        logger.LogWarning(warningMessage);
+
         var now = DateTime.UtcNow;
         var ignoreTimeWindow = now.AddMinutes(-1 * IGNORE_START_MINUTES_BEFORE); // 30 minutes
         var preemptTimeWindow = now.AddMinutes(-1 * PREEMPT_STUCK_MINUTES_BEFORE); // 1 hour
@@ -67,15 +73,11 @@ public class ProcessContentService : IProcessContentService
 
         var fbSaveContents = schedulerProxy.GetPendingFinishedFbRunLogsSaveContentsAfterDate(absoluteTimeWindow, MAXIMUM_ATTEMPTS);
 
-        List<int> channelsCurrentlyProcessingList = new List<int>();
-
-        var tasksList = new List<Task>();
-
         foreach (var fbSaveContent in fbSaveContents)
         {
             if (fbSaveContent.QueuedUtc == null)
             {
-                InitiateQueProcessing(fbSaveContent);
+                InitiateQueProcessing(fbSaveContent.Id);
             }
             else if (fbSaveContent.QueuedUtc != null)
             {
@@ -93,49 +95,65 @@ public class ProcessContentService : IProcessContentService
                         if (heartBeatLastReceived >= ignoreTimeWindow)
                             continue;
                     }
-
                 }
 
-                // Don't process same channel if that's already processing in current thread, Let's that finish first
-                if (channelsCurrentlyProcessingList.Contains(fbSaveContent.AdCreativeRunlog.ChannelId))
+                if (concurrencySemaphoreThreads.CurrentCount < 1) // All threads are working
                 {
+                    logger.LogWarning($"Currently Semaphore Left: {concurrencySemaphoreThreads.CurrentCount}");
+                    break;
+                }
+
+                int channelId = fbSaveContent.AdCreativeRunlog.ChannelId;
+                int fbSaveContentId = fbSaveContent.Id;
+
+                if (channelsCurrentProcessingDic.ContainsKey(channelId) && channelsCurrentProcessingDic.TryGetValue(channelId, out var channelsCurrentProcessingValue))
+                {
+                    var hoursInQueue = (DateTime.Now - channelsCurrentProcessingValue.Item2).TotalHours;
+
+                    if (hoursInQueue > 6) // Something is stuck in it for more than a 6 hours 
+                    {
+                        logger.LogWarning($"ProcessContentService:CheckAndProcessPendingContent Channel stuck in queue. Channel:{channelId} fbSaveContentId:{fbSaveContentId} Hours:{hoursInQueue}");
+                        //channelsCurrentProcessingDic.TryRemove(channelId, out _);
+                    }
                     continue;
                 }
 
-                channelsCurrentlyProcessingList.Add(fbSaveContent.AdCreativeRunlog.ChannelId);
+                channelsCurrentProcessingDic.TryAdd(channelId, (fbSaveContentId, DateTime.Now));
+                concurrencySemaphoreThreads.Wait(cancellationToken);
 
-                concurrencySemaphore.Wait(cancellationToken);
-
-                logger.LogWarning($"Currently Semaphore Left: {concurrencySemaphore.CurrentCount}");
-
-                fbSaveContent.LastStartedUtc = DateTime.UtcNow;
-                fbSaveContent.Attempts += 1;
-                schedulerProxy.WriteFbSaveContent(fbSaveContent);
+                var fbSaveContentLoaded = loaderProxy.GetFbSaveContentById(fbSaveContentId)!; // Ensure the content is loaded before processing
+                fbSaveContentLoaded.LastStartedUtc = DateTime.UtcNow;
+                fbSaveContentLoaded.Attempts += 1;
+                schedulerProxy.WriteFbSaveContent(fbSaveContentLoaded);
 
 #if DEBUG
-                StartContentProcessingTask(serviceScopeFactory, fbSaveContent.Id).GetAwaiter().GetResult();
-                concurrencySemaphore.Release();
+                StartContentProcessingTask(serviceScopeFactory, fbSaveContentLoaded.Id).GetAwaiter().GetResult();
+
+                channelsCurrentProcessingDic.TryRemove(channelId, out _);
+                concurrencySemaphoreThreads.Release();
 #else
                 // Limit concurrency 
                 var task = Task.Run(async () =>
                 {
+                    // Cashing values in local variables to avoid multiple property accesses from fbSaveContent
+                    //int fbSaveContentId = fbSaveContent.Id;
+                    //int channelid = fbSaveContent.AdCreativeRunlog.ChannelId;
+
                     try
                     {
-                        await StartContentProcessingTask(serviceScopeFactory, fbSaveContent.Id);
+                        await StartContentProcessingTask(serviceScopeFactory, fbSaveContentId);
                     }
                     finally
                     {
-                        concurrencySemaphore.Release();
+                        channelsCurrentProcessingDic.TryRemove(channelId, out _);
+                        concurrencySemaphoreThreads.Release();
                     }
                 }, cancellationToken);
 
-                tasksList.Add(task);
 #endif
             }
         }
 
-        // Wait for all started tasks to finish
-        Task.WhenAll(tasksList).GetAwaiter().GetResult();
     }
 
     private async Task StartContentProcessingTask(IServiceScopeFactory serviceScopeFactory, int fbSaveContentId)
@@ -239,8 +257,10 @@ public class ProcessContentService : IProcessContentService
         return saveContent.AdImageFinishedUtc != null && saveContent.AdInsightFinishedUtc != null && saveContent.AdCreativeFinishedUtc != null;
     }
 
-    private void InitiateQueProcessing(FbSaveContent fbSaveContent)
+    private void InitiateQueProcessing(int fbSaveContentId)
     {
+        var fbSaveContent = loaderProxy.GetFbSaveContentById(fbSaveContentId)!; // Ensure the content is loaded before processing
+
         fbSaveContent.QueuedUtc = DateTime.UtcNow;
         fbSaveContent.HeartBeatLastReceivedAtUtc = fbSaveContent.QueuedUtc;
         fbSaveContent.Attempts = 0;
@@ -318,7 +338,7 @@ public class ProcessContentService : IProcessContentService
         }
         catch (Exception ex)
         {
-            string exceptionMessage = $"{sequenceProcessingRunning} : {ex.Message} : {ex.InnerException?.Message}";
+            string exceptionMessage = $"{sequenceProcessingRunning} : {ex.Message} : {ex.InnerException?.Message} : {ex.StackTrace}";
 
             logger.LogError($"ProcessContentService:CheckAndContinueProcessing:  {exceptionMessage}");
 

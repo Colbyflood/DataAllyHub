@@ -89,7 +89,6 @@ public class AdInsightsLoader : FacebookLoaderBase
                     {
                         currentLimitSize = 1;
                     }
-                    Logger.LogWarning($"Cutting limit size down to {currentLimitSize} for {GetSanitizedUrl(currentUrl)}");
                     currentUrl = UpdateUrlWithLimit(currentUrl, currentLimitSize);
                 }
                 else if (fe.ServiceDown)

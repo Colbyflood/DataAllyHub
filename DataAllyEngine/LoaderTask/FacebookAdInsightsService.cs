@@ -65,7 +65,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
         if (response.Content.Count > 0)
         {
             int contentCount = response.Content.Count;
-            int batchSize = 500;
+            int batchSize = 250;
 
             int totalBatches = (contentCount + batchSize - 1) / batchSize;
 

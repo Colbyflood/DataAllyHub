@@ -122,7 +122,7 @@ public class ContentProcessorProxy : IContentProcessorProxy
     public void DeleteFbRunStaging(FbRunStaging staging)
     {
         context.Fbrunstagings.Remove(staging);
-        //context.SaveChanges();
+        context.SaveChanges();
     }
 
     public List<Ad> GetAdsByChannelAdIdAndChannelId(string channelAdId, int channelId)

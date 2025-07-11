@@ -149,6 +149,10 @@ public class BackfillLauncherService : IBackfillLauncherService
                 var endDate = now.AddDays(-1);
                 loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL, startDate, endDate, candidate.Days, fbSaveContent!.Id);
             }
+
+            Thread.Sleep(3000);// Sleep for 3 seconds to avoid overwhelming the API
+            schedulerProxy.DeleteFbBackfillRequest(candidate); // remove candidate after running the backfill tasks
+
         }
     }
 
