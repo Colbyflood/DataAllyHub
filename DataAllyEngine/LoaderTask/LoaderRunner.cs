@@ -61,9 +61,8 @@ public class LoaderRunner : ILoaderRunner
         Task.Run(() => ResumeAdImagesLoadTask(facebookParameters, runlog.Id, url, serviceScopeFactory, logging));
     }
 
-    public void StartAdInsightsLoad(FacebookParameters facebookParameters, Channel channel, string scopeType, DateTime startDate, DateTime endDate, int? backfillDays, int fbSaveContentId)
+    public void StartAdInsightsLoad(FacebookParameters facebookParameters, Channel channel, string scopeType, DateTime? startDate, DateTime? endDate, int? backfillDays, int fbSaveContentId)
     {
-
 #if DEBUG
         StartAdInsightsLoadTask(facebookParameters, channel, scopeType, startDate, endDate, backfillDays, serviceScopeFactory, logging, fbSaveContentId).GetAwaiter().GetResult();
 #else
@@ -71,10 +70,10 @@ public class LoaderRunner : ILoaderRunner
 #endif
     }
 
-    public void StartAdInsightsLoad(FacebookParameters facebookParameters, FbRunLog runlog, DateTime startDate, DateTime endDate)
+    public void StartAdInsightsLoad(FacebookParameters facebookParameters, FbRunLog runlog, DateTime? startDate, DateTime? endDate)
     {
         var channel = loaderProxy.GetChannelById(runlog.ChannelId);
-        Task.Run(() => StartAdInsightsLoadTask(facebookParameters, runlog.Id, channel, startDate, endDate, serviceScopeFactory, logging));
+        Task.Run(() => StartAdInsightsLoadTask(facebookParameters, runlog.Id, channel!, startDate, endDate, serviceScopeFactory, logging));
     }
 
     public void ResumeAdInsightsLoad(FacebookParameters facebookParameters, FbRunLog runlog, string url)
@@ -215,7 +214,7 @@ public class LoaderRunner : ILoaderRunner
     }
 
     private static async Task StartAdInsightsLoadTask(FacebookParameters facebookParameters, int runlogId, Channel channel,
-        DateTime startDate, DateTime endDate, IServiceScopeFactory serviceScopeFactory, ILogging logger)
+        DateTime? startDate, DateTime? endDate, IServiceScopeFactory serviceScopeFactory, ILogging logger)
     {
         logger.LogInformation($"Starting AdInsightLoadTask for channel {channel.Id} between {startDate} and {endDate}");
         var loaderProxy = serviceScopeFactory.CreateScope().ServiceProvider.GetService<ILoaderProxy>();
@@ -237,7 +236,7 @@ public class LoaderRunner : ILoaderRunner
     }
 
     private static async Task StartAdInsightsLoadTask(FacebookParameters facebookParameters, Channel channel, string scopeType,
-        DateTime startDate, DateTime endDate, int? backfillDays, IServiceScopeFactory serviceScopeFactory, ILogging logger, int fbSaveContentId)
+        DateTime? startDate, DateTime? endDate, int? backfillDays, IServiceScopeFactory serviceScopeFactory, ILogging logger, int fbSaveContentId)
     {
         logger.LogInformation($"Starting AdInsightLoadTask for channel {channel.Id} between {startDate} and {endDate}");
         var loaderProxy = serviceScopeFactory.CreateScope().ServiceProvider.GetService<ILoaderProxy>();

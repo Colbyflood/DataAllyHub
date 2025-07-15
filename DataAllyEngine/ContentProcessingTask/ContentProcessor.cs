@@ -563,7 +563,7 @@ public class ContentProcessor : IContentProcessor
     {
         if (string.IsNullOrWhiteSpace(asset.Url) || !asset.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
         {
-            Console.WriteLine($"[WARN] Unable to process image for asset {asset.AssetType} {asset.AssetKey} because url is empty or not http");
+            logger.LogWarning($"[WARN] Unable to process image for asset {asset.AssetType} {asset.AssetKey} because url is empty or not http");
             return null;
         }
 
@@ -579,12 +579,12 @@ public class ContentProcessor : IContentProcessor
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[ERROR] Error downloading {asset.Url} for asset {asset.AssetType} {asset.AssetKey}: {ex}");
+            logger.LogWarning($"[ERROR] Error downloading {asset.Url} for asset {asset.AssetType} {asset.AssetKey}: {ex}");
         }
 
         if (imageStream == null)
         {
-            Console.WriteLine($"[WARN] No image for asset {asset.AssetType} {asset.AssetKey}");
+            logger.LogWarning($"[WARN] No image for asset {asset.AssetType} {asset.AssetKey}");
             return null;
         }
 

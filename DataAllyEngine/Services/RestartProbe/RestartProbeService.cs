@@ -126,10 +126,24 @@ public class RestartProbeService : IRestartProbeService
             {
                 if (mostRecentStopProblem == null || mostRecentStopProblem.RestartUrl == null)
                 {
-                    var endTime = new DateTime(runlog.StartedUtc.Year, runlog.StartedUtc.Month, runlog.StartedUtc.Day, runlog.StartedUtc.Hour, 0, 0, DateTimeKind.Utc);
-                    var startTime = endTime.AddDays(-1);
+                    DateTime? startDate = null;
+                    DateTime? endDate = null;
 
-                    loaderRunner.StartAdInsightsLoad(facebookParameters, runlog, startTime, startTime);
+                    if (runlog.ScopeType == Names.SCOPE_TYPE_DAILY)
+                    {
+                        endDate = new DateTime(runlog.StartedUtc.Year, runlog.StartedUtc.Month, runlog.StartedUtc.Day, runlog.StartedUtc.Hour, 0, 0, DateTimeKind.Utc);
+                        startDate = endDate.Value.AddDays(-7);
+                    }
+                    else // if (runlog.ScopeType == Names.SCOPE_TYPE_BACKFILL)
+                    {
+                        if (runlog.BackfillDays is not null)
+                        {
+                            endDate = new DateTime(runlog.StartedUtc.Year, runlog.StartedUtc.Month, runlog.StartedUtc.Day, runlog.StartedUtc.Hour, 0, 0, DateTimeKind.Utc);
+                            startDate = endDate.Value.AddDays(-1 * runlog.BackfillDays.Value);
+                        }
+                    }
+
+                    loaderRunner.StartAdInsightsLoad(facebookParameters, runlog, startDate, endDate);
                 }
                 else
                 {

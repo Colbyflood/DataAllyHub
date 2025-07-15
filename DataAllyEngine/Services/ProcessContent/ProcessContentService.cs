@@ -127,7 +127,7 @@ public class ProcessContentService : IProcessContentService
                 schedulerProxy.WriteFbSaveContent(fbSaveContentLoaded);
 
 #if DEBUG
-                StartContentProcessingTask(serviceScopeFactory, fbSaveContentLoaded.Id).GetAwaiter().GetResult();
+                StartContentProcessingTask(serviceScopeFactory, fbSaveContentId).GetAwaiter().GetResult();
 
                 channelsCurrentProcessingDic.TryRemove(channelId, out _);
                 concurrencySemaphoreThreads.Release();
@@ -135,10 +135,6 @@ public class ProcessContentService : IProcessContentService
                 // Limit concurrency 
                 var task = Task.Run(async () =>
                 {
-                    // Cashing values in local variables to avoid multiple property accesses from fbSaveContent
-                    //int fbSaveContentId = fbSaveContent.Id;
-                    //int channelid = fbSaveContent.AdCreativeRunlog.ChannelId;
-
                     try
                     {
                         await StartContentProcessingTask(serviceScopeFactory, fbSaveContentId);
@@ -178,14 +174,14 @@ public class ProcessContentService : IProcessContentService
             logger.LogError($"Unable to get loaderProxy for loading fbSaveContentId {fbSaveContentId}");
             return;
         }
-        var processContentService = serviceScopeFactory.CreateScope().ServiceProvider.GetService<ILogger<IProcessContentService>>();
-        if (processContentService == null)
+        var processContentServiceLogger = serviceScopeFactory.CreateScope().ServiceProvider.GetService<ILogger<IProcessContentService>>();
+        if (processContentServiceLogger == null)
         {
             logger.LogError($"Unable to get loaderProxy for loading fbSaveContentId {fbSaveContentId}");
             return;
         }
         var iScopedService = serviceScopeFactory.CreateScope().ServiceProvider.GetService<IServiceScopeFactory>();
-        var service = new ProcessContentService(contentProcessor, schedulerProxy, loaderProxy, processContentService, iScopedService!);
+        var service = new ProcessContentService(contentProcessor, schedulerProxy, loaderProxy, processContentServiceLogger, iScopedService!);
         await service.CheckAndContinueProcessing(fbSaveContentId);
         logger.LogInformation($"Exiting started StartContentProcessingTask for fbSaveContentId {fbSaveContentId}");
     }

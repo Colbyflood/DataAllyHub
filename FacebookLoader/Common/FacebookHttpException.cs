@@ -46,8 +46,14 @@ public class FacebookHttpException : Exception
 
                 if (TypeCode == "OAuthException")
                 {
-                    if (ErrorCode == "4" && ErrorSubcode == "1504022")
+                    if (
+                        ErrorCode == "4" // API Too Many Calls.
+                        ||
+                        ErrorCode == "17" // API User Too Many Calls
+                        )
+                    {
                         Throttled = true;
+                    }
                     else if (ErrorCode == "2")
                         ServiceDown = true;
                     else if (ErrorCode == "200") // (#200) Ad account owner has NOT grant ads_management or ads_read permission

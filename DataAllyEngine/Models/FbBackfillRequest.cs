@@ -16,7 +16,7 @@ public partial class FbBackfillRequest
     public int ChannelId { get; set; }
 
     [Column("days")]
-    public int Days { get; set; }
+    public int? Days { get; set; }
 
     [Column("requested_utc", TypeName = "datetime")]
     public DateTime RequestedUtc { get; set; }

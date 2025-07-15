@@ -64,7 +64,7 @@ public class FacebookAdImagesService : FacebookServiceBase
         if (response.Content.Count > 0)
         {
             int contentCount = response.Content.Count;
-            int batchSize = 250;
+            int batchSize = MAX_FB_STAGING_RECORDS_IN_ROWS;
 
             int totalBatches = (contentCount + batchSize - 1) / batchSize;
 

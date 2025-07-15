@@ -113,7 +113,6 @@ public class BackfillLauncherService : IBackfillLauncherService
                 continue;
             }
 
-
             logger.LogInformation($"Launching previously unstarted backfill loads for channel Id {candidate.ChannelId} ({channel.ChannelAccountName})");
 
             // Fetch existing saveContent
@@ -145,8 +144,15 @@ public class BackfillLauncherService : IBackfillLauncherService
 
             if (adInsightRunLog == null)
             {
-                var startDate = now.AddDays(-1 * candidate.Days);
-                var endDate = now.AddDays(-1);
+                DateTime? startDate = null;
+                DateTime? endDate = null;
+
+                if (candidate.Days is not null)
+                {
+                    startDate = now.AddDays(-1 * candidate.Days.Value);
+                    endDate = now.AddDays(-1);
+                }
+
                 loaderRunner.StartAdInsightsLoad(facebookParameters, channel, Names.SCOPE_TYPE_BACKFILL, startDate, endDate, candidate.Days, fbSaveContent!.Id);
             }
 
@@ -156,7 +162,7 @@ public class BackfillLauncherService : IBackfillLauncherService
         }
     }
 
-    private void MarkTokenFailure(Channel channel, bool isTokenDisabled, int backfillDays, FbRunLog? adImageRunLog, FbRunLog? adCreativeRunLog, FbRunLog? adInsightRunLog)
+    private void MarkTokenFailure(Channel channel, bool isTokenDisabled, int? backfillDays, FbRunLog? adImageRunLog, FbRunLog? adCreativeRunLog, FbRunLog? adInsightRunLog)
     {
         logger.LogWarning($"Token failure for channel Id {channel.Id} ({channel.ChannelAccountName})");
 
@@ -183,7 +189,7 @@ public class BackfillLauncherService : IBackfillLauncherService
         LogProblem(adInsightRunLog, now, problem);
     }
 
-    private FbRunLog CreateRunLog(int channelId, DateTime utcNow, string feedType, string scope, int backfillDays)
+    private FbRunLog CreateRunLog(int channelId, DateTime utcNow, string feedType, string scope, int? backfillDays)
     {
         var runlog = new FbRunLog();
         runlog.ChannelId = channelId;

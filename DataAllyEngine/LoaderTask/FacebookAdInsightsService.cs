@@ -14,7 +14,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
     {
     }
 
-    public async Task<FbRunLog> InitiateAdInsightsLoad(string scopeType, DateTime startDate, DateTime endDate, int? backfillDays, int fbSaveContentId)
+    public async Task<FbRunLog> InitiateAdInsightsLoad(string scopeType, DateTime? startDate, DateTime? endDate, int? backfillDays, int fbSaveContentId)
     {
         logging.LogInformation($"Requesting loading of ad insights for channel {channel.Id} in scope {scopeType} between {startDate} and {endDate}");
 
@@ -45,15 +45,18 @@ public class FacebookAdInsightsService : FacebookServiceBase
         return runlog;
     }
 
-    public async Task<bool> StartAdInsightsLoad(FbRunLog runlog, DateTime startDate, DateTime endDate)
+    public async Task<bool> StartAdInsightsLoad(FbRunLog runlog, DateTime? startDate, DateTime? endDate)
     {
         logging.LogInformation($"Requesting and processing ad insights for scope {runlog.ScopeType} in runlog {runlog.Id}");
 
         runlog.LastStartedUtc = DateTime.UtcNow;
         loaderProxy.WriteFbRunLog(runlog);
 
+        string? startDateStr = startDate?.ToString("yyyy-MM-dd");
+        string? endDateStr = endDate?.ToString("yyyy-MM-dd");
+
         var loader = new AdInsightsLoader(facebookParameters, logging);
-        var response = await loader.StartLoadAsync(startDate.ToString("yyyy-MM-dd"), endDate.ToString("yyyy-MM-dd"));
+        var response = await loader.StartLoadAsync(startDateStr, endDateStr);
 
         if (response == null)
         {
@@ -65,7 +68,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
         if (response.Content.Count > 0)
         {
             int contentCount = response.Content.Count;
-            int batchSize = 250;
+            int batchSize = MAX_FB_STAGING_RECORDS_IN_ROWS;
 
             int totalBatches = (contentCount + batchSize - 1) / batchSize;
 
@@ -114,17 +117,34 @@ public class FacebookAdInsightsService : FacebookServiceBase
 
         var loader = new AdInsightsLoader(facebookParameters, logging);
         var response = await loader.LoadAsync(url);
+        
+        if (response == null)
+        {
+            logging.LogError($"Failed to load ad insights and response is null for {runlog.Id} inside ResumeAdInsightsLoad");
+            LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null, null);
+            return false;
+        }
 
         if (response.Content.Count > 0)
         {
-            var content = response.ToJson();
+            int contentCount = response.Content.Count;
+            int batchSize = MAX_FB_STAGING_RECORDS_IN_ROWS;
 
-            var runStaging = new FbRunStaging();
-            runStaging.FbRunlogId = runlog.Id;
-            runStaging.Sequence = GetNextSequence(runlog);
-            runStaging.Content = content;
+            int totalBatches = (contentCount + batchSize - 1) / batchSize;
 
-            loaderProxy.WriteFbRunStaging(runStaging);
+            for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++)
+            {
+                var batch = response.Content.Skip(batchIndex * batchSize).Take(batchSize).ToList<FacebookAdInsight>();
+
+                var content = new FacebookAdInsightsResponse(batch);
+
+                var runStaging = new FbRunStaging();
+                runStaging.FbRunlogId = runlog.Id;
+                runStaging.Sequence = GetNextSequence(runlog);
+                runStaging.Content = content.ToJson();
+
+                loaderProxy.WriteFbRunStaging(runStaging);
+            }
         }
 
         if (response.IsSuccessful)
