@@ -8,10 +8,14 @@ namespace FacebookLoader.Loader.AdCreative;
 
 public class AdCreativesLoader : FacebookLoaderBase
 {
-    private const string FieldsList = "account_id,id,name,status,adset_id,campaign_id,created_time,updated_time,creative{id,status," +
-        "actor_id,instagram_actor_id,video_id,instagram_permalink_url,object_type,image_url,image_hash,thumbnail_url," +
-        "thumbnail_id,product_set_id,url_tags,title,body,link_destination_display_url,template_url_spec," +
-        "template_url,object_story_spec{page_id,link_data,video_data,template_data}}";
+    private const string FieldsList = "account_id,id,name,status,adset_id,campaign_id,created_time,updated_time," +
+        "creative{" +
+        "id,status,actor_id,instagram_actor_id,video_id,instagram_permalink_url,object_type,image_url,image_hash,thumbnail_url" +
+        ",thumbnail_id,product_set_id,url_tags,title,body,link_destination_display_url,template_url_spec" +
+        ",template_url" +
+        ",object_story_spec{page_id,link_data,video_data,template_data}" +
+        ",asset_feed_spec{images}" + // For specific ads missing image hashes directly use the first image has from assets_feed_spec
+        "}";
 
     private const int Limit = 100;
     private const int MaxTestLoops = 4;
@@ -54,6 +58,11 @@ public class AdCreativesLoader : FacebookLoaderBase
         return new FacebookPhotoData(spec.PageId, data.ImageHash);
     }
 
+    private static FacebookAssetFeedSpecData DigestAssetFeedSepcData(AssetFeedSpec spec)
+    {
+        return new FacebookAssetFeedSpecData(spec.Image.Hash);
+    }
+
     private static FacebookCreative DigestCreative(Creative creative)
     {
         var videoData = DigestVideoData(creative.ObjectStorySpec);
@@ -62,6 +71,7 @@ public class AdCreativesLoader : FacebookLoaderBase
         var imageHash = creative.ObjectStorySpec.ImageHash;
         var videoId = creative.ObjectStorySpec.VideoId;
         var pageId = creative.ObjectStorySpec.PageId;
+        var assetFeedSpecData = DigestAssetFeedSepcData(creative.AssetFeedSpec);
         return new FacebookCreative(
             creative.Id,
             creative.Status,
@@ -79,7 +89,8 @@ public class AdCreativesLoader : FacebookLoaderBase
             pageId,
             videoData,
             linkData,
-            photoData
+            photoData,
+            assetFeedSpecData
         );
     }
 
@@ -146,7 +157,9 @@ public class AdCreativesLoader : FacebookLoaderBase
                 }
 
                 if (string.IsNullOrEmpty(root.Paging.Next) || (testMode && loopCount >= MaxTestLoops))
+                {
                     break;
+                }
 
                 currentUrl = root.Paging.Next;
                 loopCount++;
@@ -354,6 +367,38 @@ class PhotoData
     }
 }
 
+class AssetFeedSpec
+{
+    public Image Image { get; set; } = new Image();
+
+    public static AssetFeedSpec FromJson(JToken? obj)
+    {
+        Image imagesData = new Image();
+        var imagesNode = FacebookLoaderBase.ExtractObjectArray(obj, "images");
+        if (imagesNode != null)
+        {
+            foreach (var item in imagesNode)
+            {
+                if (item is JObject dataObject)
+                {
+                    imagesData.Hash = FacebookLoaderBase.ExtractString(dataObject, "hash");
+                    break; // only need the first image hash, ignoring others
+                }
+            }
+        }
+
+        return new AssetFeedSpec
+        {
+            Image = imagesData
+        };
+    }
+}
+
+class Image
+{
+    public string Hash { get; set; } = ""; // asset_feed_spec.images[0].hash we are using the first image hash from the list
+}
+
 class ObjectStorySpec
 {
     public string PageId { get; set; } = "";
@@ -412,6 +457,7 @@ class Creative
     public string Title { get; set; } = "";
     public string Body { get; set; } = "";
     public ObjectStorySpec ObjectStorySpec { get; set; } = new ObjectStorySpec();
+    public AssetFeedSpec AssetFeedSpec { get; set; } = new AssetFeedSpec();
 
     public static Creative FromJson(JToken obj)
     {
@@ -420,6 +466,13 @@ class Creative
         if (objectStorySpecNode != null)
         {
             objectStorySpec = ObjectStorySpec.FromJson(objectStorySpecNode);
+        }
+
+        var assetFeedSpecNode = FacebookLoaderBase.ExtractObject(obj, "asset_feed_spec");
+        AssetFeedSpec assetFeedSpec = new AssetFeedSpec();
+        if (assetFeedSpecNode != null)
+        {
+            assetFeedSpec = AssetFeedSpec.FromJson(assetFeedSpecNode);
         }
 
         return new Creative
@@ -435,7 +488,8 @@ class Creative
             UrlTags = FacebookLoaderBase.ExtractString(obj, "url_tags"),
             Title = FacebookLoaderBase.ExtractString(obj, "title"),
             Body = FacebookLoaderBase.ExtractString(obj, "body"),
-            ObjectStorySpec = objectStorySpec
+            ObjectStorySpec = objectStorySpec,
+            AssetFeedSpec = assetFeedSpec
         };
     }
 }

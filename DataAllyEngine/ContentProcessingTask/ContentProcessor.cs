@@ -479,7 +479,7 @@ public class ContentProcessor : IContentProcessor
         }
 
         // CrousalImages came in child attachments
-        if (record.LinkData.ChildAttachments != null & record.LinkData.ChildAttachments.Count > 0)
+        if (record.LinkData.ChildAttachments != null & record.LinkData.ChildAttachments!.Count > 0)
         {
             int crousalImageOrder = 1;
             record.LinkData.ChildAttachments.ForEach(attachment =>
@@ -489,6 +489,12 @@ public class ContentProcessor : IContentProcessor
                     imageHashes.Add(new CreativeImageHash(attachment.ImageHash, defaultPageId, crousalImageOrder++));
                 }
             });
+        }
+
+        // First Image inside asset_feed_spec
+        if (!string.IsNullOrWhiteSpace(record.AssetFeedSpecData?.ImageHash))
+        {
+            imageHashes.Add(new CreativeImageHash(record.AssetFeedSpecData.ImageHash, defaultPageId));
         }
 
         return imageHashes;
