@@ -10,7 +10,7 @@ public class KpiProcessor
 
     private readonly IKpiProxy kpiProxy;
     private readonly ILogger logger;
-    
+
     public KpiProcessor(Channel channel, IKpiProxy kpiProxy, ILogger logger)
     {
         this.channel = channel;
@@ -29,11 +29,9 @@ public class KpiProcessor
             throw new FormatException("Invalid effective date");
         }
     }
-    
+
     public void ImportKpis(Ad ad, FacebookInsight entry)
     {
-        Console.WriteLine("Starting import kpis process");
-
         var effectiveDate = ParseEffectiveDate(entry.DateStart);
         var createdDate = DateTime.Now;
 
@@ -215,7 +213,7 @@ public class KpiProcessor
         }
         return null;
     }
-    
+
     private static decimal? ConvertStringToDecimal(string value)
     {
         if (decimal.TryParse(value, out var decimalValue))
@@ -229,7 +227,7 @@ public class KpiProcessor
     {
         return (decimal?)value;
     }
-    
+
     private static decimal? ConvertDoubleToDecimal(double? value)
     {
         return (decimal?)value;
@@ -239,7 +237,7 @@ public class KpiProcessor
     {
         return (int?)value;
     }
-    
+
     private static void LoadGeneralKpi(FacebookInsight entry, GeneralKpi generalKpi)
     {
         generalKpi.AdRecallLift = entry.EstimatedAdRecallers.Count;

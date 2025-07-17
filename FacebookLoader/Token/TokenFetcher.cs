@@ -33,7 +33,6 @@ public class TokenFetcher
 		}
 		catch (HttpRequestException httpEx) when (httpEx.StatusCode.HasValue)
 		{
-			//var responseText = httpEx.Message;
 			var responseText = string.Empty;
 
 			if (response != null)

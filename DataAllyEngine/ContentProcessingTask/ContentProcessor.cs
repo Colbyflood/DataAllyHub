@@ -64,8 +64,6 @@ public class ContentProcessor : IContentProcessor
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
         foreach (var entry in stagingEntries)
         {
-            Console.WriteLine("Deserializing a staging entry for ad creatives");
-
             var facebookAdCreativesResponse = FacebookAdCreativesResponse.FromJson(entry.Content);
             if (facebookAdCreativesResponse == null)
             {
@@ -112,7 +110,7 @@ public class ContentProcessor : IContentProcessor
         UpdateSaveContentLastStarted(fbSaveContent.Id);
 
         var stagingEntries = contentProcessorProxy.LoadFbRunStagingForRunlog(runlog.Id);
-        Console.WriteLine("Deserializing a staging entry for ad images");
+
         foreach (var entry in stagingEntries)
         {
             var facebookAdImagesResponse = FacebookAdImagesResponse.FromJson(entry.Content);
@@ -153,7 +151,7 @@ public class ContentProcessor : IContentProcessor
             var asset = contentProcessorProxy.GetAssetByChannelIdAndKey(channel.Id, creativeId);
             if (asset == null)
             {
-                Console.WriteLine($"[WARN] Encountered image in channel {channel.Id} without corresponding asset Id in creatives array: {creativeId}");
+                logger.LogWarning($"[WARN] Encountered image in channel {channel.Id} without corresponding asset Id in creatives array: {creativeId}");
             }
             else
             {
@@ -182,7 +180,6 @@ public class ContentProcessor : IContentProcessor
         var kpiProcessor = new KpiProcessor(channel, kpiProxy, logger);
         foreach (var entry in stagingEntries)
         {
-            Console.WriteLine("Deserializing a staging entry for ad insights");
             var facebookAdInsightsResponse = FacebookAdInsightsResponse.FromJson(entry.Content);
             if (facebookAdInsightsResponse == null)
             {
@@ -622,7 +619,7 @@ public class ContentProcessor : IContentProcessor
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[ERROR] Unable to save thumbnail for {filename} as {uuid} for {asset.AssetType} {asset.AssetKey}: {ex}");
+            logger.LogWarning($"[ERROR] Unable to save thumbnail for {filename} as {uuid} for {asset.AssetType} {asset.AssetKey}: {ex}");
             return null;
         }
     }
@@ -652,7 +649,7 @@ public class ContentProcessor : IContentProcessor
         var ads = contentProcessorProxy.GetAdsByChannelAdIdAndChannelId(record.Id, channel.Id);
         if (ads == null || !ads.Any())
         {
-            Console.WriteLine($"[WARN] Cannot find an Ad entry for KPI referencing ad Id {record.Id} in channel {channel.Id}");
+            logger.LogWarning($"[WARN] Cannot find an Ad entry for KPI referencing ad Id {record.Id} in channel {channel.Id}");
             return;
         }
 

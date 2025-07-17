@@ -15,8 +15,8 @@ var builder = new ConfigurationBuilder()
 IConfiguration configuration = builder.Build();
 
 // Ua
-var token = "EAAD7wZCNwaOgBPHZC7pPZCJj7LhD5nwXRBVyVW568xyFYZBdoevqErCzUwAVhExC2ZBDZAAycc9nfoZBQHZAdGPitIbaIpHyeoZCdsWUbJx1wdFIaN4WQogceo6CM6lR4LoJREu6k7tPwtFzd1ZCGbQJToOhhGlBvmefrnL2kHLbDcSbgmJmubOQOHnM3dAsC0";
-var channelAccount = "act_239631127116758";
+var token = "EAAD7wZCNwaOgBPFfSFxPQntZBkCZCJ81YCrzLwGHUNpeNJCfRAWKLZAZAQp7YHCG7TlnpJrvvedkUJCa7iZC5KZCRe6YOb54DadrftMJ2BZAP3L8VOnUsVTjMDDdK8uOHmpA0xeCCRJzliZAOvLkR8GaMtFZCgxyMJgqjQ6kIo3JrTZC3VVMv8CKeRHEM9pt0ZCd";
+var channelAccount = "act_435200474576078";
 
 var logging = new Logging();
 
@@ -24,50 +24,55 @@ var facebookParameters = new FacebookParameters(channelAccount, token);
 
 try
 {
-    //var loader = new AdCreativesLoader(facebookParameters, logger);
-    //var response = await loader.StartLoadAsync();
+    // Addcretive code
+    var loader = new AdCreativesLoader(facebookParameters, logging);
+    var response = await loader.StartLoadAsync();
 
-    var now = DateTime.UtcNow;
-    var windowStartTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, DateTimeKind.Utc);
-    var yesterday = windowStartTime.AddDays(-3);
-    var startDay = windowStartTime.AddDays(-3); // Fetch data for last 1 days
+    // AdInsights Test Code
+    //var now = DateTime.UtcNow;
+    //var windowStartTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, DateTimeKind.Utc);
+    //var yesterday = windowStartTime.AddDays(-3);
+    //var startDay = windowStartTime.AddDays(-3); // Fetch data for last 1 days
 
-    var customDate = new DateTime(2025, 7, 4);
+    //var customDate = new DateTime(2025, 7, 4);
 
-    var loader = new AdInsightsLoader(facebookParameters, logging);
-    var response = await loader.StartLoadAsync(customDate.ToString("yyyy-MM-dd"), customDate.ToString("yyyy-MM-dd"));
+    //var loader = new AdInsightsLoader(facebookParameters, logging);
+    //var response = await loader.StartLoadAsync(null, null);
 
-    if (response == null)
-    {
+    //if (response == null)
+    //{
 
-    }
+    //}
 
-    if (response.Content.Count > 0)
-    {
-        int contentCount = response.Content.Count;
+    //if (response.Content.Count > 0)
+    //{
+    //    int contentCount = response.Content.Count;
 
-        var content = response.ToJson();
+    //    var content = response.ToJson();
 
-        var x = "dd";
+    //    var x = "dd";
 
-        //int batchSize = 500;
+    //    //int batchSize = MAX_FB_STAGING_RECORDS_IN_ROWS;
 
-        //int totalBatches = (contentCount + batchSize - 1) / batchSize;
+    //    //int totalBatches = (contentCount + batchSize - 1) / batchSize;
 
-        //for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++)
-        //{
-        //    var batch = response.Content.Skip(batchIndex * batchSize).Take(batchSize).ToList<FacebookAdInsight>();
+    //    //for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++)
+    //    //{
+    //    //    var batch = response.Content.Skip(batchIndex * batchSize).Take(batchSize).ToList<FacebookAdInsight>();
 
-        //    var content = new FacebookAdInsightsResponse(batch);
+    //    //    var content = new FacebookAdInsightsResponse(batch);
 
-        //    var runStaging = new FbRunStaging();
-        //    runStaging.FbRunlogId = runlog.Id;
-        //    runStaging.Sequence = GetNextSequence(runlog);
-        //    runStaging.Content = content.ToJson();
+    //    //    var runStaging = new FbRunStaging();
+    //    //    runStaging.FbRunlogId = runlog.Id;
+    //    //    runStaging.Sequence = GetNextSequence(runlog);
+    //    //    runStaging.Content = content.ToJson();
 
-        //    loaderProxy.WriteFbRunStaging(runStaging);
-        //}
-    }
+    //    //    loaderProxy.WriteFbRunStaging(runStaging);
+    //    //}
+    ////}
+
+    //var adImagesLoader = new AdImagesLoader(facebookParameters, logging);
+    //var response = await adImagesLoader.StartLoadAsync();
 
     // var adImagesLoader = new AdImagesLoader(facebookParameters, logger);
     //

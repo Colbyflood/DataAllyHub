@@ -4,6 +4,7 @@ using DataAllyEngine.Configuration;
 using DataAllyEngine.Models;
 using DataAllyEngine.Proxy;
 using DataAllyEngine.Services.CreativeLoader;
+using FacebookLoader.Common;
 using FacebookLoader.Content;
 using FacebookLoader.UrlIdDecode;
 
@@ -11,6 +12,8 @@ namespace DataAllyEngine.Services.CreativeImagesLoader;
 
 public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeImagesLoadingService
 {
+    private new const int BATCH_SIZE = 1000;
+
     private readonly ILogger<ICreativeImagesLoadingService> logger;
 
     public CreativeImagesLoadingService(ILoaderProxy loaderProxy, ISchedulerProxy schedulerProxy,
@@ -21,9 +24,9 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
         this.logger = logger;
     }
 
-    protected override List<FbCreativeLoad> GetNextPendingCreativesBatch(int minimumId, int batchSize)
+    protected override List<FbCreativeLoad> GetNextPendingCreativesBatch(int minimumId, DateTime lastAttemptedIgnoreUtc)
     {
-        return loaderProxy.GetPendingCreativeImages(minimumId, batchSize);
+        return loaderProxy.GetPendingCreativeImages(minimumId, BATCH_SIZE, MAXIMUM_ATTEMPTS, lastAttemptedIgnoreUtc);
     }
 
     protected override void ProcessCreative(FbCreativeLoad creative, TokenKey tokenKey, int channelId)
@@ -33,38 +36,55 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
             return;
         }
 
-        var now = DateTime.UtcNow;
-
-        if (string.IsNullOrEmpty(creative.Url))
-        {
-            // attempt to decode the image from the hash
-            var imageUrlWidthHeight = GetImageUrlWidthHeight(tokenKey, channelId, creative.CreativeKey);
-            if (string.IsNullOrEmpty(imageUrlWidthHeight?.Url))
-            {
-                logger.LogWarning($"Cannot get creative image with key {creative.CreativeKey}.");
-                creative.LastAttemptDateTimeUtc = now;
-                creative.TotalAttempts++;
-                loaderProxy.WriteFbCreativeLoad(creative);
-                return;
-            }
-            creative.Url = imageUrlWidthHeight?.Url;
-            creative.Width = imageUrlWidthHeight?.Width;
-            creative.Height = imageUrlWidthHeight?.Height;
-
-            loaderProxy.WriteFbCreativeLoad(creative);
-        }
+        string? errorMessage = null;
 
         try
         {
+            if (string.IsNullOrEmpty(creative.Url))
+            {
+                // attempt to decode the image from the hash
+                var imageUrlWidthHeight = GetImageUrlWidthHeight(tokenKey, channelId, creative.CreativeKey);
+                if (string.IsNullOrEmpty(imageUrlWidthHeight?.Url))
+                {
+                    logger.LogWarning($"Cannot get creative image with key {creative.CreativeKey}.");
+                    creative.LastAttemptDateTimeUtc = DateTime.UtcNow;
+                    creative.TotalAttempts++;
+                    loaderProxy.WriteFbCreativeLoad(creative);
+                    return;
+                }
+                creative.Url = imageUrlWidthHeight?.Url;
+                creative.Width = imageUrlWidthHeight?.Width;
+                creative.Height = imageUrlWidthHeight?.Height;
+
+                loaderProxy.WriteFbCreativeLoad(creative);
+            }
+
             DownloadAndSaveCreative(creative);
+        }
+        catch (FacebookHttpException fe)
+        {
+            if (fe.Throttled)
+            {
+                logger.LogError(fe, $"Unable to download creative image for {creative.CreativeKey} (id {creative.Id}) because of throtling");
+                Thread.Sleep(TimeSpan.FromMinutes(THIRTY_MINUTES)); // Wait for 30 minutes before retrying next to release throttling
+
+                return;
+            }
+            else
+            {
+                errorMessage = $"Unable to download creative image for {creative.CreativeKey} (id {creative.Id}) because of feException: {fe.Message}";
+                logger.LogError(fe, errorMessage);
+            }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"Unable to download creative image for {creative.CreativeKey} (id {creative.Id}) because of {ex.Message}");
+            errorMessage = $"Unable to download creative image for {creative.CreativeKey} (id {creative.Id}) because of {ex.Message}";
+            logger.LogError(ex, errorMessage);
         }
 
-        creative.LastAttemptDateTimeUtc = now;
+        creative.LastAttemptDateTimeUtc = DateTime.UtcNow;
         creative.TotalAttempts++;
+        creative.ErrorMessage = errorMessage;
         loaderProxy.WriteFbCreativeLoad(creative);
     }
 
@@ -93,6 +113,10 @@ public class CreativeImagesLoadingService : AbstractCreativeLoader, ICreativeIma
             }
 
             return response[0]!;
+        }
+        catch (FacebookHttpException fe)
+        {
+            throw;
         }
         catch (Exception ex)
         {

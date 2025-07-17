@@ -113,22 +113,34 @@ public class LoaderProxy : ILoaderProxy
         return context.Tokens.SingleOrDefault(record => record.CompanyId == companyId && record.ChannelTypeId == channelTypeId);
     }
 
-    public List<FbCreativeLoad> GetPendingCreativeImages(int startId, int batchSize)
+    public List<FbCreativeLoad> GetPendingCreativeImages(int startId, int batchSize, int maxTotalAttempts, DateTime lastAttemptedIgnoreUtc)
     {
         return context.Fbcreativeloads
-            .Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_IMAGE && rec.BinId == null)
-            .OrderBy(rec => rec.Id)
+            .Where(rec =>
+                        rec.CreativeType == Names.CREATIVE_TYPE_IMAGE
+                     && rec.BinId == null
+                     && rec.TotalAttempts < maxTotalAttempts
+                     && (rec.LastAttemptDateTimeUtc == null || rec.LastAttemptDateTimeUtc < lastAttemptedIgnoreUtc)
+            )
+            .OrderBy(rec => rec.TotalAttempts)
+            .ThenBy(rec => rec.CreatedDateTimeUtc)
             .Take(batchSize)
             .ToList();
     }
 
-    public List<FbCreativeLoad> GetPendingCreativeVideos(int startId, int batchSize)
+    public List<FbCreativeLoad> GetPendingCreativeVideos(int startId, int batchSize, int maxTotalAttempts, DateTime lastAttemptedIgnoreUtc)
     {
         return context.Fbcreativeloads
-            .Where(rec => rec.Id > startId && rec.CreativeType == Names.CREATIVE_TYPE_VIDEO && rec.BinId == null)
-            .OrderBy(rec => rec.Id)
-            .Take(batchSize)
-            .ToList();
+                        .Where(rec =>
+                                    rec.CreativeType == Names.CREATIVE_TYPE_VIDEO
+                                 && rec.BinId == null
+                                 && rec.TotalAttempts < maxTotalAttempts
+                                 && (rec.LastAttemptDateTimeUtc == null || rec.LastAttemptDateTimeUtc < lastAttemptedIgnoreUtc)
+                        )
+                        .OrderBy(rec => rec.TotalAttempts)
+                        .ThenBy(rec => rec.CreatedDateTimeUtc)
+                        .Take(batchSize)
+                        .ToList();
     }
 
     public void WriteFbCreativeLoad(FbCreativeLoad creativeLoad)
@@ -138,5 +150,16 @@ public class LoaderProxy : ILoaderProxy
             context.Fbcreativeloads.Add(creativeLoad);
         }
         context.SaveChanges();
+    }
+
+    public FbAccountPageToken? GetFbAccountPageTokenById(int companyId, string fbPageid)
+    {
+        return context
+                    .FbAccountPageTokens
+                    .FirstOrDefault(record =>
+                                             record.Token != null
+                                          && record.Token.CompanyId == companyId
+                                          && record.FbAccountId == fbPageid
+                    );
     }
 }

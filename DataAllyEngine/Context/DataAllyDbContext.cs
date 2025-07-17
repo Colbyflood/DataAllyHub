@@ -106,6 +106,8 @@ public partial class DataAllyDbContext : DbContext
 
     public virtual DbSet<TokenFbAccount> Tokenfbaccounts { get; set; }
 
+    public virtual DbSet<FbAccountPageToken> FbAccountPageTokens { get; set; }
+
     public virtual DbSet<VideoKpi> Videokpis { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -252,6 +254,11 @@ public partial class DataAllyDbContext : DbContext
             entity.HasOne(d => d.Client).WithMany(p => p.Channels)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Channel_ClientId_FK");
+        });
+
+        modelBuilder.Entity<FbAccountPageToken>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
         });
 
         modelBuilder.Entity<Channelsourceflow>(entity =>

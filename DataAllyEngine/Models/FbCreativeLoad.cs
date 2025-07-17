@@ -73,4 +73,7 @@ public class FbCreativeLoad
 
 	[Column("height")]
 	public int? Height { get; set; }
+
+    [Column("error_message")]
+    public string? ErrorMessage { get; set; }
 }
