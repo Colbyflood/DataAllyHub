@@ -12,9 +12,8 @@ public abstract class FacebookServiceBase
     protected readonly FacebookParameters facebookParameters;
     protected readonly ILogging logging;
 
-    // ReSharper disable once InconsistentNaming
     protected const int RESTART_TIME_MINUTES = 60;
-    protected const int MAX_FB_STAGING_RECORDS_IN_ROWS = 250;
+    protected const int MAX_FB_STAGING_RECORDS_IN_ROWS = 50;
 
     protected FacebookServiceBase(Channel channel, ILoaderProxy loaderProxy, FacebookParameters facebookParameters, ILogging logging)
     {

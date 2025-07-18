@@ -24,6 +24,9 @@ public partial class FbRunStaging
     [Column("content")]
     public string Content { get; set; }
 
+    [Column("rows_count")]
+    public int? RowsCount { get; set; }
+
     [ForeignKey("FbRunlogId")]
     public virtual FbRunLog FbRunlog { get; set; } = null!;
 }

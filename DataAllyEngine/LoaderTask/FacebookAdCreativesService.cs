@@ -78,6 +78,7 @@ public class FacebookAdCreativesService : FacebookServiceBase
                 runStaging.FbRunlogId = runlog.Id;
                 runStaging.Sequence = GetNextSequence(runlog);
                 runStaging.Content = content.ToJson();
+                runStaging.RowsCount = batch.Count;
 
                 loaderProxy.WriteFbRunStaging(runStaging);
             }
@@ -114,16 +115,34 @@ public class FacebookAdCreativesService : FacebookServiceBase
         var loader = new AdCreativesLoader(facebookParameters, logging);
         var response = await loader.LoadAsync(url);
 
-        if (response?.Content.Count > 0)
+        if (response == null)
         {
-            var content = response.ToJson();
+            logging.LogError($"Failed to load ad creatives on resuming and response is null for {runlog.Id}");
+            LogProblem(runlog.Id, Names.FB_PROBLEM_INTERNAL_PROBLEM, DateTime.UtcNow, null, null);
+            return false;
+        }
 
-            var runStaging = new FbRunStaging();
-            runStaging.FbRunlogId = runlog.Id;
-            runStaging.Sequence = GetNextSequence(runlog);
-            runStaging.Content = content;
+        if (response.Content.Count > 0)
+        {
+            int contentCount = response.Content.Count;
+            int batchSize = MAX_FB_STAGING_RECORDS_IN_ROWS;
 
-            loaderProxy.WriteFbRunStaging(runStaging);
+            int totalBatches = (contentCount + batchSize - 1) / batchSize;
+
+            for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++)
+            {
+                var batch = response.Content.Skip(batchIndex * batchSize).Take(batchSize).ToList<FacebookAdCreative>();
+
+                var content = new FacebookAdCreativesResponse(batch);
+
+                var runStaging = new FbRunStaging();
+                runStaging.FbRunlogId = runlog.Id;
+                runStaging.Sequence = GetNextSequence(runlog);
+                runStaging.Content = content.ToJson();
+                runStaging.RowsCount = batch.Count;
+
+                loaderProxy.WriteFbRunStaging(runStaging);
+            }
         }
 
         if (response.IsSuccessful)

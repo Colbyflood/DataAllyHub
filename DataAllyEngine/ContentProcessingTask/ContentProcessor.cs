@@ -629,7 +629,7 @@ public class ContentProcessor : IContentProcessor
         }
         catch (Exception ex)
         {
-            logger.LogWarning($"[ERROR] Unable to save thumbnail for {filename} as {uuid} for {asset.AssetType} {asset.AssetKey}: {ex}");
+            logger.LogWarning($"[ERROR] Unable to save thumbnail for {filename} as {uuid} for {asset.AssetType} {asset.AssetKey} {channelId}: {ex}");
             return null;
         }
     }

@@ -82,6 +82,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
                 runStaging.FbRunlogId = runlog.Id;
                 runStaging.Sequence = GetNextSequence(runlog);
                 runStaging.Content = content.ToJson();
+                runStaging.RowsCount = batch.Count;
 
                 loaderProxy.WriteFbRunStaging(runStaging);
             }
@@ -142,6 +143,7 @@ public class FacebookAdInsightsService : FacebookServiceBase
                 runStaging.FbRunlogId = runlog.Id;
                 runStaging.Sequence = GetNextSequence(runlog);
                 runStaging.Content = content.ToJson();
+                runStaging.RowsCount = batch.Count;
 
                 loaderProxy.WriteFbRunStaging(runStaging);
             }
