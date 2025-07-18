@@ -82,7 +82,6 @@ public class UrlIdDecoder
 				responseText = await response.Content.ReadAsStringAsync();
 			}
 
-			Console.Error.WriteLine($"HTTP error occurred: {httpEx} while calling graph api");
 			throw new FacebookHttpException((int)httpEx.StatusCode.Value, responseText);
 		}
 		catch (Exception ex)

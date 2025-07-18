@@ -7,6 +7,7 @@ namespace DataAllyEngine.Models;
 [Table("thumbnail")]
 [Index("ChannelAdId", Name = "channel_ad_id_IDX")]
 [Index("Guid", Name = "guid_UK", IsUnique = true)]
+[Index("ChannelId", Name = "thumbnail_channel_fk")]
 public partial class Thumbnail
 {
 	[Key]
@@ -29,4 +30,7 @@ public partial class Thumbnail
 	[Column("extension")]
 	[StringLength(10)]
 	public string Extension { get; set; } = null!;
+
+    [Column("channel_id")]
+    public int? ChannelId { get; set; }
 }

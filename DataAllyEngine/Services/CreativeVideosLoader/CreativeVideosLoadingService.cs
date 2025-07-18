@@ -127,8 +127,9 @@ public class CreativeVideosLoadingService : AbstractCreativeLoader, ICreativeVid
         //var pageToken = tokenHolder.GetFacebookPageToken(tokenKey, channel).GetAwaiter().GetResult();
         //if (pageToken == null)
         //{
-        //    logger.LogWarning($"No page token found for key {tokenKey}");
-        //    return null;
+        //    errorMessage = $"No page token found for key {tokenKey}";
+        //    logger.LogWarning(errorMessage);
+        //    return (null, errorMessage);
         //}
 
         try

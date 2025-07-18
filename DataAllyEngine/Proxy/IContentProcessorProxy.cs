@@ -48,7 +48,7 @@ public interface IContentProcessorProxy
     Asset? GetAssetByChannelIdTypeNameAndKey(int channelId, string assetTypeName, string key);
     void WriteAsset(Asset asset);
 
-    Thumbnail? GetThumbnailByFilenameAndChannelAdId(string filename, string channelAdId);
+    Thumbnail? GetThumbnailByFilenameAndChannelAdId(string filename, string channelAdId, int channelId);
     void WriteThumbnail(Thumbnail thumbnail);
 
     FbCreativeLoad? GetFbCreativeLoadByImageHash(string imageHash, int channelId);

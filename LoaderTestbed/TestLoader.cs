@@ -15,8 +15,8 @@ var builder = new ConfigurationBuilder()
 IConfiguration configuration = builder.Build();
 
 // Ua
-var token = "EAAD7wZCNwaOgBPFfSFxPQntZBkCZCJ81YCrzLwGHUNpeNJCfRAWKLZAZAQp7YHCG7TlnpJrvvedkUJCa7iZC5KZCRe6YOb54DadrftMJ2BZAP3L8VOnUsVTjMDDdK8uOHmpA0xeCCRJzliZAOvLkR8GaMtFZCgxyMJgqjQ6kIo3JrTZC3VVMv8CKeRHEM9pt0ZCd";
-var channelAccount = "act_435200474576078";
+var token = "EAAD7wZCNwaOgBPFwBSMsF0qGkZB6Is5SGz2m56DfbPrnVF4ZCFaB6mZCFDmxp9VzVGDaOoSgorxtZAkTZB0tn1ZAJfe8xFLDjsjFsCLa1OEyr8OegQHjGSnqzpe1VQuFjYQPzHtm5u30cJ3CB4iwhQ3ZAf9PZBdmcnNsANQadWti5z4JHj8NMpJjLaE8CxMTrQffT";
+var channelAccount = "act_239631127116758";
 
 var logging = new Logging();
 
@@ -27,6 +27,11 @@ try
     // Addcretive code
     var loader = new AdCreativesLoader(facebookParameters, logging);
     var response = await loader.StartLoadAsync();
+
+    if (response!=null)
+    {
+        var content = response.ToJson();
+    }
 
     // AdInsights Test Code
     //var now = DateTime.UtcNow;

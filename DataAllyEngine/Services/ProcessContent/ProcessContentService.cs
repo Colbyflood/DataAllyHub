@@ -57,7 +57,7 @@ public class ProcessContentService : IProcessContentService
         }
     }
 
-    private SemaphoreSlim concurrencySemaphoreThreads = new SemaphoreSlim(10); // Limit to 10 concurrent tasks
+    private SemaphoreSlim concurrencySemaphoreThreads = new SemaphoreSlim(12); // Limit to 10 concurrent tasks
     ConcurrentDictionary<int, (int, DateTime)> channelsCurrentProcessingDic = new ConcurrentDictionary<int, (int, DateTime)>();
     private void CheckAndProcessPendingContent(CancellationToken cancellationToken)
     {

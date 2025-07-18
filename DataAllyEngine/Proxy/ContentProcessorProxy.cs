@@ -245,11 +245,12 @@ public class ContentProcessorProxy : IContentProcessorProxy
         context.SaveChanges();
     }
 
-    public Thumbnail? GetThumbnailByFilenameAndChannelAdId(string filename, string channelAdId)
+    public Thumbnail? GetThumbnailByFilenameAndChannelAdId(string filename, string channelAdId, int channelId)
     {
         return context.Thumbnails.FirstOrDefault(t =>
                                                     t.ChannelAdId.ToLower() == channelAdId.ToLower()
                                                  && t.Filename.ToLower() == filename.ToLower()
+                                                 && t.ChannelId == channelId
                                                 );
     }
 

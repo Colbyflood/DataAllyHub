@@ -382,8 +382,17 @@ public class ContentProcessor : IContentProcessor
 
             contentProcessorProxy.WriteAsset(asset);
         }
+        else // Asset already exists
+        {
+            if (asset.Url != record.Creative.ThumbnailUrl) // Update url in case that's updated
+            {
+                asset.Url = record.Creative.ThumbnailUrl;
+                asset.Updated = ParseDate(record.UpdatedTime);
+                contentProcessorProxy.WriteAsset(asset);
+            }
+        }
 
-        ProcessThumbnail(asset, record.Id);
+        ProcessThumbnail(asset, record.Id, channel.Id);
 
         return asset;
     }
@@ -562,7 +571,7 @@ public class ContentProcessor : IContentProcessor
         // $videoIds = array_filter($videoIds); // Remove nulls/empties
     }
 
-    private Thumbnail? ProcessThumbnail(Asset asset, string channelAdId)
+    private Thumbnail? ProcessThumbnail(Asset asset, string channelAdId, int channelId)
     {
         if (string.IsNullOrWhiteSpace(asset.Url) || !asset.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
         {
@@ -571,7 +580,7 @@ public class ContentProcessor : IContentProcessor
         }
 
         var filename = ExtractFilenameFromUrl(asset.Url);
-        var thumbnail = contentProcessorProxy.GetThumbnailByFilenameAndChannelAdId(filename, channelAdId);
+        var thumbnail = contentProcessorProxy.GetThumbnailByFilenameAndChannelAdId(filename, channelAdId, channelId);
         if (thumbnail != null)
             return thumbnail;
 
@@ -607,7 +616,8 @@ public class ContentProcessor : IContentProcessor
                 Filename = filename,
                 Guid = uuid,
                 BinId = binId,
-                Extension = extension
+                Extension = extension,
+                ChannelId = channelId
             };
 
             contentProcessorProxy.WriteThumbnail(thumbnail);
